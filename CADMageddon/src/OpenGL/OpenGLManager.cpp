@@ -1,17 +1,19 @@
 #include "OpenGLManager.h"
 #include "GL\glew.h"
+#include "../Logging/Logger.h"
 
 namespace CADMageddon
 {
-    OpenGLManager::OpenGLManager(OpenGLData openGLData) : m_openGlData(openGLData)
+    OpenGLManager::OpenGLManager()
     {
 
     }
 
-    int OpenGLManager::Init()
+    int OpenGLManager::Init(const OpenGLData& data)
     {
         if (glewInit() != GLEW_OK)
         {
+
             return -1;
         }
 

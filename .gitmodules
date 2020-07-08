@@ -1,0 +1,3 @@
+[submodule "CADMageddon/vendor/spdlog"]
+	path = CADMageddon/vendor/spdlog
+	url = https://github.com/gabime/spdlog.git

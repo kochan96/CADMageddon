@@ -6,8 +6,8 @@ namespace CADMageddon
     class OpenGLManager
     {
     public:
-        OpenGLManager(OpenGLData openGLData);
-        int Init();
+        OpenGLManager();
+        int Init(const OpenGLData& openGLData);
 
         int getMinorVersion() { return m_openGlData.m_minorVersion; }
         int getMajorVersion() { return m_openGlData.m_majorVersion; }
@@ -21,5 +21,6 @@ namespace CADMageddon
 
     private:
         OpenGLData m_openGlData;
+
     };
 }
