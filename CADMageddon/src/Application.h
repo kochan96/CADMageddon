@@ -15,7 +15,7 @@ namespace CADMageddon
         void OnEvent(Event& e);
 
         void Init();
-        int Run();
+        void Run();
         void Close();
 
         static Application& Get() { return *m_Instance; }

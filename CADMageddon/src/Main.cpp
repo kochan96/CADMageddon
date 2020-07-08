@@ -8,4 +8,7 @@ int main()
     CADMageddon::Application app;
     app.Init();
     app.Run();
+
+
+    return EXIT_SUCCESS;
 }

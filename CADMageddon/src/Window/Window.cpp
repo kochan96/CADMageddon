@@ -50,6 +50,8 @@ namespace CADMageddon
         m_Window = glfwCreateWindow((int)m_Data.Width, (int)m_Data.Height, m_Data.Title.c_str(), nullptr, nullptr);
         ++m_GLFWWindowCount;
 
+        glfwMakeContextCurrent(m_Window);
+
         glfwSetWindowUserPointer(m_Window, &m_Data);
         SetVSync(true);
 

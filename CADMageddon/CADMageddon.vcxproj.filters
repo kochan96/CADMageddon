@@ -98,5 +98,8 @@
     <ClInclude Include="src\Application.h">
       <Filter>Header Files\Application</Filter>
     </ClInclude>
+    <ClInclude Include="src\Core\Macros.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
