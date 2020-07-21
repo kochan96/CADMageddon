@@ -1,11 +1,11 @@
 #pragma once
-#include <memory>
-#include <functional>
+#include "cadpch.h"
 #include "WindowProps.h"
-#include "../OpenGL/OpenGLData.h"
-#include "../Events/Event.h"
+#include "Events/Event.h"
 
+#include <glad\glad.h>
 #include <GLFW/glfw3.h>
+
 
 namespace CADMageddon
 {
@@ -30,7 +30,7 @@ namespace CADMageddon
 
         virtual void* GetNativeWindow() const { return m_Window; }
 
-        virtual void Init(const WindowProps& props, const OpenGLData& openglData);
+        virtual void Init(const WindowProps& props);
         virtual void Shutdown();
     
     private:

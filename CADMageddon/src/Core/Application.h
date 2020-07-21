@@ -1,6 +1,6 @@
 #pragma once
-#include "Window/Window.h"
-#include "OpenGL/OpenGLManager.h"
+#include "Window.h"
+#include "LayerStack.h"
 #include "Events\Event.h"
 #include "Events\ApplicationEvent.h"
 
@@ -10,12 +10,16 @@ namespace CADMageddon
     {
     public:
         Application();
-        ~Application() {}
+        ~Application();
 
         void OnEvent(Event& e);
 
+        void PushLayer(Layer* layer);
+        void PushOverlay(Layer* layer);
+
         void Init();
         void Run();
+
         void Close();
 
         static Application& Get() { return *m_Instance; }
@@ -33,6 +37,7 @@ namespace CADMageddon
         float m_LastFrameTime = 0.0f;
 
         std::unique_ptr<Window> m_window;
-        std::shared_ptr<OpenGLManager> m_openGlManager;
+
+        LayerStack m_LayerStack;
     };
 }

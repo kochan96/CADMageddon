@@ -1,7 +1,7 @@
 #pragma once
 #include "Event.h"
 #include <sstream>
-#include "../Input/MouseCode.h"
+#include "Core/MouseCode.h"
 
 
 namespace CADMageddon

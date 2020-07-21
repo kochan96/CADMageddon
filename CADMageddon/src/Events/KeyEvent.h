@@ -1,7 +1,7 @@
 #pragma once
 #include "Event.h"
 #include <sstream>
-#include "../Input/Input.h"
+#include "Core/Input.h"
 
 namespace CADMageddon
 {

@@ -1,10 +1,10 @@
 #include "Window.h"
-#include "../Logging/Logger.h"
-#include "../Input/Input.h"
+#include "Logger.h"
+#include "Input.h"
 
-#include "../Events/KeyEvent.h"
-#include "../Events/MouseEvent.h"
-#include "../Events/ApplicationEvent.h"
+#include "Events/KeyEvent.h"
+#include "Events/MouseEvent.h"
+#include "Events/ApplicationEvent.h"
 
 
 namespace CADMageddon
@@ -13,7 +13,7 @@ namespace CADMageddon
 
     static void GLFWErrorCallback(int error, const char* description)
     {
-        Logger::getOpenGlLogger()->error("GLFW Error ({0}): {1}", error, description);
+        Logger::getAppLogger()->error("GLFW Error ({0}): {1}", error, description);
     }
 
     Window::Window()
@@ -25,7 +25,7 @@ namespace CADMageddon
         Shutdown();
     }
 
-    void Window::Init(const WindowProps& props, const OpenGLData& openglData)
+    void Window::Init(const WindowProps& props)
     {
         m_Data.Title = props.m_title;
         m_Data.Width = props.m_width;
@@ -42,15 +42,17 @@ namespace CADMageddon
             glfwSetErrorCallback(GLFWErrorCallback);
         }
 
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, openglData.m_majorVersion);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, openglData.m_minorVersion);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, openglData.m_profile);
-        glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, openglData.m_debug ? GL_TRUE : GL_FALSE);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 
         m_Window = glfwCreateWindow((int)m_Data.Width, (int)m_Data.Height, m_Data.Title.c_str(), nullptr, nullptr);
         ++m_GLFWWindowCount;
 
         glfwMakeContextCurrent(m_Window);
+
+        int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 
         glfwSetWindowUserPointer(m_Window, &m_Data);
         SetVSync(true);
