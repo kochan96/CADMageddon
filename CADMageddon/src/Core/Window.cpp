@@ -50,9 +50,8 @@ namespace CADMageddon
         m_Window = glfwCreateWindow((int)m_Data.Width, (int)m_Data.Height, m_Data.Title.c_str(), nullptr, nullptr);
         ++m_GLFWWindowCount;
 
-        glfwMakeContextCurrent(m_Window);
-
-        int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+        m_Context = CreateScope<OpenGLContext>(m_Window);
+        m_Context->Init();
 
         glfwSetWindowUserPointer(m_Window, &m_Data);
         SetVSync(true);
@@ -161,9 +160,8 @@ namespace CADMageddon
 
     void Window::OnUpdate()
     {
-
         glfwPollEvents();
-        glfwSwapBuffers(m_Window);
+        m_Context->SwapBuffers();
     }
 
     void Window::SetVSync(bool enabled)

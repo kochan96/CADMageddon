@@ -85,6 +85,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\CADApplication\EditorLayer.cpp" />
     <ClCompile Include="src\cadpch.cpp" />
     <ClCompile Include="src\Core\Application.cpp" />
     <ClCompile Include="src\Core\Input.cpp" />
@@ -93,9 +94,15 @@
     <ClCompile Include="src\Core\Logger.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\Core\Window.cpp" />
+    <ClCompile Include="src\Rendering\Buffer.cpp" />
+    <ClCompile Include="src\Rendering\Buffer.h" />
+    <ClCompile Include="src\Rendering\Context.cpp" />
+    <ClCompile Include="src\Rendering\Shader.cpp" />
+    <ClCompile Include="src\Rendering\VertexArray.cpp" />
     <ClCompile Include="vendor\glad\src\glad.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\CADApplication\EditorLayer.h" />
     <ClInclude Include="src\cadpch.h" />
     <ClInclude Include="src\Core\Application.h" />
     <ClInclude Include="src\Core\Layer.h" />
@@ -112,6 +119,9 @@
     <ClInclude Include="src\Core\Logger.h" />
     <ClInclude Include="src\Core\Window.h" />
     <ClInclude Include="src\Core\WindowProps.h" />
+    <ClInclude Include="src\Rendering\Context.h" />
+    <ClInclude Include="src\Rendering\Shader.h" />
+    <ClInclude Include="src\Rendering\VertexArray.h" />
     <ClInclude Include="vendor\glm\include\detail\compute_common.hpp" />
     <ClInclude Include="vendor\glm\include\detail\compute_vector_relational.hpp" />
     <ClInclude Include="vendor\glm\include\detail\qualifier.hpp" />

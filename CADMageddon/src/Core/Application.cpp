@@ -4,6 +4,8 @@
 #include "Base.h"
 #include "Timestep.h"
 
+#include "CADApplication\EditorLayer.h"
+
 namespace CADMageddon
 {
     Application* Application::m_Instance = nullptr;
@@ -27,6 +29,7 @@ namespace CADMageddon
         m_window->Init(windowData);
         m_window->SetEventCallback(BIND_EVENT_FN(Application::OnEvent));
 
+        PushLayer(new EditorLayer("EditorLayer"));
     }
 
     void Application::OnEvent(Event& e)
@@ -57,7 +60,6 @@ namespace CADMageddon
 
     void Application::Run()
     {
-        glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
 
         while (m_Running)
         {
@@ -65,8 +67,6 @@ namespace CADMageddon
             float time = (float)glfwGetTime();
             Timestep timestep = time - m_LastFrameTime;
             m_LastFrameTime = time;
-
-            glClear(GL_COLOR_BUFFER_BIT);
 
             if (!m_Minimized)
             {
@@ -110,6 +110,8 @@ namespace CADMageddon
         }
 
         m_Minimized = false;
+
+        glViewport(0, 0, e.GetWidth(), e.GetHeight());
         //m_openGlManager->setViewPort(e.GetWidth(), e.GetHeight());
 
         return false;

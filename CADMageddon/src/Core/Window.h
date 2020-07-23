@@ -1,9 +1,11 @@
 #pragma once
 #include "cadpch.h"
+#include "Core/Base.h"
 #include "WindowProps.h"
 #include "Events/Event.h"
+#include "Rendering/Context.h"
 
-#include <glad\glad.h>
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 
@@ -35,6 +37,7 @@ namespace CADMageddon
     
     private:
         GLFWwindow* m_Window;
+        Scope<OpenGLContext> m_Context;
 
         struct WindowData
         {
