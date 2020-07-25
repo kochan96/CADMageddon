@@ -19,6 +19,7 @@ namespace CADMageddon
     private:
         void InitImGui();
         void ShutDownImGui();
+        void RenderImGui();
 
     private:
 

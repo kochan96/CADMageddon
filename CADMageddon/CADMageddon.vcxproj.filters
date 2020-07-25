@@ -1391,6 +1391,7 @@
     <ClCompile Include="src\cadpch.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\ImGui\ImGuiBuild.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\shaders\FlatShader.glsl">

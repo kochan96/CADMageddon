@@ -13,8 +13,8 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 IncludeDir = {}
 IncludeDir["GLFW"] = "CADMageddon/vendor/glfw/include"
 IncludeDir["Glad"] = "CADMageddon/vendor/glad/include"
-IncludeDir["ImGui"] = "CADMageddon/vendor/imgui/include"
-IncludeDir["glm"] = "CADMageddon/vendor/glm/include"
+IncludeDir["ImGui"] = "CADMageddon/vendor/imgui"
+IncludeDir["glm"] = "CADMageddon/vendor/glm"
 
 group "Dependencies"
     include "CADMageddon/vendor/glfw"
@@ -52,8 +52,8 @@ project "CADMageddon"
         "%{prj.name}/src",
 		"%{prj.name}/vendor/spdlog/include",
 		"%{IncludeDir.GLFW}",
-		"%{IncludeDir.ImGui}",
-		"%{IncludeDir.Glad}",
+        "%{IncludeDir.Glad}",
+        "%{IncludeDir.ImGui}",
 		"%{IncludeDir.glm}",
     }
 

@@ -1,0 +1,2 @@
+C:\Pliki\Studia\Modelowanie Geometryczne Laboratoria\CADMageddon\CADMageddon\vendor\glad\bin\Debug-windows-x86_64\Glad\Glad.pdb
+C:\Pliki\Studia\Modelowanie Geometryczne Laboratoria\CADMageddon\CADMageddon\vendor\glad\bin-int\Debug-windows-x86_64\Glad\Glad.pdb
