@@ -1,10 +1,1 @@
-[submodule "CADMageddon/vendor/spdlog"]
-	path = CADMageddon/vendor/spdlog
-	url = https://github.com/gabime/spdlog.git
-[submodule "CADMageddon/vendor/glfw"]
-	path = CADMageddon/vendor/glfw
-	url = https://github.com/glfw/glfw.git
-[submodule "CADMageddon/vendor/imgui/"]
-	path = CADMageddon/vendor/imgui/
-	url = https://github.com/ocornut/imgui.git
-	branch= docking
+
