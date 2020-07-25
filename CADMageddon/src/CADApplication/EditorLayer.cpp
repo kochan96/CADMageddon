@@ -61,19 +61,24 @@ namespace CADMageddon
             5,4,0, //bottom
         };
 
-        m_VertexBuffer = CreateRef<OpenGLVertexBuffer>(positions, sizeof(positions));
-        m_VertexBuffer->SetLayout({
+        auto vertexBuffer = CreateRef<OpenGLVertexBuffer>(positions, sizeof(positions));
+        vertexBuffer->SetLayout({
             { ShaderDataType::Float3, "a_Position" }
             });
 
-        m_VertexArray->AddVertexBuffer(m_VertexBuffer);
-        m_IndexBuffer = CreateRef<OpenGLIndexBuffer>(indices, 36);
+        m_VertexArray->AddVertexBuffer(vertexBuffer);
+        auto indexBuffer = CreateRef<OpenGLIndexBuffer>(indices, 36);
 
-        m_VertexArray->SetIndexBuffer(m_IndexBuffer);
+        m_VertexArray->SetIndexBuffer(indexBuffer);
 
         m_Shader->Bind();
 
         m_Shader->SetFloat4("u_Color", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+
+        FramebufferSpecification fbSpec;
+        fbSpec.Width = 1280;
+        fbSpec.Height = 720;
+        m_Framebuffer = CreateRef<OpenGLFramebuffer>(fbSpec);
 
         InitImGui();
 
@@ -86,7 +91,19 @@ namespace CADMageddon
 
     void EditorLayer::OnUpdate(Timestep ts)
     {
+        // Resize
+        if (FramebufferSpecification spec = m_Framebuffer->GetSpecification();
+            m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // zero sized framebuffer is invalid
+            (spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
+        {
+            m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+            m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);
+        }
+
+
         m_CameraController.OnUpdate(ts);
+
+        m_Framebuffer->Bind();
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -94,6 +111,8 @@ namespace CADMageddon
         Renderer::Submit(m_Shader, m_VertexArray);
 
         Renderer::EndScene();
+
+        m_Framebuffer->UnBind();
 
         RenderImGui();
     }
@@ -209,12 +228,12 @@ namespace CADMageddon
         }
 
 
-        /*ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
         ImGui::Begin("Viewport");
 
-        m_ViewportFocused = ImGui::IsWindowFocused();
-        m_ViewportHovered = ImGui::IsWindowHovered();
-        Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused || !m_ViewportHovered);
+        //m_ViewportFocused = ImGui::IsWindowFocused();
+       // m_ViewportHovered = ImGui::IsWindowHovered();
+        //Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused || !m_ViewportHovered);
 
         ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
         m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
@@ -223,7 +242,7 @@ namespace CADMageddon
         ImGui::Image((void*)textureID, ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
         ImGui::End();
         ImGui::PopStyleVar();
-        */
+        
 
         ImGui::End();
 

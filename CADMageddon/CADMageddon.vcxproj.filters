@@ -19,6 +19,9 @@
     <Filter Include="src\Events">
       <UniqueIdentifier>{7162C20E-5D1A-045C-C621-DDB7B2F89E4C}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\ImGui">
+      <UniqueIdentifier>{170E22B3-8378-D629-CCB6-87CF3860B47E}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Rendering">
       <UniqueIdentifier>{BA10DABB-26D1-55F2-EF0B-9F6F5B8B9ACE}</UniqueIdentifier>
     </Filter>
@@ -103,6 +106,9 @@
       <Filter>src\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="src\Rendering\FPSCameraController.h">
+      <Filter>src\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Rendering\FrameBuffer.h">
       <Filter>src\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="src\Rendering\Renderer.h">
@@ -1364,6 +1370,9 @@
     <ClCompile Include="src\Core\Window.cpp">
       <Filter>src\Core</Filter>
     </ClCompile>
+    <ClCompile Include="src\ImGui\ImGuiBuild.cpp">
+      <Filter>src\ImGui</Filter>
+    </ClCompile>
     <ClCompile Include="src\Main.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1379,6 +1388,9 @@
     <ClCompile Include="src\Rendering\FPSCameraController.cpp">
       <Filter>src\Rendering</Filter>
     </ClCompile>
+    <ClCompile Include="src\Rendering\FrameBuffer.cpp">
+      <Filter>src\Rendering</Filter>
+    </ClCompile>
     <ClCompile Include="src\Rendering\Renderer.cpp">
       <Filter>src\Rendering</Filter>
     </ClCompile>
@@ -1391,7 +1403,6 @@
     <ClCompile Include="src\cadpch.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\ImGui\ImGuiBuild.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\shaders\FlatShader.glsl">

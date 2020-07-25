@@ -2,6 +2,7 @@
 #include "Core\Layer.h"
 #include "Rendering\VertexArray.h"
 #include "Rendering\Shader.h"
+#include "Rendering\FrameBuffer.h"
 
 #include "Rendering\FPSCameraController.h"
 
@@ -23,11 +24,12 @@ namespace CADMageddon
 
     private:
 
-        Ref<OpenGLVertexBuffer> m_VertexBuffer;
-        Ref<OpenGLIndexBuffer> m_IndexBuffer;
         Ref<OpenGLVertexArray> m_VertexArray;
         Ref<OpenGLShader> m_Shader;
+        Ref<OpenGLFramebuffer> m_Framebuffer;
 
         FPSCameraController m_CameraController;
+
+        glm::vec2 m_ViewportSize = { 0.0f, 0.0f };
     };
 }

@@ -154,6 +154,7 @@
     <ClInclude Include="src\Rendering\Camera.h" />
     <ClInclude Include="src\Rendering\Context.h" />
     <ClInclude Include="src\Rendering\FPSCameraController.h" />
+    <ClInclude Include="src\Rendering\FrameBuffer.h" />
     <ClInclude Include="src\Rendering\Renderer.h" />
     <ClInclude Include="src\Rendering\Shader.h" />
     <ClInclude Include="src\Rendering\VertexArray.h" />
@@ -581,6 +582,7 @@
     <ClCompile Include="src\Rendering\Camera.cpp" />
     <ClCompile Include="src\Rendering\Context.cpp" />
     <ClCompile Include="src\Rendering\FPSCameraController.cpp" />
+    <ClCompile Include="src\Rendering\FrameBuffer.cpp" />
     <ClCompile Include="src\Rendering\Renderer.cpp" />
     <ClCompile Include="src\Rendering\Shader.cpp" />
     <ClCompile Include="src\Rendering\VertexArray.cpp" />
@@ -603,4 +605,4 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
-</Project>
+</Project> 
