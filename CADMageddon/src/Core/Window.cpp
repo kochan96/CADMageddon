@@ -13,7 +13,7 @@ namespace CADMageddon
 
     static void GLFWErrorCallback(int error, const char* description)
     {
-        Logger::getAppLogger()->error("GLFW Error ({0}): {1}", error, description);
+        LOG_ERROR("GLFW Error ({0}): {1}", error, description);
     }
 
     Window::Window()
@@ -36,7 +36,7 @@ namespace CADMageddon
             int success = glfwInit();
             if (!success)
             {
-                Logger::getAppLogger()->error("Could not initialize GLFW");
+                LOG_ERROR("Could not initialize GLFW");
             }
 
             glfwSetErrorCallback(GLFWErrorCallback);

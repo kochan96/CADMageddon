@@ -14,7 +14,7 @@ namespace CADMageddon {
         if (type == "fragment" || type == "pixel")
             return GL_FRAGMENT_SHADER;
 
-        Logger::getAppLogger()->error("Unknown shader type!");
+        LOG_ERROR("Unknown shader type!");
 
         return 0;
     }
@@ -64,12 +64,12 @@ namespace CADMageddon {
             }
             else
             {
-                Logger::getAppLogger()->error("Could not read from file '{0}'", filepath);
+                LOG_ERROR("Could not read from file '{0}'", filepath);
             }
         }
         else
         {
-            Logger::getAppLogger()->error("Could not open file '{0}'", filepath);
+            LOG_ERROR("Could not open file '{0}'", filepath);
         }
 
         return result;
@@ -85,8 +85,8 @@ namespace CADMageddon {
         while (pos != std::string::npos)
         {
             size_t eol = source.find_first_of("\r\n", pos); //End of shader type declaration line
-            if (eol != std::string::npos)
-                Logger::getAppLogger()->error("Syntax error");
+            if (eol == std::string::npos)
+                LOG_ERROR("Syntax error");
 
             size_t begin = pos + typeTokenLength + 1; //Start of shader type name (after "#type " keyword)
             std::string type = source.substr(begin, eol - begin);
@@ -131,8 +131,8 @@ namespace CADMageddon {
 
                 glDeleteShader(shader);
 
-                Logger::getAppLogger()->error("{0}", infoLog.data());
-                Logger::getAppLogger()->error("Shader compilation failure!");
+                LOG_ERROR("{0}", infoLog.data());
+                LOG_ERROR("Shader compilation failure!");
                 break;
             }
 
@@ -163,8 +163,8 @@ namespace CADMageddon {
             for (auto id : glShaderIDs)
                 glDeleteShader(id);
 
-            Logger::getAppLogger()->error("{0}", infoLog.data());
-            Logger::getAppLogger()->error("Shader link failure!");
+            LOG_ERROR("{0}", infoLog.data());
+            LOG_ERROR("Shader link failure!");
             return;
         }
 

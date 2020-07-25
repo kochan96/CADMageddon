@@ -5,6 +5,7 @@
 #include "Timestep.h"
 
 #include "CADApplication\EditorLayer.h"
+#include "Rendering\Renderer.h"
 
 namespace CADMageddon
 {
@@ -28,6 +29,8 @@ namespace CADMageddon
 
         m_window->Init(windowData);
         m_window->SetEventCallback(BIND_EVENT_FN(Application::OnEvent));
+
+        Renderer::Init();
 
         PushLayer(new EditorLayer("EditorLayer"));
     }
@@ -110,6 +113,7 @@ namespace CADMageddon
         }
 
         m_Minimized = false;
+        Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
 
         glViewport(0, 0, e.GetWidth(), e.GetHeight());
         //m_openGlManager->setViewPort(e.GetWidth(), e.GetHeight());
