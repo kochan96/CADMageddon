@@ -1,13 +1,13 @@
 
 [submodule "CADMageddon/vendor/glfw"]
 	path = CADMageddon/vendor/glfw
-	url = https://github.com/glfw/glfw.git
+	url = https://github.com/kochan96/glfw
 [submodule "CADMageddon/vendor/spdlog"]
 	path = CADMageddon/vendor/spdlog
 	url = https://github.com/gabime/spdlog.git
 [submodule "CADMageddon/vendor/imgui"]
 	path = CADMageddon/vendor/imgui
-	url = https://github.com/ocornut/imgui.git
+	url = https://github.com/kochan96/imgui
 [submodule "CADMageddon/vendor/glm"]
 	path = CADMageddon/vendor/glm
 	url = https://github.com/g-truc/glm.git
