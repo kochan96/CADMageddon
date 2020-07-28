@@ -22,6 +22,7 @@ namespace CADMageddon
     {
         glClearColor(0.39f, 0.58f, 0.93f, 1.0f);
         glEnable(GL_DEPTH_TEST);
+        glEnable(GL_MULTISAMPLE);
 
 
         m_VertexArray = CreateRef<OpenGLVertexArray>();
@@ -101,7 +102,8 @@ namespace CADMageddon
         }
 
 
-        m_CameraController.OnUpdate(ts);
+        if (m_ViewportFocused)
+            m_CameraController.OnUpdate(ts);
 
         m_Framebuffer->Bind();
 
@@ -119,7 +121,17 @@ namespace CADMageddon
 
     void EditorLayer::OnEvent(Event& event)
     {
-        m_CameraController.OnEvent(event);
+        if (m_BlockEvents)
+        {
+            ImGuiIO& io = ImGui::GetIO();
+            event.Handled |= event.IsInCategory(EventCategoryMouse) & io.WantCaptureMouse;
+            event.Handled |= event.IsInCategory(EventCategoryKeyboard) & io.WantCaptureKeyboard;
+        }
+        else
+        {
+            m_CameraController.OnEvent(event);
+            event.Handled = false;
+        }
     }
 
     void EditorLayer::InitImGui()
@@ -227,13 +239,24 @@ namespace CADMageddon
             ImGui::EndMenuBar();
         }
 
+        ImGui::Begin("Hierarchy");
+
+        ImGui::Text("Label");
+
+        ImGui::End();
+
+        ImGui::Begin("Inspector");
+
+        ImGui::Text("Label 2");
+
+        ImGui::End();
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
         ImGui::Begin("Viewport");
 
-        //m_ViewportFocused = ImGui::IsWindowFocused();
-       // m_ViewportHovered = ImGui::IsWindowHovered();
-        //Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused || !m_ViewportHovered);
+        m_ViewportFocused = ImGui::IsWindowFocused();
+        m_ViewportHovered = ImGui::IsWindowHovered();
+        m_BlockEvents = !m_ViewportFocused || !m_ViewportHovered;
 
         ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
         m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };

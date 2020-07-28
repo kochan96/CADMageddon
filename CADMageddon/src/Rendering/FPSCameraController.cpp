@@ -82,7 +82,7 @@ namespace CADMageddon
     {
         auto [mousePosX, mousePosY] = Input::GetMousePosition();
 
-        if (Input::IsMouseButtonPressed(CDM_MOUSE_BUTTON_LEFT))
+        if (Input::IsMouseButtonPressed(CDM_MOUSE_BUTTON_RIGHT))
         {
             m_CameraRotation.x -= (mousePosY - lastMousePos.y) * m_CameraRotationSpeed * ts;
             m_CameraRotation.y -= (mousePosX - lastMousePos.x) * m_CameraRotationSpeed * ts;
