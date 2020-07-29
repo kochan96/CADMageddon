@@ -6,6 +6,8 @@
 
 #include "Rendering\FPSCameraController.h"
 
+#include "Scene\Entity.h"
+
 namespace CADMageddon
 {
     class EditorLayer : public Layer
@@ -27,6 +29,8 @@ namespace CADMageddon
         Ref<OpenGLVertexArray> m_VertexArray;
         Ref<OpenGLShader> m_Shader;
         Ref<OpenGLFramebuffer> m_Framebuffer;
+        Ref<OpenGLVertexBuffer> m_VertexBuffer;
+        Ref<OpenGLIndexBuffer> m_IndexBuffer;
 
         FPSCameraController m_CameraController;
 
@@ -35,5 +39,9 @@ namespace CADMageddon
         bool m_ViewportFocused = false;
         bool m_ViewportHovered = false;
         bool m_BlockEvents = false;
+
+
+        Scene m_Scene;
+        Entity m_Torus;
     };
 }

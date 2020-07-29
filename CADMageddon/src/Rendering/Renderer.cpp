@@ -59,14 +59,16 @@ namespace CADMageddon
 
     void Renderer::Submit(const Ref<OpenGLShader>& shader, const Ref<OpenGLVertexArray>& vertexArray, const glm::mat4& transform, const glm::vec4& color)
     {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
         shader->Bind();
         shader->SetMat4("u_ViewProjectionMatrix", s_SceneData->ViewProjectionMatrix);
         shader->SetMat4("u_ModelMatrix", transform);
         shader->SetFloat4("u_Color", color);
 
         vertexArray->Bind();
-        glDrawElements(GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
+        glDrawElements(GL_LINES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
+
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
-
-
 }

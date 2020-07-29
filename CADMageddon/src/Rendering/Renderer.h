@@ -3,6 +3,8 @@
 #include "Shader.h"
 #include "Camera.h"
 
+#include "Scene\Components.h"
+
 namespace CADMageddon
 {
     class Renderer

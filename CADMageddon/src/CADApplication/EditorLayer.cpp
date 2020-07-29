@@ -5,12 +5,18 @@
 #include "Rendering\Renderer.h"
 
 #include <glm\gtc\matrix_transform.hpp>
+#include <glm\gtc\type_ptr.hpp>
 
 #include <imgui.h>
 #include <examples/imgui_impl_glfw.h>
 #include <examples/imgui_impl_opengl3.h>
 
 #include "Core/Application.h"
+
+#include "Scene/ObjectFactory.h"
+#include "Scene\Components.h"
+
+#include "ImguiEditors\TorusEditor.h"
 
 namespace CADMageddon
 {
@@ -28,60 +34,26 @@ namespace CADMageddon
         m_VertexArray = CreateRef<OpenGLVertexArray>();
         m_Shader = CreateRef<OpenGLShader>("assets/shaders/FlatShader.glsl");
 
-        float positions[8 * 3] =
-        {
-            -0.5f,-0.5f,0.5f,
-            0.5f,-0.5f,0.5f,
-            0.5f,0.5f,0.5f,
-            -0.5f,0.5f,0.5f,
+        m_Torus = m_Scene.CreateEntity();
+        auto& torusComponent = m_Torus.AddComponent<TorusComponent>(1.0f, 0.3f, 30, 10);
 
-            -0.5f,-0.5f,-0.5f,
-            0.5f,-0.5f,-0.5f,
-            0.5f,0.5f,-0.5f,
-            -0.5f,0.5f,-0.5f,
-        };
-
-        uint32_t indices[36]
-        {
-            0,1,2,
-            2,3,0, //front
-
-            4,5,6,
-            6,7,4, //back
-
-            0,4,7,
-            7,3,0, //left
-
-            1,5,6,
-            6,2,1, //right
-
-            3,2,6,
-            6,7,3, //top
-
-            0,1,5,
-            5,4,0, //bottom
-        };
-
-        auto vertexBuffer = CreateRef<OpenGLVertexBuffer>(positions, sizeof(positions));
-        vertexBuffer->SetLayout({
+        m_VertexBuffer = CreateRef<OpenGLVertexBuffer>(&torusComponent.Mesh.Vertices[0].x, torusComponent.Mesh.Vertices.size() * 3 * sizeof(float));
+        m_VertexBuffer->SetLayout({
             { ShaderDataType::Float3, "a_Position" }
             });
 
-        m_VertexArray->AddVertexBuffer(vertexBuffer);
-        auto indexBuffer = CreateRef<OpenGLIndexBuffer>(indices, 36);
+        m_VertexArray->AddVertexBuffer(m_VertexBuffer);
+        m_IndexBuffer = CreateRef<OpenGLIndexBuffer>(torusComponent.Mesh.Indices.data(), torusComponent.Mesh.Indices.size());
 
-        m_VertexArray->SetIndexBuffer(indexBuffer);
-
-        m_Shader->Bind();
-
-        m_Shader->SetFloat4("u_Color", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
-
+        m_VertexArray->SetIndexBuffer(m_IndexBuffer);
         FramebufferSpecification fbSpec;
         fbSpec.Width = 1280;
         fbSpec.Height = 720;
         m_Framebuffer = CreateRef<OpenGLFramebuffer>(fbSpec);
 
         InitImGui();
+
+
 
     }
 
@@ -105,12 +77,25 @@ namespace CADMageddon
         if (m_ViewportFocused)
             m_CameraController.OnUpdate(ts);
 
+        //TODO do not create opengl objects every frame
+
+        auto& torusComponent = m_Torus.GetComponent<TorusComponent>();
+        m_VertexArray = CreateRef<OpenGLVertexArray>();
+        m_VertexBuffer = CreateRef<OpenGLVertexBuffer>(&torusComponent.Mesh.Vertices[0].x, torusComponent.Mesh.Vertices.size() * 3 * sizeof(float));
+        m_VertexBuffer->SetLayout({
+            { ShaderDataType::Float3, "a_Position" }
+            });
+        m_IndexBuffer = CreateRef<OpenGLIndexBuffer>(torusComponent.Mesh.Indices.data(), torusComponent.Mesh.Indices.size());
+        
+        m_VertexArray->AddVertexBuffer(m_VertexBuffer);
+        m_VertexArray->SetIndexBuffer(m_IndexBuffer);
+
         m_Framebuffer->Bind();
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         Renderer::BeginScene(m_CameraController.GetCamera());
-        Renderer::Submit(m_Shader, m_VertexArray);
+        Renderer::Submit(m_Shader, m_VertexArray, glm::mat4(1.0f), glm::vec4(0.3f, 0.2f, 0.1f, 1.0f));
 
         Renderer::EndScene();
 
@@ -247,7 +232,8 @@ namespace CADMageddon
 
         ImGui::Begin("Inspector");
 
-        ImGui::Text("Label 2");
+        auto& torusComponent = m_Torus.GetComponent<TorusComponent>();
+        TorusEditor(torusComponent);
 
         ImGui::End();
 
@@ -265,7 +251,7 @@ namespace CADMageddon
         ImGui::Image((void*)textureID, ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
         ImGui::End();
         ImGui::PopStyleVar();
-        
+
 
         ImGui::End();
 

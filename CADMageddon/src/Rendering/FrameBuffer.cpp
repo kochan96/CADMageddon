@@ -33,19 +33,17 @@ namespace CADMageddon
         glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
 
         glGenTextures(1, &m_ColorAttachment);
-        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_ColorAttachment);
-        glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGB8, m_Specification.Width, m_Specification.Height, GL_TRUE);
+        glBindTexture(GL_TEXTURE_2D, m_ColorAttachment);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_Specification.Width, m_Specification.Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, m_ColorAttachment, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ColorAttachment, 0);
 
-        glGenRenderbuffers(1, &m_DepthAttachment);
-        glBindRenderbuffer(GL_RENDERBUFFER, m_DepthAttachment);
-        glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH24_STENCIL8, m_Specification.Width, m_Specification.Height);
-        glBindRenderbuffer(GL_RENDERBUFFER, 0);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_DepthAttachment);
-
+        glGenTextures(1, &m_DepthAttachment);
+        glBindTexture(GL_TEXTURE_2D, m_DepthAttachment);
+        glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH24_STENCIL8, m_Specification.Width, m_Specification.Height);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_DepthAttachment, 0);
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }

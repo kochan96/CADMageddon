@@ -15,6 +15,7 @@ IncludeDir["GLFW"] = "CADMageddon/vendor/glfw/include"
 IncludeDir["Glad"] = "CADMageddon/vendor/glad/include"
 IncludeDir["ImGui"] = "CADMageddon/vendor/imgui"
 IncludeDir["glm"] = "CADMageddon/vendor/glm"
+IncludeDir["entt"] = "CADMageddon/vendor/entt/include"
 
 group "Dependencies"
     include "CADMageddon/vendor/glfw"
@@ -54,7 +55,8 @@ project "CADMageddon"
 		"%{IncludeDir.GLFW}",
         "%{IncludeDir.Glad}",
         "%{IncludeDir.ImGui}",
-		"%{IncludeDir.glm}",
+        "%{IncludeDir.glm}",
+        "%{IncludeDir.entt}"
     }
 
     links 

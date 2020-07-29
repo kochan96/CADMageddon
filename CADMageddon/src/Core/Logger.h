@@ -1,9 +1,15 @@
 #pragma once
 #include <memory>
+
+#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
+#define SPDLOG_DEBUG_ON
+#define SPDLOG_TRACE_ON
 #include <spdlog\spdlog.h>
 
 namespace CADMageddon
 {
+
+
     class Logger
     {
     public:
@@ -15,10 +21,12 @@ namespace CADMageddon
     };
 
 
-#define LOG_TRACE(...) Logger::getAppLogger()->trace(__VA_ARGS__)
-#define LOG_INFO(...) Logger::getAppLogger()->info(__VA_ARGS__)
-#define LOG_WARNING(...) Logger::getAppLogger()->warn(__VA_ARGS__)
-#define LOG_ERROR(...) Logger::getAppLogger()->error(__VA_ARGS__)
-#define LOG_CRITITCAL(...) Logger::getAppLogger()->critical(__VA_ARGS__)
-    
+#define LOG_TRACE(...)     SPDLOG_LOGGER_TRACE(Logger::getAppLogger(),__VA_ARGS__)
+#define LOG_INFO(...)      SPDLOG_LOGGER_INFO(Logger::getAppLogger(),__VA_ARGS__)
+#define LOG_WARNING(...)   SPDLOG_LOGGER_WARN(Logger::getAppLogger(),__VA_ARGS__)
+#define LOG_ERROR(...)     SPDLOG_LOGGER_ERROR(Logger::getAppLogger(),__VA_ARGS__)
+#define LOG_CRITITCAL(...) SPDLOG_LOGGER_CRITICAL(Logger::getAppLogger(),__VA_ARGS__)
+
+#define LOG_ASSERT(x,...) if(!x) LOG_ERROR(__VA_ARGS__)
+
 }
