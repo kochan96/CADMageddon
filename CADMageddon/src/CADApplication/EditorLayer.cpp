@@ -39,8 +39,7 @@ namespace CADMageddon
         InitImGui();
         InitGridVertexArray();
 
-        m_SelectedEntity = m_Scene.CreateTorusEntity("Torus");
-
+        std::srand(0);
     }
 
     void EditorLayer::InitImGui()
@@ -127,7 +126,8 @@ namespace CADMageddon
 
         m_Scene.OnUpdate(ts);
 
-        Renderer::RenderGrid(m_GridVertexArray, glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
+        Renderer::RenderGrid(m_GridVertexArray, glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)), glm::vec4(1.0f));
+        
         Renderer::EndScene();
 
         m_Framebuffer->UnBind();
@@ -296,16 +296,20 @@ namespace CADMageddon
     void EditorLayer::RenderInspector()
     {
         ImGui::Begin("Inspector");
+        if (m_SelectedEntity)
+        {
 
-        auto& nameComponent = m_SelectedEntity.GetComponent<NameComponent>();
-        auto& torusComponent = m_SelectedEntity.GetComponent<TorusComponent>();
-        auto& transformComponent = m_SelectedEntity.GetComponent<TransformComponent>();
-        auto& colorComponent = m_SelectedEntity.GetComponent<ColorComponent>();
+            auto& nameComponent = m_SelectedEntity.GetComponent<NameComponent>();
+            auto& torusComponent = m_SelectedEntity.GetComponent<TorusComponent>();
+            auto& transformComponent = m_SelectedEntity.GetComponent<TransformComponent>();
+            auto& colorComponent = m_SelectedEntity.GetComponent<ColorComponent>();
 
-        NameComponentEditor(nameComponent);
-        TransformComponentEditor(transformComponent);
-        TorusComponentEditor(torusComponent);
-        ColorComponentEditor(colorComponent);
+            NameComponentEditor(nameComponent);
+            TransformComponentEditor(transformComponent);
+            TorusComponentEditor(torusComponent);
+            ColorComponentEditor(colorComponent);
+
+        }
 
         ImGui::End();
     }

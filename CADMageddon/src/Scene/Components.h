@@ -78,4 +78,13 @@ namespace CADMageddon
         ColorComponent(const glm::vec4& color)
             : Color(color) {}
     };
+
+    struct PointComponent
+    {
+        float Size = 0.1f;
+        PointComponent() = default;
+        PointComponent(const PointComponent&) = default;
+        PointComponent(float size)
+            : Size(size) {}
+    };
 }

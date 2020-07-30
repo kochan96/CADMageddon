@@ -28,6 +28,7 @@ namespace CADMageddon
     Scope<ShaderLibrary> Renderer::s_ShaderLibrary = CreateScope<ShaderLibrary>();
 
     static RenderTorusData s_RenderTorusData;
+    static RenderPointData s_RenderPointData;
 
     void Renderer::Init()
     {
@@ -43,6 +44,7 @@ namespace CADMageddon
         glEnable(GL_DEPTH_TEST);
 
         s_ShaderLibrary->Load("FlatColorShader", "assets/shaders/FlatColorShader.glsl");
+        s_ShaderLibrary->Load("PointsShader", "assets/shaders/PointsShader.glsl");
 
         s_RenderTorusData.TorusVertexArray = CreateRef<OpenGLVertexArray>();
         s_RenderTorusData.TorusVertexBuffer = CreateRef<OpenGLVertexBuffer>(s_RenderTorusData.MaxVertices * sizeof(Vertex));
@@ -55,6 +57,22 @@ namespace CADMageddon
         s_RenderTorusData.TorusVertexArray->AddVertexBuffer(s_RenderTorusData.TorusVertexBuffer);
         s_RenderTorusData.TorusVertexArray->SetIndexBuffer(s_RenderTorusData.TorusIndexBuffer);
         s_RenderTorusData.FlatColorShader = s_ShaderLibrary->Get("FlatColorShader");
+
+        s_RenderPointData.PointsVertexArray = CreateRef<OpenGLVertexArray>();
+
+        s_RenderPointData.PointsVertexBuffer = CreateRef<OpenGLVertexBuffer>(s_RenderPointData.MaxPoints * sizeof(VertexC));
+        s_RenderPointData.PointsVertexBuffer->SetLayout({
+            { ShaderDataType::Float3, "a_Position" },
+            { ShaderDataType::Float4, "a_Color" }
+            });
+
+        s_RenderPointData.PointsVertexArray->AddVertexBuffer(s_RenderPointData.PointsVertexBuffer);
+
+        s_RenderPointData.Shader = s_ShaderLibrary->Get("PointsShader");
+
+        s_RenderPointData.PointVertexBufferBase = new VertexC[s_RenderPointData.MaxPoints];
+
+        glPointSize(10.0f);
     }
 
     void Renderer::ShutDown()
@@ -69,10 +87,18 @@ namespace CADMageddon
     void Renderer::BeginScene(FPSCamera& camera)
     {
         s_SceneData->ViewProjectionMatrix = camera.GetViewProjectionMatrix();
+
+        s_RenderPointData.PointVertexBufferPtr = s_RenderPointData.PointVertexBufferBase;
+
+        s_RenderPointData.Count = 0;
     }
 
     void Renderer::EndScene()
     {
+        uint32_t dataSize = (uint32_t)((uint8_t*)s_RenderPointData.PointVertexBufferPtr - (uint8_t*)s_RenderPointData.PointVertexBufferBase);
+        s_RenderPointData.PointsVertexBuffer->SetData(s_RenderPointData.PointVertexBufferBase, dataSize);
+
+        Flush();
     }
 
     void Renderer::RenderTorus(const Mesh& mesh, const glm::mat4& transform, const glm::vec4& color)
@@ -109,19 +135,36 @@ namespace CADMageddon
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
 
-
-    void Renderer::Submit(const Ref<OpenGLShader>& shader, const Ref<OpenGLVertexArray>& vertexArray, const glm::mat4& transform, const glm::vec4& color)
+    void Renderer::RenderPoint(const PointComponent& pointComponent, const glm::mat4& transform, const glm::vec4& color)
     {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        if (s_RenderPointData.Count >= s_RenderPointData.MaxPoints)
+            FlushAndReset();
 
-        shader->Bind();
-        shader->SetMat4("u_ViewProjectionMatrix", s_SceneData->ViewProjectionMatrix);
-        shader->SetMat4("u_ModelMatrix", transform);
-        shader->SetFloat4("u_Color", color);
+        s_RenderPointData.PointVertexBufferPtr->Position = transform * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+        s_RenderPointData.PointVertexBufferPtr->Color = color;
+        s_RenderPointData.PointVertexBufferPtr++;
 
-        vertexArray->Bind();
-        glDrawElements(GL_LINES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
+        s_RenderPointData.Count++;
+    }
 
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    void Renderer::FlushAndReset()
+    {
+        EndScene();
+
+        s_RenderPointData.Count = 0;
+        s_RenderPointData.PointVertexBufferPtr = s_RenderPointData.PointVertexBufferBase;
+
+    }
+
+    void Renderer::Flush()
+    {
+        if (s_RenderPointData.Count == 0)
+            return;
+
+        s_RenderPointData.PointsVertexArray->Bind();
+        s_RenderPointData.Shader->Bind();
+        s_RenderPointData.Shader->SetMat4("u_ViewProjectionMatrix", s_SceneData->ViewProjectionMatrix);
+
+        glDrawArrays(GL_POINTS, 0, s_RenderPointData.Count);
     }
 }

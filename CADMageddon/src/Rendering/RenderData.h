@@ -11,6 +11,12 @@ namespace CADMageddon
         glm::vec3 Position;
     };
 
+    struct VertexC
+    {
+        glm::vec3 Position;
+        glm::vec4 Color;
+    };
+
     struct RenderTorusData
     {
         static const int MaxVertices = 20000;
@@ -20,5 +26,18 @@ namespace CADMageddon
         Ref<OpenGLVertexBuffer> TorusVertexBuffer;
         Ref<OpenGLIndexBuffer> TorusIndexBuffer;
         Ref<OpenGLShader> FlatColorShader;
+    };
+
+    struct RenderPointData
+    {
+        static const int MaxPoints = 20000;
+        Ref <OpenGLVertexArray> PointsVertexArray;
+        Ref<OpenGLVertexBuffer> PointsVertexBuffer;
+        Ref<OpenGLShader> Shader;
+
+        VertexC* PointVertexBufferBase = nullptr;
+        VertexC* PointVertexBufferPtr = nullptr;
+
+        int Count = 0;
     };
 }
