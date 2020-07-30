@@ -36,7 +36,7 @@ namespace CADMageddon
         float m_AspectRation;
         FPSCamera m_Camera;
 
-        glm::vec3 m_CameraPosition = { 0.0f,2.5f,5.0f };
+        glm::vec3 m_CameraPosition = { 0.0f,2.5f,15.0f };
         glm::vec2 m_CameraRotation = { 0.0f,0.0f };
         glm::vec2 lastMousePos = { 0.0f,0.0f };
 

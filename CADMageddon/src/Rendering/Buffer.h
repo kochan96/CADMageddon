@@ -126,10 +126,13 @@ namespace CADMageddon
     {
     public:
         OpenGLIndexBuffer(uint32_t* indices, uint32_t count);
+        OpenGLIndexBuffer(uint32_t count);
         ~OpenGLIndexBuffer();
 
         void Bind() const;
         void UnBind() const;
+
+        void SetIndices(const uint32_t* indices, uint32_t count);
 
         uint32_t GetCount() const { return m_Count; }
 

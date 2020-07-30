@@ -75,4 +75,64 @@ namespace CADMageddon
 
         return mesh;
     }
+
+    //glm::vec3 GetGridPoint(float majorRadius, float minorRadius, float u, float v)
+    //{
+    //    glm::vec3 point;
+
+    //    point.x = (majorRadius + minorRadius * cos(v)) * cos(u);
+    //    point.y = (majorRadius + minorRadius * cos(v)) * sin(u);
+    //    point.z = minorRadius * sin(v);
+
+    //    return point;
+    //}
+
+    Mesh ObjectFactory::CreateGridMesh(float width, float height)
+    {
+        Mesh mesh;
+        //auto widthDelta = width / spacingHorizontal;
+        //auto heightDelta = height / spacingVertical;
+
+        auto halfWidth = width / 2.0f;
+        auto halfHeight = height / 2.0f;
+
+        std::vector<glm::vec3> vertices;
+        for (auto u = -halfWidth; u <= halfWidth; u += 1.0f)
+        {
+            for (auto v = -halfHeight; v <= halfHeight; v += 1.0f)
+            {
+                vertices.push_back(glm::vec3(u, v, 0));
+            }
+        }
+
+        int WidthCount = static_cast<int>(width) + 1;
+        int HeightCount = static_cast<int>(height) + 1;
+
+        std::vector<uint32_t> indices;
+
+        for (int widthIndex = 0; widthIndex < WidthCount; widthIndex++)
+        {
+            for (int heightIndex = 0; heightIndex < HeightCount; heightIndex++)
+            {
+                int currentIndex = widthIndex * HeightCount + heightIndex;
+                int nextRowIndex = currentIndex + HeightCount;
+                int nextIndex = currentIndex + 1;
+                if (nextIndex < widthIndex * HeightCount + HeightCount)
+                {
+                    indices.push_back(currentIndex);
+                    indices.push_back(nextIndex);
+                }
+                if (nextRowIndex < WidthCount * HeightCount)
+                {
+                    indices.push_back(currentIndex);
+                    indices.push_back(nextRowIndex);
+                }
+            }
+        }
+
+        mesh.Vertices = vertices;
+        mesh.Indices = indices;
+
+        return mesh;
+    }
 }

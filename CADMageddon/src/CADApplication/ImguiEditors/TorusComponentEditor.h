@@ -4,9 +4,13 @@
 
 namespace CADMageddon
 {
-    bool TorusEditor(TorusComponent& component)
+    bool TorusComponentEditor(TorusComponent& component)
     {
-        ImGui::BeginChild("Torus");
+        const int maxMajorCount = 200;
+        const int maxMinorCount = 100;
+
+        ImGui::BeginGroup();
+        ImGui::Text("TorusComponent");
 
         bool changed = false;
         float value = component.MajorRadius;
@@ -27,7 +31,7 @@ namespace CADMageddon
         int count = component.MajorRadiusCount;
         if (ImGui::DragInt("MajorRadiusCount", &count))
         {
-            if (count > 2)
+            if (count > 2 && count <= maxMajorCount)
             {
                 component.MajorRadiusCount = count;
                 changed = true;
@@ -37,7 +41,7 @@ namespace CADMageddon
         count = component.MinorRadiusCount;
         if (ImGui::DragInt("MinorRadiusCount", &count))
         {
-            if (count > 2)
+            if (count > 2 && count <= maxMinorCount)
             {
                 component.MinorRadiusCount = count;
                 changed = true;
@@ -50,7 +54,7 @@ namespace CADMageddon
         }
 
 
-        ImGui::EndChild();
+        ImGui::EndGroup();
 
         return true;
     }

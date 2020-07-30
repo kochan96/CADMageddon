@@ -58,6 +58,16 @@ namespace CADMageddon
         glBufferData(GL_ARRAY_BUFFER, count * sizeof(uint32_t), indices, GL_STATIC_DRAW);
     }
 
+    OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t count)
+        :m_Count(count)
+    {
+        glGenBuffers(1, &m_RendererID);
+        // GL_ELEMENT_ARRAY_BUFFER is not valid without an actively bound VAO
+        // Binding with GL_ARRAY_BUFFER allows the data to be loaded regardless of VAO state. 
+        glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
+        glBufferData(GL_ARRAY_BUFFER, count * sizeof(uint32_t), nullptr, GL_DYNAMIC_DRAW);
+    }
+
     OpenGLIndexBuffer::~OpenGLIndexBuffer()
     {
         glDeleteBuffers(1, &m_RendererID);
@@ -71,5 +81,13 @@ namespace CADMageddon
     void OpenGLIndexBuffer::UnBind() const
     {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    }
+
+    void OpenGLIndexBuffer::SetIndices(const uint32_t* indices, uint32_t count)
+    {
+        glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, count * sizeof(uint32_t), indices);
+
+        m_Count = count;
     }
 }

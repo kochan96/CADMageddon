@@ -23,14 +23,16 @@ namespace CADMageddon
         void InitImGui();
         void ShutDownImGui();
         void RenderImGui();
+        void InitGridVertexArray();
+
+        void RenderMainMenuBar();
+        void RenderHierarchy();
+        void RenderInspector();
+        void RenderViewport();
 
     private:
-
-        Ref<OpenGLVertexArray> m_VertexArray;
-        Ref<OpenGLShader> m_Shader;
+        Ref<OpenGLVertexArray> m_GridVertexArray;
         Ref<OpenGLFramebuffer> m_Framebuffer;
-        Ref<OpenGLVertexBuffer> m_VertexBuffer;
-        Ref<OpenGLIndexBuffer> m_IndexBuffer;
 
         FPSCameraController m_CameraController;
 
@@ -42,6 +44,6 @@ namespace CADMageddon
 
 
         Scene m_Scene;
-        Entity m_Torus;
+        Entity m_SelectedEntity;
     };
 }

@@ -16,7 +16,7 @@
 #include "Scene/ObjectFactory.h"
 #include "Scene\Components.h"
 
-#include "ImguiEditors\TorusEditor.h"
+#include "ImguiEditors\ImGuiEditors.h"
 
 namespace CADMageddon
 {
@@ -28,95 +28,19 @@ namespace CADMageddon
     {
         glClearColor(0.39f, 0.58f, 0.93f, 1.0f);
         glEnable(GL_DEPTH_TEST);
-        glEnable(GL_MULTISAMPLE);
+        //glEnable(GL_MULTISAMPLE);
 
 
-        m_VertexArray = CreateRef<OpenGLVertexArray>();
-        m_Shader = CreateRef<OpenGLShader>("assets/shaders/FlatShader.glsl");
-
-        m_Torus = m_Scene.CreateEntity();
-        auto& torusComponent = m_Torus.AddComponent<TorusComponent>(1.0f, 0.3f, 30, 10);
-
-        m_VertexBuffer = CreateRef<OpenGLVertexBuffer>(&torusComponent.Mesh.Vertices[0].x, torusComponent.Mesh.Vertices.size() * 3 * sizeof(float));
-        m_VertexBuffer->SetLayout({
-            { ShaderDataType::Float3, "a_Position" }
-            });
-
-        m_VertexArray->AddVertexBuffer(m_VertexBuffer);
-        m_IndexBuffer = CreateRef<OpenGLIndexBuffer>(torusComponent.Mesh.Indices.data(), torusComponent.Mesh.Indices.size());
-
-        m_VertexArray->SetIndexBuffer(m_IndexBuffer);
         FramebufferSpecification fbSpec;
         fbSpec.Width = 1280;
         fbSpec.Height = 720;
         m_Framebuffer = CreateRef<OpenGLFramebuffer>(fbSpec);
 
         InitImGui();
+        InitGridVertexArray();
 
+        m_SelectedEntity = m_Scene.CreateTorusEntity("Torus");
 
-
-    }
-
-    void EditorLayer::OnDetach()
-    {
-        ShutDownImGui();
-    }
-
-    void EditorLayer::OnUpdate(Timestep ts)
-    {
-        // Resize
-        if (FramebufferSpecification spec = m_Framebuffer->GetSpecification();
-            m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // zero sized framebuffer is invalid
-            (spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
-        {
-            m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-            m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);
-        }
-
-
-        if (m_ViewportFocused)
-            m_CameraController.OnUpdate(ts);
-
-        //TODO do not create opengl objects every frame
-
-        auto& torusComponent = m_Torus.GetComponent<TorusComponent>();
-        m_VertexArray = CreateRef<OpenGLVertexArray>();
-        m_VertexBuffer = CreateRef<OpenGLVertexBuffer>(&torusComponent.Mesh.Vertices[0].x, torusComponent.Mesh.Vertices.size() * 3 * sizeof(float));
-        m_VertexBuffer->SetLayout({
-            { ShaderDataType::Float3, "a_Position" }
-            });
-        m_IndexBuffer = CreateRef<OpenGLIndexBuffer>(torusComponent.Mesh.Indices.data(), torusComponent.Mesh.Indices.size());
-        
-        m_VertexArray->AddVertexBuffer(m_VertexBuffer);
-        m_VertexArray->SetIndexBuffer(m_IndexBuffer);
-
-        m_Framebuffer->Bind();
-
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        Renderer::BeginScene(m_CameraController.GetCamera());
-        Renderer::Submit(m_Shader, m_VertexArray, glm::mat4(1.0f), glm::vec4(0.3f, 0.2f, 0.1f, 1.0f));
-
-        Renderer::EndScene();
-
-        m_Framebuffer->UnBind();
-
-        RenderImGui();
-    }
-
-    void EditorLayer::OnEvent(Event& event)
-    {
-        if (m_BlockEvents)
-        {
-            ImGuiIO& io = ImGui::GetIO();
-            event.Handled |= event.IsInCategory(EventCategoryMouse) & io.WantCaptureMouse;
-            event.Handled |= event.IsInCategory(EventCategoryKeyboard) & io.WantCaptureKeyboard;
-        }
-        else
-        {
-            m_CameraController.OnEvent(event);
-            event.Handled = false;
-        }
     }
 
     void EditorLayer::InitImGui()
@@ -151,6 +75,27 @@ namespace CADMageddon
         ImGui_ImplOpenGL3_Init("#version 410");
     }
 
+    void EditorLayer::InitGridVertexArray()
+    {
+        m_GridVertexArray = CreateRef<OpenGLVertexArray>();
+        auto gridMesh = ObjectFactory::CreateGridMesh(200.0f, 200.0f);
+
+        auto vertexBuffer = CreateRef<OpenGLVertexBuffer>(&gridMesh.Vertices[0].x, gridMesh.Vertices.size() * 3 * sizeof(float));
+        auto indexBuffer = CreateRef<OpenGLIndexBuffer>(gridMesh.Indices.data(), gridMesh.Indices.size());
+
+        vertexBuffer->SetLayout({
+            { ShaderDataType::Float3, "a_Position" }
+            });
+
+        m_GridVertexArray->AddVertexBuffer(vertexBuffer);
+        m_GridVertexArray->SetIndexBuffer(indexBuffer);
+    }
+
+    void EditorLayer::OnDetach()
+    {
+        ShutDownImGui();
+    }
+
     void EditorLayer::ShutDownImGui()
     {
         ImGui_ImplOpenGL3_Shutdown();
@@ -158,6 +103,52 @@ namespace CADMageddon
         ImGui::DestroyContext();
     }
 
+    void EditorLayer::OnUpdate(Timestep ts)
+    {
+        // Resize
+        if (FramebufferSpecification spec = m_Framebuffer->GetSpecification();
+            m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // zero sized framebuffer is invalid
+            (spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
+        {
+            m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+            m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);
+        }
+
+
+        if (m_ViewportFocused)
+            m_CameraController.OnUpdate(ts);
+
+
+        m_Framebuffer->Bind();
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        Renderer::BeginScene(m_CameraController.GetCamera());
+
+        m_Scene.OnUpdate(ts);
+
+        Renderer::RenderGrid(m_GridVertexArray, glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
+        Renderer::EndScene();
+
+        m_Framebuffer->UnBind();
+
+        RenderImGui();
+    }
+
+    void EditorLayer::OnEvent(Event& event)
+    {
+        if (m_BlockEvents)
+        {
+            ImGuiIO& io = ImGui::GetIO();
+            event.Handled |= event.IsInCategory(EventCategoryMouse) & io.WantCaptureMouse;
+            event.Handled |= event.IsInCategory(EventCategoryKeyboard) & io.WantCaptureKeyboard;
+        }
+        else
+        {
+            m_CameraController.OnEvent(event);
+            event.Handled = false;
+        }
+    }
 
     void EditorLayer::RenderImGui()
     {
@@ -209,34 +200,118 @@ namespace CADMageddon
             ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
         }
 
-        if (ImGui::BeginMenuBar())
+        RenderMainMenuBar();
+        RenderHierarchy();
+        RenderInspector();
+        RenderViewport();
+
+        //ImGui::ShowDemoWindow();
+
+
+
+        Application& app = Application::Get();
+        io.DisplaySize = ImVec2((float)app.GetMainWindow().GetWidth(), (float)app.GetMainWindow().GetHeight());
+
+        // Rendering
+        ImGui::Render();
+        //LOG_INFO(ImGui::GetIO().Framerate);
+
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        {
+            GLFWwindow* backup_current_context = glfwGetCurrentContext();
+            ImGui::UpdatePlatformWindows();
+            ImGui::RenderPlatformWindowsDefault();
+            glfwMakeContextCurrent(backup_current_context);
+        }
+    }
+
+    void EditorLayer::RenderMainMenuBar()
+    {
+        if (ImGui::BeginMainMenuBar())
         {
             if (ImGui::BeginMenu("File"))
             {
-                // Disabling fullscreen would allow the window to be moved to the front of other windows, 
-                // which we can't undo at the moment without finer window depth/z control.
-                //ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen_persistant);
+                if (ImGui::MenuItem("New"))
+                {
+                    //TODO
+                }
 
-                if (ImGui::MenuItem("Exit")) Application::Get().Close();
+                if (ImGui::MenuItem("Save"))
+                {
+                    //TODO
+                }
+
+                if (ImGui::MenuItem("Open"))
+                {
+                    //TODO
+                }
+
+                if (ImGui::MenuItem("Close"))
+                {
+                    Application::Get().Close();
+                }
+
                 ImGui::EndMenu();
             }
 
-            ImGui::EndMenuBar();
+            if (ImGui::BeginMenu("Primitives"))
+            {
+                if (ImGui::MenuItem("Add Torus"))
+                {
+                    m_Scene.CreateTorusEntity("Torus");
+                }
+
+                ImGui::EndMenu();
+            }
         }
 
+        ImGui::EndMainMenuBar();
+
+    }
+
+    void EditorLayer::RenderHierarchy()
+    {
         ImGui::Begin("Hierarchy");
 
-        ImGui::Text("Label");
+        int id = 0;
+        for (auto entity : m_Scene.GetEntities())
+        {
+            auto& nameComponent = entity.GetComponent<NameComponent>();
+
+            std::string label = nameComponent.Name + "##" + std::to_string(id);
+            if (ImGui::Selectable(label.c_str(), m_SelectedEntity == entity))
+            {
+                m_SelectedEntity = entity;
+            }
+
+            id++;
+        }
+
 
         ImGui::End();
+    }
 
+    void EditorLayer::RenderInspector()
+    {
         ImGui::Begin("Inspector");
 
-        auto& torusComponent = m_Torus.GetComponent<TorusComponent>();
-        TorusEditor(torusComponent);
+        auto& nameComponent = m_SelectedEntity.GetComponent<NameComponent>();
+        auto& torusComponent = m_SelectedEntity.GetComponent<TorusComponent>();
+        auto& transformComponent = m_SelectedEntity.GetComponent<TransformComponent>();
+        auto& colorComponent = m_SelectedEntity.GetComponent<ColorComponent>();
+
+        NameComponentEditor(nameComponent);
+        TransformComponentEditor(transformComponent);
+        TorusComponentEditor(torusComponent);
+        ColorComponentEditor(colorComponent);
 
         ImGui::End();
+    }
 
+    void EditorLayer::RenderViewport()
+    {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
         ImGui::Begin("Viewport");
 
@@ -254,20 +329,5 @@ namespace CADMageddon
 
 
         ImGui::End();
-
-        Application& app = Application::Get();
-        io.DisplaySize = ImVec2((float)app.GetMainWindow().GetWidth(), (float)app.GetMainWindow().GetHeight());
-
-        // Rendering
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-        {
-            GLFWwindow* backup_current_context = glfwGetCurrentContext();
-            ImGui::UpdatePlatformWindows();
-            ImGui::RenderPlatformWindowsDefault();
-            glfwMakeContextCurrent(backup_current_context);
-        }
     }
 }

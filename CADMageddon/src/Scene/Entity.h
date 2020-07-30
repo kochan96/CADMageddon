@@ -41,6 +41,11 @@ namespace CADMageddon
 
         operator bool() const { return m_EntityHandle != entt::null; }
 
+        bool operator==(const Entity& b) const
+        {
+            return m_EntityHandle == b.m_EntityHandle;
+        }
+
     private:
         entt::entity m_EntityHandle{ entt::null };
         Scene* m_Scene = nullptr;

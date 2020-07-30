@@ -18,6 +18,8 @@ namespace CADMageddon
         static void EndScene();
 
         static void Submit(const Ref<OpenGLShader>& shader, const Ref<OpenGLVertexArray>& vertexArray, const glm::mat4& transform = glm::mat4(1.0f), const glm::vec4& color = glm::vec4(1.0f));
+        static void RenderTorus(const Mesh& mesh, const glm::mat4& transform = glm::mat4(1.0f), const glm::vec4& color = glm::vec4(1.0f));
+        static void RenderGrid(const Ref<OpenGLVertexArray> vertexArray, const glm::mat4& transform = glm::mat4(1.0f), const glm::vec4& color = glm::vec4(1.0f));
 
     private:
         struct SceneData
@@ -26,5 +28,6 @@ namespace CADMageddon
         };
 
         static Scope<SceneData> s_SceneData;
+        static Scope<ShaderLibrary> s_ShaderLibrary;
     };
 }

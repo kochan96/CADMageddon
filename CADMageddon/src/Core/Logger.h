@@ -1,9 +1,5 @@
 #pragma once
 #include <memory>
-
-#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
-#define SPDLOG_DEBUG_ON
-#define SPDLOG_TRACE_ON
 #include <spdlog\spdlog.h>
 
 namespace CADMageddon
