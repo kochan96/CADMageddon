@@ -40,4 +40,17 @@ namespace CADMageddon
 
         int Count = 0;
     };
+
+    struct RenderLineData
+    {
+        static const int MaxLines = 20000;
+        Ref <OpenGLVertexArray> LinesVertexArray;
+        Ref<OpenGLVertexBuffer> LinesVertexBuffer;
+        Ref<OpenGLShader> Shader;
+
+        VertexC* LinesVertexBufferBase = nullptr;
+        VertexC* LinesVertexBufferPtr = nullptr;
+
+        int Count = 0;
+    };
 }

@@ -8,6 +8,8 @@ namespace CADMageddon
     class Entity
     {
     public:
+        static Entity Empty() { return Entity(); }
+
         Entity() = default;
         Entity(entt::entity handle, Scene* scene);
         Entity(const Entity& other) = default;
@@ -15,20 +17,25 @@ namespace CADMageddon
         template<typename T, typename... Args>
         T& AddComponent(Args&&... args)
         {
-            LOG_ASSERT(!HasComponent<T>(), "Entity already has component!");
+            LOG_ASSERT(!HasComponent<T>(), "Entity already has component!")
             return m_Scene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
         }
 
         template<typename T>
         T& GetComponent()
         {
-            LOG_ASSERT(HasComponent<T>(), "Entity does not have component!");
+            LOG_ASSERT(HasComponent<T>(), "Entity does not have component!")
             return m_Scene->m_Registry.get<T>(m_EntityHandle);
         }
 
         template<typename T>
         bool HasComponent()
         {
+            if (!m_Scene->m_Registry.valid(m_EntityHandle))
+            {
+                return false;
+            }
+
             return m_Scene->m_Registry.has<T>(m_EntityHandle);
         }
 
@@ -46,8 +53,15 @@ namespace CADMageddon
             return m_EntityHandle == b.m_EntityHandle;
         }
 
+        bool operator!=(const Entity& b) const
+        {
+            return m_EntityHandle != b.m_EntityHandle;
+        }
+
     private:
         entt::entity m_EntityHandle{ entt::null };
         Scene* m_Scene = nullptr;
+
+        friend class Scene;
     };
 }

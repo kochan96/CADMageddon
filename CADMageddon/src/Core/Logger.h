@@ -23,6 +23,6 @@ namespace CADMageddon
 #define LOG_ERROR(...)     SPDLOG_LOGGER_ERROR(Logger::getAppLogger(),__VA_ARGS__)
 #define LOG_CRITITCAL(...) SPDLOG_LOGGER_CRITICAL(Logger::getAppLogger(),__VA_ARGS__)
 
-#define LOG_ASSERT(x,...) if(!x) LOG_ERROR(__VA_ARGS__)
+#define LOG_ASSERT(x,...) if(!x){ LOG_ERROR(__VA_ARGS__); __debugbreak;}
 
 }

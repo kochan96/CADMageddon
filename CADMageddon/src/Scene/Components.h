@@ -81,10 +81,28 @@ namespace CADMageddon
 
     struct PointComponent
     {
-        float Size = 0.1f;
+        glm::vec3 Position = glm::vec3(0.0f, 0.0f, 0.0f);
         PointComponent() = default;
         PointComponent(const PointComponent&) = default;
-        PointComponent(float size)
-            : Size(size) {}
+        PointComponent(const glm::vec3& position)
+            : Position(position) {}
+    };
+
+    struct SceneSelectableComponent
+    {
+        bool IsSelected = false;
+        SceneSelectableComponent() = default;
+        SceneSelectableComponent(const SceneSelectableComponent&) = default;
+        SceneSelectableComponent(bool isSelected)
+            : IsSelected(isSelected) {}
+    };
+
+    struct HierarchyComponent
+    {
+        bool IsSelected = false;
+        HierarchyComponent() = default;
+        HierarchyComponent(const HierarchyComponent&) = default;
+        HierarchyComponent(bool isSelected)
+            : IsSelected(isSelected) {}
     };
 }

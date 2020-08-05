@@ -76,17 +76,6 @@ namespace CADMageddon
         return mesh;
     }
 
-    //glm::vec3 GetGridPoint(float majorRadius, float minorRadius, float u, float v)
-    //{
-    //    glm::vec3 point;
-
-    //    point.x = (majorRadius + minorRadius * cos(v)) * cos(u);
-    //    point.y = (majorRadius + minorRadius * cos(v)) * sin(u);
-    //    point.z = minorRadius * sin(v);
-
-    //    return point;
-    //}
-
     Mesh ObjectFactory::CreateGridMesh(float width, float height)
     {
         Mesh mesh;
