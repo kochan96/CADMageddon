@@ -17,7 +17,7 @@ namespace CADMageddon
         }
 
         glm::vec3 rotation = component.Rotation;
-        if (ImGui::DragFloat3("Rotation", &rotation.x, 1.0f, -180.0f, 180.0f))
+        if (ImGui::DragFloat3("Rotation", &rotation.x, 1.0f, -90.0f, 90.0f))
         {
             component.Rotation = rotation;
         }

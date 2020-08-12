@@ -26,6 +26,8 @@ namespace CADMageddon
     {
         m_Viewport = std::make_pair<glm::vec2, glm::vec2>(glm::vec2(0.0f), glm::vec2(0.0f));
         m_Scene = CreateRef<Scene>();
+        m_TransformationSystem = CreateRef<TransformationSystem>();
+        m_PickingSystem = CreateRef<PickingSystem>(m_TransformationSystem);
     }
 
     void EditorLayer::OnAttach()
@@ -48,16 +50,42 @@ namespace CADMageddon
         std::srand(0);
     }
 
-    bool EditorLayer::OnKeyPressedEvent(KeyPressedEvent& e)
+    bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& e)
+    {
+
+        if (!m_BlockEvents && m_EditorMode == EditorMode::Selection && e.GetMouseButton() == MouseCode::ButtonLeft)
+        {
+            auto pos = ImGui::GetIO().MousePos;
+            auto viewPortMousePosition = GetViewPortMousePosition(glm::vec2(pos.x, pos.y));
+            m_PickingSystem->Update(viewPortMousePosition, m_ViewportSize, *(m_Scene.get()), m_CameraController.GetCamera());
+        }
+
+        return false;
+    }
+
+    bool EditorLayer::OnKeyPressedEventViewport(KeyPressedEvent& e)
     {
         if (e.GetKeyCode() == CDM_KEY_SPACE)
         {
             m_Scene->CreatePointEntity(m_CursorController.getCursor().getPosition());
         }
 
-        if (e.GetKeyCode() == CDM_KEY_DELETE && m_SelectedEntity)
+        if (e.GetKeyCode() == CDM_KEY_DELETE)
         {
-            m_Scene->DestroyEntity(m_SelectedEntity);
+            m_TransformationSystem->ClearSelection();
+            m_Scene->DestroySelected();
+            m_SelectedEntity = Entity::Empty();
+        }
+
+        return false;
+    }
+
+    bool EditorLayer::OnKeyPressedEvent(KeyPressedEvent& e)
+    {
+        if (e.GetKeyCode() == CDM_KEY_DELETE)
+        {
+            m_TransformationSystem->ClearSelection();
+            m_Scene->DestroySelected();
             m_SelectedEntity = Entity::Empty();
         }
 
@@ -188,26 +216,12 @@ namespace CADMageddon
         if (m_ViewportFocused)
             m_CameraController.OnUpdate(ts);
 
-        if (!m_BlockEvents && Input::IsMouseButtonPressed(CDM_MOUSE_BUTTON_LEFT))
+        if (!m_BlockEvents && Input::IsMouseButtonPressed(CDM_MOUSE_BUTTON_LEFT) && m_EditorMode == EditorMode::MoveCursor)
         {
             auto pos = ImGui::GetIO().MousePos;
             auto viewPortMousePosition = GetViewPortMousePosition(glm::vec2(pos.x, pos.y));
 
-            switch (m_EditorMode)
-            {
-            case EditorMode::MoveCursor:
-            {
-                m_CursorController.Update(ts, m_CameraController.GetCamera(), viewPortMousePosition);
-                break;
-            }
-            case EditorMode::Selection:
-            {
-                m_PickingSystem.Update(viewPortMousePosition, m_ViewportSize, *(m_Scene.get()), m_CameraController.GetCamera());
-                break;
-            }
-            default:
-                break;
-            }
+            m_CursorController.Update(ts, m_CameraController.GetCamera(), viewPortMousePosition);
         }
 
         m_Framebuffer->Bind();
@@ -222,14 +236,22 @@ namespace CADMageddon
         const float cursorSize = 1.0f;
         RenderCursor(m_CursorController.getCursor().getPosition(), cursorSize);
 
-        auto pos = ImGui::GetIO().MousePos;
-        m_TransformationSystem.Update(m_Scene, m_CameraController.GetCamera(), GetNDCMousePosition({ pos.x,pos.y }));
+        if (IsEditMode())
+        {
+            auto pos = ImGui::GetIO().MousePos;
+            m_TransformationSystem->Update(m_Scene, m_CameraController.GetCamera(), GetNDCMousePosition({ pos.x,pos.y }));
+        }
 
         Renderer::EndScene();
 
         m_Framebuffer->UnBind();
 
         RenderImGui();
+    }
+
+    bool EditorLayer::IsEditMode() const
+    {
+        return m_EditorMode == EditorMode::Translation || m_EditorMode == EditorMode::Rotation || m_EditorMode == EditorMode::Scale;
     }
 
     void EditorLayer::OnEvent(Event& event)
@@ -239,12 +261,15 @@ namespace CADMageddon
             ImGuiIO& io = ImGui::GetIO();
             event.Handled |= event.IsInCategory(EventCategoryMouse) & io.WantCaptureMouse;
             event.Handled |= event.IsInCategory(EventCategoryKeyboard) & io.WantCaptureKeyboard;
+            EventDispatcher dispatcher(event);
+            dispatcher.Dispatch<KeyPressedEvent>(BIND_EVENT_FN(EditorLayer::OnKeyPressedEvent));
         }
         else
         {
             m_CameraController.OnEvent(event);
             EventDispatcher dispatcher(event);
-            dispatcher.Dispatch<KeyPressedEvent>(BIND_EVENT_FN(EditorLayer::OnKeyPressedEvent));
+            dispatcher.Dispatch<KeyPressedEvent>(BIND_EVENT_FN(EditorLayer::OnKeyPressedEventViewport));
+            dispatcher.Dispatch<MouseButtonPressedEvent>(BIND_EVENT_FN(EditorLayer::OnMouseButtonPressed));
         }
     }
 
@@ -428,7 +453,7 @@ namespace CADMageddon
             clearEntity.GetComponent<HierarchyComponent>().IsSelected = false;
         }
 
-        m_TransformationSystem.ClearSelection();
+        m_TransformationSystem->ClearSelection();
     }
 
     void EditorLayer::HandleSingleSelection(Entity& entity, HierarchyComponent& hierarchyComponent)
@@ -440,12 +465,12 @@ namespace CADMageddon
 
         if (hierarchyComponent.IsSelected)
         {
-            m_TransformationSystem.AddToSelected(entity);
+            m_TransformationSystem->AddToSelected(entity);
             m_SelectedEntity = entity;
         }
         else
         {
-            m_TransformationSystem.RemoveFromSelected(entity);
+            m_TransformationSystem->RemoveFromSelected(entity);
             m_SelectedEntity = Entity::Empty();
         }
     }
@@ -455,12 +480,13 @@ namespace CADMageddon
         hierarchyComponent.IsSelected = !hierarchyComponent.IsSelected;
         if (hierarchyComponent.IsSelected)
         {
-            m_TransformationSystem.AddToSelected(entity);
+            m_TransformationSystem->AddToSelected(entity);
         }
         else
         {
-            m_TransformationSystem.RemoveFromSelected(entity);
+            m_TransformationSystem->RemoveFromSelected(entity);
         }
+
 
         m_SelectedEntity = Entity::Empty();
     }
@@ -557,19 +583,19 @@ namespace CADMageddon
         if (ImGui::RadioButton("Translation", m_EditorMode == EditorMode::Translation))
         {
             m_EditorMode = EditorMode::Translation;
-            m_TransformationSystem.SetTransformationMode(TransformationMode::Translation);
+            m_TransformationSystem->SetTransformationMode(TransformationMode::Translation);
         }
 
         if (ImGui::RadioButton("Rotation", m_EditorMode == EditorMode::Rotation))
         {
             m_EditorMode = EditorMode::Rotation;
-            m_TransformationSystem.SetTransformationMode(TransformationMode::Rotation);
+            m_TransformationSystem->SetTransformationMode(TransformationMode::Rotation);
         }
 
         if (ImGui::RadioButton("Scale", m_EditorMode == EditorMode::Scale))
         {
             m_EditorMode = EditorMode::Scale;
-            m_TransformationSystem.SetTransformationMode(TransformationMode::Scaling);
+            m_TransformationSystem->SetTransformationMode(TransformationMode::Scaling);
         }
 
         ImGui::EndGroup();

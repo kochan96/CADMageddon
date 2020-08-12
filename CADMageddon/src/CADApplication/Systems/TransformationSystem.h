@@ -14,6 +14,12 @@ namespace CADMageddon
         Scaling
     };
 
+    enum class TransformationOrigin
+    {
+        Center,
+        Cursor,
+    };
+
     class TransformationSystem
     {
     public:
@@ -25,9 +31,13 @@ namespace CADMageddon
         void ClearSelection();
 
         TransformationMode GetTransformationMode() const { return m_TransformationMode; }
-        void SetTransformationMode(TransformationMode mode) { m_TransformationMode = mode; }
+        void SetTransformationMode(TransformationMode mode) { m_TransformationMode = mode; RecalculateParentAndChildrenTransform(); }
+
+        TransformationOrigin GetTransformationOrigin() const { return m_TransformationOrigin; }
+        void SetTransformationOrigin(TransformationOrigin origin) { m_TransformationOrigin = origin; }
 
     private:
+        TransformComponent& GetTransformToModify();
         void AssignParentTransform(TransformComponent& transform);
         void UnAssignParentTransform(TransformComponent& transform);
         void RecalculateParentAndChildrenTransform();
@@ -36,6 +46,7 @@ namespace CADMageddon
 
     private:
         TransformationMode m_TransformationMode;
+        TransformationOrigin m_TransformationOrigin;
         std::vector<Entity> m_SelectedEntities;
         Ref<TransformComponent> m_TransformationParent;
     };

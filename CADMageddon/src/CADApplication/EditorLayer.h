@@ -33,11 +33,16 @@ namespace CADMageddon
         void OnEvent(Event& event) override;
 
     private:
+        bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
+
+        bool OnKeyPressedEventViewport(KeyPressedEvent& e);
         bool OnKeyPressedEvent(KeyPressedEvent& e);
 
         void ClearSelection();
         void HandleSingleSelection(Entity& entity, HierarchyComponent& hierarchyComponent);
         void HandleMultiSelection(Entity& entity, HierarchyComponent& hierarchyComponent);
+
+        bool IsEditMode() const;
 
         void InitImGui();
         void ShutDownImGui();
@@ -74,8 +79,9 @@ namespace CADMageddon
         Entity m_SelectedEntity;
         EditorMode m_EditorMode = EditorMode::MoveCursor;
 
-        PickingSystem m_PickingSystem;
         CursorController m_CursorController;
-        TransformationSystem m_TransformationSystem;
+
+        Ref<PickingSystem> m_PickingSystem;
+        Ref<TransformationSystem> m_TransformationSystem;
     };
 }

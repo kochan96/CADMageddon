@@ -27,6 +27,27 @@ namespace CADMageddon
         m_Registry.destroy(entity.m_EntityHandle);
     }
 
+    void Scene::DestroySelected()
+    {
+        std::vector<Entity> selectedEntities;
+
+        for (auto entity : m_Entities)
+        {
+            if (entity.HasComponent<HierarchyComponent>())
+            {
+                if (entity.GetComponent<HierarchyComponent>().IsSelected)
+                {
+                    selectedEntities.push_back(entity);
+                }
+            }
+        }
+
+        for (auto entity : selectedEntities)
+        {
+            DestroyEntity(entity);
+        }
+    }
+
     Entity Scene::CreateEntity(const std::string& name)
     {
         Entity entity = { m_Registry.create(),this };

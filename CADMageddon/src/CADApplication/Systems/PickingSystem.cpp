@@ -1,7 +1,15 @@
 #include "PickingSystem.h"
 #include "Core\Input.h"
+#include "TransformationSystem.h"
+
 namespace CADMageddon
 {
+    PickingSystem::PickingSystem(Ref<TransformationSystem> transformationSystem)
+        :m_TransformationSystem(transformationSystem)
+    {
+
+    }
+
     void PickingSystem::Update(
         const glm::vec2& mousePosition,
         const glm::vec2& viewPortSize,
@@ -51,12 +59,22 @@ namespace CADMageddon
                 continue;
             }
 
-
             if (entity.HasComponent<HierarchyComponent>())
             {
                 auto& hierarchySelectable = entity.GetComponent<HierarchyComponent>();
                 hierarchySelectable.IsSelected = !hierarchySelectable.IsSelected;
+
+                if (hierarchySelectable.IsSelected)
+                {
+                    m_TransformationSystem->AddToSelected(entity);
+                }
+                else
+                {
+                    m_TransformationSystem->RemoveFromSelected(entity);
+                }
             }
+
+
         }
     }
 

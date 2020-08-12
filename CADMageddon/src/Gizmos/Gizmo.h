@@ -51,12 +51,13 @@ namespace CADMageddon
         int AxesCount = 3;
         int SelectedAxis = -1;
     };
-    
+
     struct TransformComponent;
 
     class Gizmo
     {
     public:
+        static bool IsActive() { return context->IsActive; }
         static void Manipulate(GizmoMode mode, TransformComponent& transform, const glm::mat4& cameraMatrix, glm::vec2 ndcMousePosition);
 
     private:

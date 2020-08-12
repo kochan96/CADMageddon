@@ -11,6 +11,7 @@ namespace CADMageddon
     {
         m_TransformationParent = CreateRef<TransformComponent>();
         m_TransformationMode = TransformationMode::Translation;
+        m_TransformationOrigin = TransformationOrigin::Cursor;
     }
 
     void TransformationSystem::Update(Ref<Scene> scene, FPSCamera& camera, glm::vec2 ndcMousePosition)
@@ -20,16 +21,18 @@ namespace CADMageddon
             return;
         }
 
+        auto& transformToManipulate = GetTransformToModify();
+
         switch (m_TransformationMode)
         {
             case TransformationMode::Translation:
-                Gizmo::Manipulate(GizmoMode::Translation, *m_TransformationParent, camera.GetViewProjectionMatrix(), ndcMousePosition);
+                Gizmo::Manipulate(GizmoMode::Translation, transformToManipulate, camera.GetViewProjectionMatrix(), ndcMousePosition);
                 break;
             case TransformationMode::Rotation:
-                Gizmo::Manipulate(GizmoMode::Rotation, *m_TransformationParent, camera.GetViewProjectionMatrix(), ndcMousePosition);
+                Gizmo::Manipulate(GizmoMode::Rotation, transformToManipulate, camera.GetViewProjectionMatrix(), ndcMousePosition);
                 break;
             case TransformationMode::Scaling:
-                Gizmo::Manipulate(GizmoMode::Scale, *m_TransformationParent, camera.GetViewProjectionMatrix(), ndcMousePosition);
+                Gizmo::Manipulate(GizmoMode::Scale, transformToManipulate, camera.GetViewProjectionMatrix(), ndcMousePosition);
                 break;
         }
 
@@ -65,10 +68,23 @@ namespace CADMageddon
         m_SelectedEntities.clear();
     }
 
+    TransformComponent& TransformationSystem::GetTransformToModify()
+    {
+
+        if (m_SelectedEntities.size() == 1)
+        {
+            return m_SelectedEntities[0].GetComponent<TransformComponent>();
+        }
+        else
+        {
+            return *m_TransformationParent;
+        }
+    }
+
     void TransformationSystem::AssignParentTransform(TransformComponent& transform)
     {
-        auto inverseParent = glm::inverse(m_TransformationParent->GetMatrix());
-        auto newLocal = transform.GetMatrix() * inverseParent;
+        auto inverseParent = glm::translate(glm::mat4(1.0f), -m_TransformationParent->Translation);
+        auto newLocal = inverseParent * transform.GetMatrix();
 
         glm::vec3 scale;
         glm::quat orientation;
@@ -87,6 +103,11 @@ namespace CADMageddon
 
     void TransformationSystem::UnAssignParentTransform(TransformComponent& transform)
     {
+        if (transform.Parent == nullptr)
+        {
+            return;
+        }
+
         auto newLocal = transform.GetMatrix();
 
         glm::vec3 scale;
@@ -111,13 +132,18 @@ namespace CADMageddon
             return;
         }
 
-        auto center = GetTransformCenter();
         for (auto selected : m_SelectedEntities)
         {
             auto& transformComponent = selected.GetComponent<TransformComponent>();
             UnAssignParentTransform(transformComponent);
         }
 
+        if (m_SelectedEntities.size() == 1)
+        {
+            return;
+        }
+
+        auto center = GetTransformCenter();
         m_TransformationParent->Translation = center;
         m_TransformationParent->Rotation = glm::vec3(0.0f, 0.0f, 0.0f);
         m_TransformationParent->Scale = glm::vec3(1.0f, 1.0f, 1.0f);

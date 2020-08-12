@@ -17,15 +17,15 @@ namespace CADMageddon
 
         switch (mode)
         {
-        case GizmoMode::Translation:
-            RenderTranslation(TransformComponent);
-            break;
-        case GizmoMode::Rotation:
-            RenderRotation(TransformComponent);
-            break;
-        case GizmoMode::Scale:
-            RenderScale(TransformComponent);
-            break;
+            case GizmoMode::Translation:
+                RenderTranslation(TransformComponent);
+                break;
+            case GizmoMode::Rotation:
+                RenderRotation(TransformComponent);
+                break;
+            case GizmoMode::Scale:
+                RenderScale(TransformComponent);
+                break;
         }
 
         if (!Input::IsMouseButtonPressed(CDM_MOUSE_BUTTON_LEFT))
@@ -37,15 +37,15 @@ namespace CADMageddon
 
         switch (mode)
         {
-        case GizmoMode::Translation:
-            ManipulateTranslation(TransformComponent, cameraMatrix, ndcMousePosition);
-            break;
-        case GizmoMode::Rotation:
-            ManipulateRotation(TransformComponent, cameraMatrix, ndcMousePosition);
-            break;
-        case GizmoMode::Scale:
-            ManipulateScale(TransformComponent, cameraMatrix, ndcMousePosition);
-            break;
+            case GizmoMode::Translation:
+                ManipulateTranslation(TransformComponent, cameraMatrix, ndcMousePosition);
+                break;
+            case GizmoMode::Rotation:
+                ManipulateRotation(TransformComponent, cameraMatrix, ndcMousePosition);
+                break;
+            case GizmoMode::Scale:
+                ManipulateScale(TransformComponent, cameraMatrix, ndcMousePosition);
+                break;
         }
 
     }
@@ -140,7 +140,7 @@ namespace CADMageddon
             Circle axis;
             axis.Radius = 1.0f;
             axis.Center = TransformComponent.Translation;
-            axis.orientation = TransformComponent.GetMatrix() * glm::vec4(context->Axes[i], 0.0f);
+            axis.orientation = /*TransformComponent.GetMatrix() */ glm::vec4(context->Axes[i], 0.0f);
             axis.orientation = glm::normalize(axis.orientation);
             float distance = ClosestDistanceLineCircle(cameraRay, axis, intersection);
             if (distance < minDistance)
@@ -175,7 +175,7 @@ namespace CADMageddon
         Circle axis;
         axis.Radius = 1.0f;
         axis.Center = TransformComponent.Translation;
-        axis.orientation = TransformComponent.GetMatrix() * glm::vec4(context->Axes[context->SelectedAxis], 0.0f);
+        axis.orientation = /*TransformComponent.GetMatrix() */ glm::vec4(context->Axes[context->SelectedAxis], 0.0f);
         axis.orientation = glm::normalize(axis.orientation);
 
         float distance = ClosestDistanceLineCircle(cameraRay, axis, intersection);
@@ -193,11 +193,13 @@ namespace CADMageddon
             angle = -angle;
         }
 
+
+
         glm::vec3 rotationDelta = glm::vec3(0.0f);
         rotationDelta[context->SelectedAxis] = glm::degrees(angle);
 
         TransformComponent.Rotation += rotationDelta;
-        TransformComponent.Rotation = glm::clamp(TransformComponent.Rotation, -180.0f, 180.0f);
+        TransformComponent.Rotation = glm::clamp(TransformComponent.Rotation, -90.0f, 90.0f);
 
         context->PreviousIntersection = context->CurrentIntersection;
         context->Center = TransformComponent.Translation;
@@ -211,7 +213,7 @@ namespace CADMageddon
             glm::vec3 axis_end = glm::vec3(0.f, 0.f, 0.f);
             axis_end[i] = 1.f;
 
-            axis_end = TransformComponent.GetMatrix() * glm::vec4(axis_end, 0.0f);
+            axis_end = /*TransformComponent.GetMatrix() */glm::vec4(axis_end, 0.0f);
             axis_end = glm::normalize(axis_end);
 
             glm::vec4 axis_color = glm::vec4(0.f, 0.f, 0.f, 1.0f);

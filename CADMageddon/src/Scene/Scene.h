@@ -14,6 +14,7 @@ namespace CADMageddon
         ~Scene();
 
         void DestroyEntity(Entity& entity);
+        void DestroySelected();
 
         Entity CreateEntity(const std::string& name = "Entity");
         Entity CreateTorusEntity(const glm::vec3& position, const std::string& name = "Torus");
