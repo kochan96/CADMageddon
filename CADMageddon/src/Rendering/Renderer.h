@@ -10,7 +10,8 @@ namespace CADMageddon
     class Renderer
     {
     public:
-        static constexpr glm::vec4 DEFAULT_COLOR = glm::vec4(0.05f, 0.08f, 0.71f, 1.0f);
+        //static constexpr glm::vec4 DEFAULT_COLOR = glm::vec4(0.05f, 0.08f, 0.71f, 1.0f);
+        static constexpr glm::vec4 DEFAULT_COLOR = glm::vec4(0.0f, 0.8f, 0.0f, 1.0f);
         static constexpr glm::vec4 SELECTED_COLOR = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f);
 
         static void Init();
@@ -20,7 +21,12 @@ namespace CADMageddon
         static void BeginScene(FPSCamera& camera);
         static void EndScene();
         static void RenderGrid(const Ref<OpenGLVertexArray>& vertexArray, const glm::mat4& transform, const glm::vec4& color = DEFAULT_COLOR);
-        static void RenderTorus(const Mesh& mesh, const glm::mat4& transform, const glm::vec4& color = DEFAULT_COLOR);
+        static void RenderTorus(
+            const std::vector<glm::vec3>& vertices,
+            const std::vector<uint32_t>& indices,
+            const glm::mat4& transform, 
+            const glm::vec4& color = DEFAULT_COLOR);
+
         static void RenderPoint(const glm::vec3& position, const glm::vec4& color = DEFAULT_COLOR);
         static void RenderLine(const glm::vec3& start, const glm::vec3& end, const glm::vec4& color = DEFAULT_COLOR);
 

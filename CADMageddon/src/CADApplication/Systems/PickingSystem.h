@@ -16,8 +16,8 @@ namespace CADMageddon
             const FPSCamera& camera);
 
     private:
-        void ClearSelection(Scene& scene);
-        bool IsInsideFrustum(const glm::vec3& position);
+        void ClearSelection(const Scene& scene);
+        bool IsInsideFrustum(const glm::vec4& position);
         bool IsInsidePickingArea(const glm::vec2& position, const glm::vec2& mousePosition, const float pickingDistance);
     };
 }

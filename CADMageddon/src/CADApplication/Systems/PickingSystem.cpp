@@ -1,4 +1,5 @@
 #include "PickingSystem.h"
+#include "Core\Input.h"
 namespace CADMageddon
 {
     void PickingSystem::Update(
@@ -7,13 +8,21 @@ namespace CADMageddon
         const Scene& m_Scene,
         const FPSCamera& camera)
     {
+
+        bool multiSelect = Input::IsKeyPressed(CDM_KEY_LEFT_CONTROL);
+
+        if (!multiSelect)
+        {
+            ClearSelection(m_Scene);
+        }
+
         const float pointSize = 5.0f;
 
         auto entities = m_Scene.GetEntities();
 
         for (auto entity : entities)
         {
-            if (!entity.HasComponent<SceneSelectableComponent>())
+            if (!entity.HasComponent<TransformComponent>())
             {
                 continue;
             }
@@ -24,12 +33,14 @@ namespace CADMageddon
             }
 
             auto& pointComponent = entity.GetComponent<PointComponent>();
-            auto frustumPosition = camera.GetViewProjectionMatrix() * glm::vec4(pointComponent.Position, 1.0f);
-            frustumPosition /= frustumPosition.w;
+            auto& transformComponent = entity.GetComponent<TransformComponent>();
+            auto frustumPosition = camera.GetViewProjectionMatrix() * transformComponent.GetMatrix() * glm::vec4(pointComponent.Point.GetPosition(), 1.0f);
             if (!IsInsideFrustum(frustumPosition))
             {
                 continue;
             }
+
+            frustumPosition /= frustumPosition.w;
 
             float x = (frustumPosition.x + 1.0f) * viewPortSize.x / 2;
             float y = (1.0f - frustumPosition.y) * viewPortSize.y / 2;
@@ -39,34 +50,24 @@ namespace CADMageddon
             {
                 continue;
             }
-          
-            auto& sceneSelectable = entity.GetComponent<SceneSelectableComponent>();
-            sceneSelectable.IsSelected = true;
+
 
             if (entity.HasComponent<HierarchyComponent>())
             {
                 auto& hierarchySelectable = entity.GetComponent<HierarchyComponent>();
-                hierarchySelectable.IsSelected = true;
+                hierarchySelectable.IsSelected = !hierarchySelectable.IsSelected;
             }
         }
     }
 
-    void PickingSystem::ClearSelection(Scene& scene)
+    void PickingSystem::ClearSelection(const Scene& scene)
     {
         for (auto entity : scene.GetEntities())
         {
-            if (!entity.HasComponent<SceneSelectableComponent>())
-            {
-                continue;
-            }
-
             if (!entity.HasComponent<PointComponent>())
             {
                 continue;
             }
-
-            auto& sceneSelectable = entity.GetComponent<SceneSelectableComponent>();
-            sceneSelectable.IsSelected = false;
 
             if (entity.HasComponent<HierarchyComponent>())
             {
@@ -76,19 +77,19 @@ namespace CADMageddon
         }
     }
 
-    bool PickingSystem::IsInsideFrustum(const glm::vec3& position)
+    bool PickingSystem::IsInsideFrustum(const glm::vec4& position)
     {
-        if (position.x > 1.0f || position.x < -1.0f)
+        if (position.x > position.w || position.x < -position.w)
         {
             return false;
         }
 
-        if (position.y > 1.0f || position.y < -1.0f)
+        if (position.y > position.w || position.y < -position.w)
         {
             return false;
         }
 
-        if (position.z > 1.0f || position.y < -1.0f)
+        if (position.z > position.w || position.y < -position.w)
         {
             return false;
         }

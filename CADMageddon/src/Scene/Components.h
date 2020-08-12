@@ -1,7 +1,9 @@
 #pragma once
 #include "cadpch.h"
+#include "Core\Base.h"
 #include <glm\glm.hpp>
 #include <glm\gtc\matrix_transform.hpp>
+#include "Point.h"
 #include "ObjectFactory.h"
 
 namespace CADMageddon
@@ -22,14 +24,20 @@ namespace CADMageddon
         float MinorRadius;
         int MajorRadiusCount;
         int MinorRadiusCount;
-        Mesh Mesh;
+
+        std::vector<Point> Points;
+        std::vector<uint32_t> Indices;
 
         TorusComponent() :TorusComponent(3.0f, 1.0f, 30, 10) {}
         TorusComponent(const TorusComponent&) = default;
         TorusComponent(float majorRadius, float minorRadius, int majorRadiusCount, int minorRadiusCount)
             :MajorRadius(majorRadius), MinorRadius(minorRadius),
-            MajorRadiusCount(majorRadiusCount), MinorRadiusCount(minorRadiusCount),
-            Mesh(ObjectFactory::CreateTorusMesh(majorRadius, minorRadius, majorRadiusCount, minorRadiusCount)) {}
+            MajorRadiusCount(majorRadiusCount), MinorRadiusCount(minorRadiusCount)
+        {
+            Mesh mesh = ObjectFactory::CreateTorusMesh(majorRadius, minorRadius, MajorRadiusCount, MinorRadiusCount);
+            Points.insert(Points.begin(), mesh.Vertices.begin(), mesh.Vertices.end());
+            Indices = mesh.Indices;
+        }
     };
 
     struct TransformComponent
@@ -38,7 +46,9 @@ namespace CADMageddon
         glm::vec3 Rotation = { 0.0f,0.0f,0.0f }; //TODO maybe quaternion or at least keep it in radians
         glm::vec3 Scale = { 1.0f,1.0f,1.0f };
 
-        operator glm::mat4()
+        Ref<TransformComponent> Parent = nullptr;
+
+        glm::mat4 GetMatrix()
         {
             auto translationMatrix = glm::translate(glm::mat4(1.0f), Translation);
             auto rotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(Rotation.y), glm::vec3(0.0f, 1.0f, 0.0f))
@@ -46,11 +56,18 @@ namespace CADMageddon
                 * glm::rotate(glm::mat4(1.0f), glm::radians(Rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
             auto scaleMatrix = glm::scale(glm::mat4(1.0f), Scale);
 
-            auto transform = translationMatrix * rotationMatrix * scaleMatrix;
+            glm::mat4 parentMatrix = glm::mat4(1.0f);
+
+            if (Parent)
+            {
+                parentMatrix = *Parent;
+            }
+
+            auto transform = parentMatrix * translationMatrix * rotationMatrix * scaleMatrix;
             return transform;
         }
 
-        operator const glm::mat4() const
+        const glm::mat4& GetMatrix() const
         {
             auto translationMatrix = glm::translate(glm::mat4(1.0f), Translation);
             auto rotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(Rotation.y), glm::vec3(0.0f, 1.0f, 0.0f))
@@ -58,8 +75,24 @@ namespace CADMageddon
                 * glm::rotate(glm::mat4(1.0f), glm::radians(Rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
             auto scaleMatrix = glm::scale(glm::mat4(1.0f), Scale);
 
-            auto transform = translationMatrix * rotationMatrix * scaleMatrix;
+            glm::mat4 parentMatrix = glm::mat4(1.0f);
+
+            if (Parent)
+            {
+                parentMatrix = *Parent;
+            }
+
+            auto transform = parentMatrix * translationMatrix * rotationMatrix * scaleMatrix;
             return transform;
+        }
+
+        operator glm::mat4()
+        {
+            return GetMatrix();
+        }
+        operator const glm::mat4() const
+        {
+            return GetMatrix();
         }
 
         TransformComponent() = default;
@@ -67,7 +100,6 @@ namespace CADMageddon
         TransformComponent(const glm::vec3& translation, const glm::vec3& rotation, const glm::vec3& scale)
             : Translation(translation), Rotation(rotation), Scale(scale) {}
     };
-
 
     struct ColorComponent
     {
@@ -81,20 +113,11 @@ namespace CADMageddon
 
     struct PointComponent
     {
-        glm::vec3 Position = glm::vec3(0.0f, 0.0f, 0.0f);
+        Point Point;
         PointComponent() = default;
         PointComponent(const PointComponent&) = default;
-        PointComponent(const glm::vec3& position)
-            : Position(position) {}
-    };
-
-    struct SceneSelectableComponent
-    {
-        bool IsSelected = false;
-        SceneSelectableComponent() = default;
-        SceneSelectableComponent(const SceneSelectableComponent&) = default;
-        SceneSelectableComponent(bool isSelected)
-            : IsSelected(isSelected) {}
+        PointComponent(std::string name, const glm::vec3& position)
+            : Point(position, name) {}
     };
 
     struct HierarchyComponent

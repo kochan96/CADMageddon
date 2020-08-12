@@ -7,16 +7,18 @@ namespace CADMageddon
 {
     void PointComponentEditor(PointComponent& component)
     {
-        ImGui::BeginGroup();
+        /*ImGui::BeginGroup();
 
         ImGui::Text("PointComponent");
 
-        glm::vec3 position = component.Position;
+
+
+        glm::vec3 position = component.Point.GetPosition();
         if (ImGui::DragFloat3("Position", &position.x, 0.1f))
         {
-            component.Position = position;
+            component.Point.SetPosition(position);
         }
 
-        ImGui::EndGroup();
+        ImGui::EndGroup();*/
     }
 }

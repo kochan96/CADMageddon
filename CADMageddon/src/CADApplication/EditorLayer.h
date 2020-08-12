@@ -10,6 +10,7 @@
 
 #include "Systems\PickingSystem.h"
 #include "Systems\CursorController.h"
+#include "Systems\TransformationSystem.h"
 
 namespace CADMageddon
 {
@@ -47,9 +48,11 @@ namespace CADMageddon
         void RenderHierarchy();
         void RenderInspector();
         void RenderViewport();
-        void RenderCursor(float size);
+        void RenderOptions();
+        void RenderCursor(glm::vec3 position, float size);
 
         glm::vec2 GetViewPortMousePosition(const glm::vec2& mousePosition);
+        glm::vec2 GetNDCMousePosition(const glm::vec2& mousePosition);
         bool IsMouseInsideViewPort();
 
     private:
@@ -67,11 +70,12 @@ namespace CADMageddon
         bool m_BlockEvents = false;
 
 
-        std::unique_ptr<Scene> m_Scene;
+        Ref<Scene> m_Scene;
         Entity m_SelectedEntity;
         EditorMode m_EditorMode = EditorMode::MoveCursor;
 
         PickingSystem m_PickingSystem;
         CursorController m_CursorController;
+        TransformationSystem m_TransformationSystem;
     };
 }

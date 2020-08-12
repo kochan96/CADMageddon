@@ -18,19 +18,21 @@
 #include "Scene\Components.h"
 
 #include "ImguiEditors\ImGuiEditors.h"
+#include "Gizmos\Gizmo.h"
 
 namespace CADMageddon
 {
     EditorLayer::EditorLayer(const std::string& debugName) :Layer(debugName), m_CameraController(45.0f, 1280.0f / 720.0f, 0.1f, 100.0f)
     {
         m_Viewport = std::make_pair<glm::vec2, glm::vec2>(glm::vec2(0.0f), glm::vec2(0.0f));
-        m_Scene = std::make_unique<Scene>();
+        m_Scene = CreateRef<Scene>();
     }
 
     void EditorLayer::OnAttach()
     {
         //glClearColor(0.39f, 0.58f, 0.93f, 1.0f);
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+        //glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glEnable(GL_DEPTH_TEST);
         //glEnable(GL_MULTISAMPLE);
 
@@ -124,7 +126,7 @@ namespace CADMageddon
         colors[ImGuiCol_NavHighlight] = ImVec4(0.60f, 0.6f, 0.6f, 1.0f);
         colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.0f, 1.0f, 1.0f, 0.7f);
 
-        
+
 
         // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
         ImGuiStyle& style = ImGui::GetStyle();
@@ -214,16 +216,14 @@ namespace CADMageddon
 
         Renderer::BeginScene(m_CameraController.GetCamera());
 
-
         m_Scene->OnUpdate(ts);
 
         Renderer::RenderGrid(m_GridVertexArray, glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)), glm::vec4(1.0f));
+        const float cursorSize = 1.0f;
+        RenderCursor(m_CursorController.getCursor().getPosition(), cursorSize);
 
-        if (m_SelectedEntity)
-        {
-            const float cursorSize = 1.0f;
-            // RenderCursor(cursorSize);
-        }
+        auto pos = ImGui::GetIO().MousePos;
+        m_TransformationSystem.Update(m_Scene, m_CameraController.GetCamera(), GetNDCMousePosition({ pos.x,pos.y }));
 
         Renderer::EndScene();
 
@@ -302,10 +302,9 @@ namespace CADMageddon
         RenderHierarchy();
         RenderInspector();
         RenderViewport();
+        RenderOptions();
 
         //ImGui::ShowDemoWindow();
-
-
 
         Application& app = Application::Get();
         io.DisplaySize = ImVec2((float)app.GetMainWindow().GetWidth(), (float)app.GetMainWindow().GetHeight());
@@ -369,21 +368,6 @@ namespace CADMageddon
 
                 ImGui::EndMenu();
             }
-
-            if (ImGui::BeginMenu("Mode"))
-            {
-                if (ImGui::MenuItem("MoveCursor", (const char*)0, m_EditorMode == EditorMode::MoveCursor))
-                {
-                    m_EditorMode = EditorMode::MoveCursor;
-                }
-
-                if (ImGui::MenuItem("Selection", (const char*)0, m_EditorMode == EditorMode::Selection))
-                {
-                    m_EditorMode = EditorMode::Selection;
-                }
-
-                ImGui::EndMenu();
-            }
         }
 
         ImGui::EndMainMenuBar();
@@ -442,11 +426,9 @@ namespace CADMageddon
         for (auto clearEntity : m_Scene->GetEntities())
         {
             clearEntity.GetComponent<HierarchyComponent>().IsSelected = false;
-            if (clearEntity.HasComponent<SceneSelectableComponent>())
-            {
-                clearEntity.GetComponent<SceneSelectableComponent>().IsSelected = false;
-            }
         }
+
+        m_TransformationSystem.ClearSelection();
     }
 
     void EditorLayer::HandleSingleSelection(Entity& entity, HierarchyComponent& hierarchyComponent)
@@ -456,18 +438,14 @@ namespace CADMageddon
 
         hierarchyComponent.IsSelected = !isSelectedPreviousValue;
 
-        if (entity.HasComponent<SceneSelectableComponent>())
-        {
-            auto& sceneSelectableComponent = entity.GetComponent<SceneSelectableComponent>();
-            sceneSelectableComponent.IsSelected = hierarchyComponent.IsSelected;
-        }
-
         if (hierarchyComponent.IsSelected)
         {
+            m_TransformationSystem.AddToSelected(entity);
             m_SelectedEntity = entity;
         }
         else
         {
+            m_TransformationSystem.RemoveFromSelected(entity);
             m_SelectedEntity = Entity::Empty();
         }
     }
@@ -475,11 +453,13 @@ namespace CADMageddon
     void EditorLayer::HandleMultiSelection(Entity& entity, HierarchyComponent& hierarchyComponent)
     {
         hierarchyComponent.IsSelected = !hierarchyComponent.IsSelected;
-
-        if (entity.HasComponent<SceneSelectableComponent>())
+        if (hierarchyComponent.IsSelected)
         {
-            auto& sceneSelectableComponent = entity.GetComponent<SceneSelectableComponent>();
-            sceneSelectableComponent.IsSelected = hierarchyComponent.IsSelected;
+            m_TransformationSystem.AddToSelected(entity);
+        }
+        else
+        {
+            m_TransformationSystem.RemoveFromSelected(entity);
         }
 
         m_SelectedEntity = Entity::Empty();
@@ -556,13 +536,53 @@ namespace CADMageddon
         ImGui::End();
     }
 
-    void EditorLayer::RenderCursor(float cursorSize)
+    void EditorLayer::RenderOptions()
+    {
+        ImGui::Begin("Options");
+
+        ImGui::BeginGroup();
+
+        ImGui::Text("Mode");
+
+        if (ImGui::RadioButton("MoveCursor", m_EditorMode == EditorMode::MoveCursor))
+        {
+            m_EditorMode = EditorMode::MoveCursor;
+        }
+
+        if (ImGui::RadioButton("Selection", m_EditorMode == EditorMode::Selection))
+        {
+            m_EditorMode = EditorMode::Selection;
+        }
+
+        if (ImGui::RadioButton("Translation", m_EditorMode == EditorMode::Translation))
+        {
+            m_EditorMode = EditorMode::Translation;
+            m_TransformationSystem.SetTransformationMode(TransformationMode::Translation);
+        }
+
+        if (ImGui::RadioButton("Rotation", m_EditorMode == EditorMode::Rotation))
+        {
+            m_EditorMode = EditorMode::Rotation;
+            m_TransformationSystem.SetTransformationMode(TransformationMode::Rotation);
+        }
+
+        if (ImGui::RadioButton("Scale", m_EditorMode == EditorMode::Scale))
+        {
+            m_EditorMode = EditorMode::Scale;
+            m_TransformationSystem.SetTransformationMode(TransformationMode::Scaling);
+        }
+
+        ImGui::EndGroup();
+
+        ImGui::End();
+    }
+
+    void EditorLayer::RenderCursor(glm::vec3 position, float cursorSize)
     {
         constexpr glm::vec4 redColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
         constexpr glm::vec4 greenColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
         constexpr glm::vec4 blueColor = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
 
-        auto position = m_SelectedEntity.GetComponent<TransformComponent>().Translation;
         auto startX = glm::vec3(position.x - cursorSize, position.y, position.z);
         auto endX = glm::vec3(position.x + cursorSize, position.y, position.z);
 
@@ -576,6 +596,17 @@ namespace CADMageddon
         Renderer::RenderLine(startX, endX, redColor);
         Renderer::RenderLine(startY, endY, greenColor);
         Renderer::RenderLine(startZ, endZ, blueColor);
+    }
+
+    glm::vec2 EditorLayer::GetNDCMousePosition(const glm::vec2& mousePosition)
+    {
+        glm::vec2 viewPortMousePosition = GetViewPortMousePosition(mousePosition);
+        glm::vec2 ndc;
+
+        ndc.x = (viewPortMousePosition.x * 2.0f) / m_ViewportSize.x - 1.0f;
+        ndc.y = 1.0f - (viewPortMousePosition.y * 2.0f) / m_ViewportSize.y;
+
+        return ndc;
     }
 
     glm::vec2 EditorLayer::GetViewPortMousePosition(const glm::vec2& mousePosition)

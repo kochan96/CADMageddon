@@ -39,6 +39,9 @@ namespace CADMageddon
 
         glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, NULL, GL_FALSE);
 
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LEQUAL);
+
         /*glEnable(GL_BLEND);
         glBlendFunc(GL_DST_ALPHA, GL_ALWA);*/
 
@@ -121,7 +124,7 @@ namespace CADMageddon
         s_RenderPointData.Count = 0;
 
         s_RenderLineData.LinesVertexBufferPtr = s_RenderLineData.LinesVertexBufferBase;
-        s_RenderPointData.Count = 0;
+        s_RenderLineData.Count = 0;
     }
 
     void Renderer::EndScene()
@@ -137,8 +140,13 @@ namespace CADMageddon
         FlushLines();
     }
 
-    void Renderer::RenderTorus(const Mesh& mesh, const glm::mat4& transform, const glm::vec4& color)
+    void Renderer::RenderTorus(
+        const std::vector<glm::vec3>& vertices,
+        const::std::vector<uint32_t>& indices,
+        const glm::mat4& transform,
+        const glm::vec4& color)
     {
+
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
         s_RenderTorusData.FlatColorShader->Bind();
@@ -147,15 +155,15 @@ namespace CADMageddon
         s_RenderTorusData.FlatColorShader->SetFloat4("u_Color", color);
 
         s_RenderTorusData.TorusVertexArray->Bind();
-        s_RenderTorusData.TorusVertexBuffer->SetData(&mesh.Vertices[0].x, mesh.Vertices.size() * sizeof(Vertex));
-        s_RenderTorusData.TorusIndexBuffer->SetIndices(mesh.Indices.data(), mesh.Indices.size());
+        s_RenderTorusData.TorusVertexBuffer->SetData(&vertices[0].x, vertices.size() * sizeof(Vertex));
+        s_RenderTorusData.TorusIndexBuffer->SetIndices(indices.data(), indices.size());
 
         glDrawElements(GL_LINES, s_RenderTorusData.TorusVertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
 
-    
+
 
     void Renderer::RenderGrid(const Ref<OpenGLVertexArray>& vertexArray, const glm::mat4& transform, const glm::vec4& color)
     {
@@ -202,7 +210,7 @@ namespace CADMageddon
 
         s_RenderLineData.Count++;
     }
-   
+
 
     void Renderer::FlushAndResetPoints()
     {

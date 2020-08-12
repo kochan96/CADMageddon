@@ -1,6 +1,7 @@
 #pragma once
 #include <imgui.h>
 #include "Scene\Components.h"
+#include "misc\cpp\imgui_stdlib.h"
 
 namespace CADMageddon
 {
@@ -50,7 +51,37 @@ namespace CADMageddon
 
         if (changed)
         {
-            component.Mesh = ObjectFactory::CreateTorusMesh(component.MajorRadius, component.MinorRadius, component.MajorRadiusCount, component.MinorRadiusCount);
+            Mesh mesh = ObjectFactory::CreateTorusMesh(
+                component.MajorRadius,
+                component.MinorRadius,
+                component.MajorRadiusCount,
+                component.MinorRadiusCount);
+
+            component.Points.clear();
+            component.Points.insert(component.Points.begin(), mesh.Vertices.begin(), mesh.Vertices.end());
+            component.Indices = mesh.Indices;
+        }
+
+
+        ImGui::Separator();
+
+        if (ImGui::TreeNode("TorusPoints"))
+        {
+            int id = 0;
+
+            for (auto point : component.Points)
+            {
+                auto name = point.GetName();
+                ImGui::PushID(id++);
+                if (ImGui::InputText("Name", &name))
+                {
+                    point.SetName(name);
+                }
+
+                ImGui::PopID();
+            }
+
+            ImGui::TreePop();
         }
 
 

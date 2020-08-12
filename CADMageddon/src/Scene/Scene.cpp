@@ -44,16 +44,15 @@ namespace CADMageddon
         torusEntity.AddComponent<TorusComponent>();
         torusEntity.AddComponent<TransformComponent>().Translation = position;
         torusEntity.AddComponent<HierarchyComponent>();
-        torusEntity.AddComponent<SceneSelectableComponent>();
         return torusEntity;
     }
 
     Entity Scene::CreatePointEntity(const glm::vec3& position, const std::string& name)
     {
         auto pointEntity = CreateEntity(name);
-        pointEntity.AddComponent<PointComponent>().Position = position;
+        pointEntity.AddComponent<PointComponent>().Point = Point(glm::vec3(0.0f, 0.0f, 0.0f), name);
+        pointEntity.AddComponent<TransformComponent>().Translation = position;
         pointEntity.AddComponent<HierarchyComponent>();
-        pointEntity.AddComponent<SceneSelectableComponent>();
         return pointEntity;
     }
 
@@ -62,23 +61,37 @@ namespace CADMageddon
         for (auto entity : m_Entities)
         {
             auto color = Renderer::DEFAULT_COLOR;
-            if (entity.HasComponent<SceneSelectableComponent>() && entity.GetComponent<SceneSelectableComponent>().IsSelected)
+
+            if (entity.HasComponent<HierarchyComponent>())
             {
-                color = Renderer::SELECTED_COLOR;
+                if (entity.GetComponent<HierarchyComponent>().IsSelected)
+                {
+                    color = Renderer::SELECTED_COLOR;
+                }
             }
+
 
             if (entity.HasComponent<TorusComponent>() && entity.HasComponent<TransformComponent>())
             {
                 auto& torusComponent = entity.GetComponent<TorusComponent>();
                 auto& transformComponent = entity.GetComponent<TransformComponent>();
 
-                Renderer::RenderTorus(torusComponent.Mesh, transformComponent, color);
+                std::vector<glm::vec3> points;
+                for (auto point : torusComponent.Points)
+                {
+                    points.push_back(point.GetPosition());
+                }
+
+                Renderer::RenderTorus(points, torusComponent.Indices, transformComponent, color);
             }
 
-            if (entity.HasComponent<PointComponent>())
+            if (entity.HasComponent<PointComponent>() && entity.HasComponent<TransformComponent>())
             {
                 auto& pointComponent = entity.GetComponent<PointComponent>();
-                Renderer::RenderPoint(pointComponent.Position, color);
+                auto& transformComponent = entity.GetComponent<TransformComponent>();
+                glm::vec3 position = transformComponent.GetMatrix() * glm::vec4(pointComponent.Point.GetPosition(), 1.0f);
+
+                Renderer::RenderPoint(position, color);
             }
         }
     }
