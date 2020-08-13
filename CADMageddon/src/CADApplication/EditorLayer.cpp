@@ -17,7 +17,6 @@
 #include "Scene/ObjectFactory.h"
 #include "Scene\Components.h"
 
-#include "ImguiEditors\ImGuiEditors.h"
 #include "Gizmos\Gizmo.h"
 
 namespace CADMageddon
@@ -27,8 +26,14 @@ namespace CADMageddon
     {
         m_Viewport = std::make_pair<glm::vec2, glm::vec2>(glm::vec2(0.0f), glm::vec2(0.0f));
         m_Scene = CreateRef<Scene>();
-        m_TransformationSystem = CreateRef<TransformationSystem>();
+        m_TransformationSystem = CreateRef<TransformationSystem>(m_CursorController.getCursor());
         m_PickingSystem = CreateRef<PickingSystem>(m_TransformationSystem);
+        m_HierarchyPanel = CreateRef<HierarchyPanel>(m_Scene);
+
+        m_HierarchyPanel->SetOnSelectionChangedCallback(std::bind(&EditorLayer::OnSelectionChanged, this, std::placeholders::_1, std::placeholders::_2));
+        m_HierarchyPanel->SetOnSelectionClearedCallback(std::bind(&EditorLayer::OnSelectionCleared, this, std::placeholders::_1));
+
+        m_InspectorPanel = CreateRef<InspectorPanel>();
     }
 
     void EditorLayer::OnAttach()
@@ -68,14 +73,14 @@ namespace CADMageddon
     {
         if (e.GetKeyCode() == CDM_KEY_SPACE)
         {
-            m_Scene->CreatePointEntity(m_CursorController.getCursor().getPosition());
+            m_Scene->CreatePointEntity(m_CursorController.getCursor()->getPosition());
         }
 
         if (e.GetKeyCode() == CDM_KEY_DELETE)
         {
             m_TransformationSystem->ClearSelection();
+            m_InspectorPanel->Clear();
             m_Scene->DestroySelected();
-            m_SelectedEntity = Entity::Empty();
         }
 
         return false;
@@ -86,11 +91,31 @@ namespace CADMageddon
         if (e.GetKeyCode() == CDM_KEY_DELETE)
         {
             m_TransformationSystem->ClearSelection();
+            m_InspectorPanel->Clear();
             m_Scene->DestroySelected();
-            m_SelectedEntity = Entity::Empty();
         }
 
         return false;
+    }
+
+    void EditorLayer::OnSelectionChanged(bool selected, Entity entity)
+    {
+        if (selected)
+        {
+            m_TransformationSystem->AddToSelected(entity);
+            m_InspectorPanel->Add(entity);
+        }
+        else
+        {
+            m_TransformationSystem->RemoveFromSelected(entity);
+            m_InspectorPanel->Remove(entity);
+        }
+    }
+
+    void EditorLayer::OnSelectionCleared(std::vector<Entity> cleared)
+    {
+        m_TransformationSystem->ClearSelection();
+        m_InspectorPanel->Clear();
     }
 
     void EditorLayer::InitImGui()
@@ -217,7 +242,7 @@ namespace CADMageddon
         if (m_ViewportFocused)
         {
             m_CameraController.OnUpdate(ts);
-            m_CursorController.UpdateWorldPosition(m_CursorController.getCursor().getPosition());
+            m_CursorController.UpdateWorldPosition(m_CursorController.getCursor()->getPosition());
         }
 
         if (!m_BlockEvents && Input::IsMouseButtonPressed(CDM_MOUSE_BUTTON_LEFT) && m_EditorMode == EditorMode::MoveCursor)
@@ -238,7 +263,7 @@ namespace CADMageddon
 
         Renderer::RenderGrid(m_GridVertexArray, glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)), glm::vec4(1.0f));
         const float cursorSize = 1.0f;
-        RenderCursor(m_CursorController.getCursor().getPosition(), cursorSize);
+        RenderCursor(m_CursorController.getCursor()->getPosition(), cursorSize);
 
         if (IsEditMode())
         {
@@ -328,8 +353,8 @@ namespace CADMageddon
         }
 
         RenderMainMenuBar();
-        RenderHierarchy();
-        RenderInspector();
+        m_HierarchyPanel->Render();
+        m_InspectorPanel->Render();
         RenderViewport();
         RenderOptions();
 
@@ -362,6 +387,8 @@ namespace CADMageddon
                 if (ImGui::MenuItem("New"))
                 {
                     m_Scene.reset(new Scene());
+                    m_HierarchyPanel->SetScene(m_Scene);
+                    m_TransformationSystem->ClearSelection();
                 }
 
                 if (ImGui::MenuItem("Save"))
@@ -386,12 +413,17 @@ namespace CADMageddon
             {
                 if (ImGui::MenuItem("Add Torus"))
                 {
-                    m_Scene->CreateTorusEntity(m_CursorController.getCursor().getPosition());
+                    m_Scene->CreateTorusEntity(m_CursorController.getCursor()->getPosition());
                 }
 
                 if (ImGui::MenuItem("Add Point"))
                 {
-                    m_Scene->CreatePointEntity(m_CursorController.getCursor().getPosition());
+                    m_Scene->CreatePointEntity(m_CursorController.getCursor()->getPosition());
+                }
+
+                if (ImGui::MenuItem("Add BezierC0"))
+                {
+                    m_Scene->CreateBezierC0Entity();
                 }
 
 
@@ -401,132 +433,6 @@ namespace CADMageddon
 
         ImGui::EndMainMenuBar();
 
-    }
-
-    void EditorLayer::RenderHierarchy()
-    {
-        ImGui::Begin("Hierarchy");
-
-        int id = 0;
-        for (auto entity : m_Scene->GetEntities())
-        {
-            if (!entity.HasComponent<NameComponent>() || !entity.HasComponent<HierarchyComponent>())
-            {
-                continue;
-            }
-
-            auto& nameComponent = entity.GetComponent<NameComponent>();
-            auto& hierarchyComponent = entity.GetComponent<HierarchyComponent>();
-
-            static ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
-
-            // Disable the default "open on single-click behavior" + set Selected flag according to our selection.
-            ImGuiTreeNodeFlags node_flags = base_flags;
-            if (hierarchyComponent.IsSelected)
-            {
-                node_flags |= ImGuiTreeNodeFlags_Selected;
-            }
-
-            node_flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
-            bool node_open = ImGui::TreeNodeEx((void*)(intptr_t)id, node_flags, nameComponent.Name.c_str());
-            if (ImGui::IsItemClicked())
-            {
-                if (ImGui::GetIO().KeyCtrl)
-                {
-                    HandleMultiSelection(entity, hierarchyComponent);
-                }
-                else
-                {
-                    HandleSingleSelection(entity, hierarchyComponent);
-                }
-            }
-        }
-
-
-        id++;
-
-
-        ImGui::End();
-    }
-
-
-    void EditorLayer::ClearSelection()
-    {
-        for (auto clearEntity : m_Scene->GetEntities())
-        {
-            clearEntity.GetComponent<HierarchyComponent>().IsSelected = false;
-        }
-
-        m_TransformationSystem->ClearSelection();
-    }
-
-    void EditorLayer::HandleSingleSelection(Entity& entity, HierarchyComponent& hierarchyComponent)
-    {
-        bool isSelectedPreviousValue = hierarchyComponent.IsSelected;
-        ClearSelection();
-
-        hierarchyComponent.IsSelected = !isSelectedPreviousValue;
-
-        if (hierarchyComponent.IsSelected)
-        {
-            m_TransformationSystem->AddToSelected(entity);
-            m_SelectedEntity = entity;
-        }
-        else
-        {
-            m_TransformationSystem->RemoveFromSelected(entity);
-            m_SelectedEntity = Entity::Empty();
-        }
-    }
-
-    void EditorLayer::HandleMultiSelection(Entity& entity, HierarchyComponent& hierarchyComponent)
-    {
-        hierarchyComponent.IsSelected = !hierarchyComponent.IsSelected;
-        if (hierarchyComponent.IsSelected)
-        {
-            m_TransformationSystem->AddToSelected(entity);
-        }
-        else
-        {
-            m_TransformationSystem->RemoveFromSelected(entity);
-        }
-
-
-        m_SelectedEntity = Entity::Empty();
-    }
-
-    void EditorLayer::RenderInspector()
-    {
-        ImGui::Begin("Inspector");
-        if (m_SelectedEntity)
-        {
-            if (m_SelectedEntity.HasComponent<NameComponent>())
-            {
-                auto& nameComponent = m_SelectedEntity.GetComponent<NameComponent>();
-                NameComponentEditor(nameComponent);
-            }
-
-            if (m_SelectedEntity.HasComponent<PointComponent>())
-            {
-                auto& pointComponent = m_SelectedEntity.GetComponent<PointComponent>();
-                PointComponentEditor(pointComponent);
-            }
-
-            if (m_SelectedEntity.HasComponent<TransformComponent>())
-            {
-                auto& transformComponent = m_SelectedEntity.GetComponent<TransformComponent>();
-                TransformComponentEditor(transformComponent);
-            }
-
-            if (m_SelectedEntity.HasComponent<TorusComponent>())
-            {
-                auto& torusComponent = m_SelectedEntity.GetComponent<TorusComponent>();
-
-                TorusComponentEditor(torusComponent);
-            }
-        }
-
-        ImGui::End();
     }
 
     void EditorLayer::RenderViewport()
@@ -605,13 +511,30 @@ namespace CADMageddon
         ImGui::EndGroup();
 
         ImGui::Separator();
+        ImGui::BeginGroup();
+
+        ImGui::Text("TransformationOrigin");
+
+        if (ImGui::RadioButton("Center", m_TransformationSystem->GetTransformationOrigin() == TransformationOrigin::Center))
+        {
+            m_TransformationSystem->SetTransformationOrigin(TransformationOrigin::Center);
+        }
+
+        if (ImGui::RadioButton("Cursor", m_TransformationSystem->GetTransformationOrigin() == TransformationOrigin::Cursor))
+        {
+            m_TransformationSystem->SetTransformationOrigin(TransformationOrigin::Cursor);
+        }
+
+        ImGui::EndGroup();
+
+        ImGui::Separator();
 
         ImGui::BeginGroup();
 
 
         auto cursor = m_CursorController.getCursor();
-        auto m_WorldPosition = cursor.getPosition();
-        auto m_ScreenPosition = cursor.getScreenPosition();
+        auto m_WorldPosition = cursor->getPosition();
+        auto m_ScreenPosition = cursor->getScreenPosition();
         ImGui::Text("Cursor");
 
         if (ImGui::DragFloat3("WorldPosition", &m_WorldPosition.x, 0.1f))

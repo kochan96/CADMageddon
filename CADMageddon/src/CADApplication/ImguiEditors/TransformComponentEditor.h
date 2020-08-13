@@ -10,22 +10,24 @@ namespace CADMageddon
 
         ImGui::Text("TransformComponent");
 
-        glm::vec3 translation = component.Translation;
+        auto transform = component.Transform;
+
+        glm::vec3 translation = transform->Translation;
         if (ImGui::DragFloat3("Position", &translation.x, 0.1f))
         {
-            component.Translation = translation;
+            transform->Translation = translation;
         }
 
-        glm::vec3 rotation = component.Rotation;
+        glm::vec3 rotation = transform->Rotation;
         if (ImGui::DragFloat3("Rotation", &rotation.x, 1.0f, -90.0f, 90.0f))
         {
-            component.Rotation = rotation;
+            transform->Rotation = rotation;
         }
 
-        glm::vec3 scale = component.Scale;
+        glm::vec3 scale = transform->Scale;
         if (ImGui::DragFloat3("Scale", &scale.x, 0.1f))
         {
-            component.Scale = scale;
+            transform->Scale = scale;
         }
 
         ImGui::EndGroup();

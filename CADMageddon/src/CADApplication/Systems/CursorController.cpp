@@ -8,13 +8,14 @@ namespace CADMageddon
     CursorController::CursorController(FPSCamera& camera)
         :m_Camera(camera)
     {
+        m_Cursor = CreateRef<Cursor3D>();
     }
 
     void CursorController::Resize(const glm::vec2& viewPortSize, const std::pair<glm::vec2, glm::vec2>& viewPort, FPSCamera& camera)
     {
         m_ViewPortSize = viewPortSize;
         m_Viewport = viewPort;
-        m_Cursor.setScreenPosition(GetCursorScreenPosition(camera));
+        m_Cursor->setScreenPosition(GetCursorScreenPosition(camera));
     }
 
     void CursorController::Update(Timestep ts, FPSCamera& camera, glm::vec2 mousePosition)
@@ -24,19 +25,19 @@ namespace CADMageddon
 
     void CursorController::UpdateScreenPosition(const glm::vec2& screenPosition)
     {
-        m_Cursor.setScreenPosition(screenPosition);
-        m_Cursor.setPosition(GetCursorWorldPosition(m_Camera));
+        m_Cursor->setScreenPosition(screenPosition);
+        m_Cursor->setPosition(GetCursorWorldPosition(m_Camera));
     }
 
     void CursorController::UpdateWorldPosition(const glm::vec3& worldPosition)
     {
-        m_Cursor.setPosition(worldPosition);
-        m_Cursor.setScreenPosition(GetCursorScreenPosition(m_Camera));
+        m_Cursor->setPosition(worldPosition);
+        m_Cursor->setScreenPosition(GetCursorScreenPosition(m_Camera));
     }
 
     glm::vec2 CursorController::GetCursorScreenPosition(FPSCamera& camera)
     {
-        auto worldPosition = glm::vec4(m_Cursor.getPosition(), 1.0f);
+        auto worldPosition = glm::vec4(m_Cursor->getPosition(), 1.0f);
         auto projectionPosition = camera.GetViewProjectionMatrix() * worldPosition;
         projectionPosition /= projectionPosition.w;
         float x = (projectionPosition.x + 1.0f) / 2.0f * m_ViewPortSize.x;
@@ -47,8 +48,8 @@ namespace CADMageddon
 
     glm::vec3 CursorController::GetCursorWorldPosition(FPSCamera& camera)
     {
-        auto screenPosition = m_Cursor.getScreenPosition();
-        auto worldPosition = m_Cursor.getPosition();
+        auto screenPosition = m_Cursor->getScreenPosition();
+        auto worldPosition = m_Cursor->getPosition();
 
         glm::vec2 ndc;
         ndc.x = (screenPosition.x * 2.0f) / m_ViewPortSize.x - 1.0f;

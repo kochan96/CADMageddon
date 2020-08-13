@@ -1,12 +1,13 @@
 #include "Gizmo.h"
 #include "Core/Input.h"
 #include "Rendering\Renderer.h"
+#include "Scene\Transform.h"
 
 namespace CADMageddon
 {
     Scope<GizmoContext> Gizmo::context = CreateScope<GizmoContext>();
 
-    void Gizmo::Manipulate(GizmoMode mode, TransformComponent& TransformComponent, const glm::mat4& cameraMatrix, glm::vec2 ndcMousePosition)
+    void Gizmo::Manipulate(GizmoMode mode, Transform& Transform, const glm::mat4& cameraMatrix, glm::vec2 ndcMousePosition)
     {
         if (context->Mode != mode)
         {
@@ -18,13 +19,13 @@ namespace CADMageddon
         switch (mode)
         {
             case GizmoMode::Translation:
-                RenderTranslation(TransformComponent);
+                RenderTranslation(Transform);
                 break;
             case GizmoMode::Rotation:
-                RenderRotation(TransformComponent);
+                RenderRotation(Transform);
                 break;
             case GizmoMode::Scale:
-                RenderScale(TransformComponent);
+                RenderScale(Transform);
                 break;
         }
 
@@ -38,13 +39,13 @@ namespace CADMageddon
         switch (mode)
         {
             case GizmoMode::Translation:
-                ManipulateTranslation(TransformComponent, cameraMatrix, ndcMousePosition);
+                ManipulateTranslation(Transform, cameraMatrix, ndcMousePosition);
                 break;
             case GizmoMode::Rotation:
-                ManipulateRotation(TransformComponent, cameraMatrix, ndcMousePosition);
+                ManipulateRotation(Transform, cameraMatrix, ndcMousePosition);
                 break;
             case GizmoMode::Scale:
-                ManipulateScale(TransformComponent, cameraMatrix, ndcMousePosition);
+                ManipulateScale(Transform, cameraMatrix, ndcMousePosition);
                 break;
         }
 
@@ -53,7 +54,7 @@ namespace CADMageddon
     /*
     TRANSLATION
     */
-    bool Gizmo::CheckIfActiveTranslation(TransformComponent& TransformComponent, const glm::mat4& cameraMatrix, glm::vec2 ndcMousePosition)
+    bool Gizmo::CheckIfActiveTranslation(Transform& Transform, const glm::mat4& cameraMatrix, glm::vec2 ndcMousePosition)
     {
         CameraRay cameraRay = GetCameraRay(cameraMatrix, ndcMousePosition);
         glm::vec3 intersection;
@@ -62,7 +63,7 @@ namespace CADMageddon
         for (int i = 0; i < context->AxesCount; i++)
         {
             CameraRay axis;
-            axis.Origin = TransformComponent.Translation;
+            axis.Origin = Transform.Translation;
             axis.Direction = context->Axes[i];
             float distance = ClosestDistanceBetweenLines(cameraRay, axis);
             if (distance < minDistance)
@@ -83,30 +84,30 @@ namespace CADMageddon
 
     }
 
-    void Gizmo::ManipulateTranslation(TransformComponent& TransformComponent, const glm::mat4& cameraMatrix, glm::vec2 ndcMousePosition)
+    void Gizmo::ManipulateTranslation(Transform& Transform, const glm::mat4& cameraMatrix, glm::vec2 ndcMousePosition)
     {
         if (context->IsActive == false)
         {
-            context->IsActive = CheckIfActiveTranslation(TransformComponent, cameraMatrix, ndcMousePosition);
+            context->IsActive = CheckIfActiveTranslation(Transform, cameraMatrix, ndcMousePosition);
             return;
         }
 
         CameraRay cameraRay = GetCameraRay(cameraMatrix, ndcMousePosition);
         CameraRay axis;
-        axis.Origin = TransformComponent.Translation;
+        axis.Origin = Transform.Translation;
         axis.Direction = context->Axes[context->SelectedAxis];
         float minDistance = ClosestDistanceBetweenLines(cameraRay, axis);
 
         context->CurrentIntersection = cameraRay.Origin + cameraRay.Direction * cameraRay.t;
         auto delta = context->CurrentIntersection - context->PreviousIntersection;
 
-        TransformComponent.Translation += glm::dot(delta, context->Axes[context->SelectedAxis]) * context->Axes[context->SelectedAxis];
+        Transform.Translation += glm::dot(delta, context->Axes[context->SelectedAxis]) * context->Axes[context->SelectedAxis];
 
         context->PreviousIntersection = context->CurrentIntersection;
-        context->Center = TransformComponent.Translation;
+        context->Center = Transform.Translation;
     }
 
-    void Gizmo::RenderTranslation(TransformComponent& TransformComponent)
+    void Gizmo::RenderTranslation(Transform& Transform)
     {
         for (int i = 0; i < 3; i++)
         {
@@ -121,7 +122,7 @@ namespace CADMageddon
                 axis_color = glm::vec4(1.f, 0.65f, 0.f, 1.0f);
             }
 
-            Renderer::RenderLine(TransformComponent.Translation, TransformComponent.Translation + axis_end, axis_color);
+            Renderer::RenderLine(Transform.Translation, Transform.Translation + axis_end, axis_color);
         }
     }
 
@@ -129,7 +130,7 @@ namespace CADMageddon
         ROTATION
     */
 
-    bool Gizmo::CheckIfActiveRotation(TransformComponent& TransformComponent, const glm::mat4& cameraMatrix, glm::vec2 ndcMousePosition)
+    bool Gizmo::CheckIfActiveRotation(Transform& Transform, const glm::mat4& cameraMatrix, glm::vec2 ndcMousePosition)
     {
         CameraRay cameraRay = GetCameraRay(cameraMatrix, ndcMousePosition);
         glm::vec3 intersection;
@@ -139,8 +140,8 @@ namespace CADMageddon
         {
             Circle axis;
             axis.Radius = 1.0f;
-            axis.Center = TransformComponent.Translation;
-            axis.orientation = /*TransformComponent.GetMatrix() */ glm::vec4(context->Axes[i], 0.0f);
+            axis.Center = Transform.Translation;
+            axis.orientation = /*Transform.GetMatrix() */ glm::vec4(context->Axes[i], 0.0f);
             axis.orientation = glm::normalize(axis.orientation);
             float distance = ClosestDistanceLineCircle(cameraRay, axis, intersection);
             if (distance < minDistance)
@@ -160,11 +161,11 @@ namespace CADMageddon
         return true;
     }
 
-    void Gizmo::ManipulateRotation(TransformComponent& TransformComponent, const glm::mat4& cameraMatrix, glm::vec2 ndcMousePosition)
+    void Gizmo::ManipulateRotation(Transform& Transform, const glm::mat4& cameraMatrix, glm::vec2 ndcMousePosition)
     {
         if (context->IsActive == false)
         {
-            context->IsActive = CheckIfActiveRotation(TransformComponent, cameraMatrix, ndcMousePosition);
+            context->IsActive = CheckIfActiveRotation(Transform, cameraMatrix, ndcMousePosition);
             return;
         }
 
@@ -174,8 +175,8 @@ namespace CADMageddon
 
         Circle axis;
         axis.Radius = 1.0f;
-        axis.Center = TransformComponent.Translation;
-        axis.orientation = /*TransformComponent.GetMatrix() */ glm::vec4(context->Axes[context->SelectedAxis], 0.0f);
+        axis.Center = Transform.Translation;
+        axis.orientation = /*Transform.GetMatrix() */ glm::vec4(context->Axes[context->SelectedAxis], 0.0f);
         axis.orientation = glm::normalize(axis.orientation);
 
         float distance = ClosestDistanceLineCircle(cameraRay, axis, intersection);
@@ -198,22 +199,22 @@ namespace CADMageddon
         glm::vec3 rotationDelta = glm::vec3(0.0f);
         rotationDelta[context->SelectedAxis] = glm::degrees(angle);
 
-        TransformComponent.Rotation += rotationDelta;
-        TransformComponent.Rotation = glm::clamp(TransformComponent.Rotation, -90.0f, 90.0f);
+        Transform.Rotation += rotationDelta;
+        Transform.Rotation = glm::clamp(Transform.Rotation, -180.0f, 180.0f);
 
         context->PreviousIntersection = context->CurrentIntersection;
-        context->Center = TransformComponent.Translation;
+        context->Center = Transform.Translation;
 
     }
 
-    void Gizmo::RenderRotation(TransformComponent& TransformComponent)
+    void Gizmo::RenderRotation(Transform& Transform)
     {
         for (int i = 0; i < 3; i++)
         {
             glm::vec3 axis_end = glm::vec3(0.f, 0.f, 0.f);
             axis_end[i] = 1.f;
 
-            axis_end = /*TransformComponent.GetMatrix() */glm::vec4(axis_end, 0.0f);
+            axis_end = /*Transform.GetMatrix() */glm::vec4(axis_end, 0.0f);
             axis_end = glm::normalize(axis_end);
 
             glm::vec4 axis_color = glm::vec4(0.f, 0.f, 0.f, 1.0f);
@@ -224,7 +225,7 @@ namespace CADMageddon
                 axis_color = glm::vec4(1.f, 0.65f, 0.f, 1.0f);
             }
 
-            RenderCircle(TransformComponent.Translation, 1.0f, axis_end, axis_color);
+            RenderCircle(Transform.Translation, 1.0f, axis_end, axis_color);
         }
     }
 
@@ -268,7 +269,7 @@ namespace CADMageddon
     SCALE
     */
 
-    bool Gizmo::CheckIfActiveScale(TransformComponent& TransformComponent, const glm::mat4& cameraMatrix, glm::vec2 ndcMousePosition)
+    bool Gizmo::CheckIfActiveScale(Transform& Transform, const glm::mat4& cameraMatrix, glm::vec2 ndcMousePosition)
     {
         CameraRay cameraRay = GetCameraRay(cameraMatrix, ndcMousePosition);
         glm::vec3 intersection;
@@ -277,7 +278,7 @@ namespace CADMageddon
         for (int i = 0; i < context->AxesCount; i++)
         {
             CameraRay axis;
-            axis.Origin = TransformComponent.Translation;
+            axis.Origin = Transform.Translation;
             axis.Direction = context->Axes[i];
             float distance = ClosestDistanceBetweenLines(cameraRay, axis);
             if (distance < minDistance)
@@ -297,30 +298,30 @@ namespace CADMageddon
         return true;
     }
 
-    void Gizmo::ManipulateScale(TransformComponent& TransformComponent, const glm::mat4& cameraMatrix, glm::vec2 ndcMousePosition)
+    void Gizmo::ManipulateScale(Transform& Transform, const glm::mat4& cameraMatrix, glm::vec2 ndcMousePosition)
     {
         if (context->IsActive == false)
         {
-            context->IsActive = CheckIfActiveTranslation(TransformComponent, cameraMatrix, ndcMousePosition);
+            context->IsActive = CheckIfActiveTranslation(Transform, cameraMatrix, ndcMousePosition);
             return;
         }
 
         CameraRay cameraRay = GetCameraRay(cameraMatrix, ndcMousePosition);
         CameraRay axis;
-        axis.Origin = TransformComponent.Translation;
+        axis.Origin = Transform.Translation;
         axis.Direction = context->Axes[context->SelectedAxis];
         float minDistance = ClosestDistanceBetweenLines(cameraRay, axis);
 
         context->CurrentIntersection = cameraRay.Origin + cameraRay.Direction * cameraRay.t;
         auto delta = context->CurrentIntersection - context->PreviousIntersection;
 
-        TransformComponent.Scale += glm::dot(delta, context->Axes[context->SelectedAxis]) * context->Axes[context->SelectedAxis];
+        Transform.Scale += glm::dot(delta, context->Axes[context->SelectedAxis]) * context->Axes[context->SelectedAxis];
 
         context->PreviousIntersection = context->CurrentIntersection;
-        context->Center = TransformComponent.Translation;
+        context->Center = Transform.Translation;
     }
 
-    void Gizmo::RenderScale(TransformComponent& TransformComponent)
+    void Gizmo::RenderScale(Transform& Transform)
     {
         for (int i = 0; i < 3; i++)
         {
@@ -335,7 +336,7 @@ namespace CADMageddon
                 axis_color = glm::vec4(1.f, 0.65f, 0.f, 1.0f);
             }
 
-            Renderer::RenderLine(TransformComponent.Translation, TransformComponent.Translation + axis_end, axis_color);
+            Renderer::RenderLine(Transform.Translation, Transform.Translation + axis_end, axis_color);
         }
     }
 

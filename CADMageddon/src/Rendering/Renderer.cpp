@@ -17,10 +17,10 @@ namespace CADMageddon
     {
         switch (severity)
         {
-        case GL_DEBUG_SEVERITY_HIGH:         LOG_CRITITCAL(message); return;
-        case GL_DEBUG_SEVERITY_MEDIUM:       LOG_ERROR(message); return;
-        case GL_DEBUG_SEVERITY_LOW:          LOG_WARNING(message); return;
-        case GL_DEBUG_SEVERITY_NOTIFICATION: LOG_TRACE(message); return;
+            case GL_DEBUG_SEVERITY_HIGH:         LOG_CRITITCAL(message); return;
+            case GL_DEBUG_SEVERITY_MEDIUM:       LOG_ERROR(message); return;
+            case GL_DEBUG_SEVERITY_LOW:          LOG_WARNING(message); return;
+            case GL_DEBUG_SEVERITY_NOTIFICATION: LOG_TRACE(message); return;
         }
     }
 
@@ -106,7 +106,6 @@ namespace CADMageddon
         //glLineWidth(10.0f);
     }
 
-
     void Renderer::ShutDown()
     {
     }
@@ -163,8 +162,6 @@ namespace CADMageddon
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
 
-
-
     void Renderer::RenderGrid(const Ref<OpenGLVertexArray>& vertexArray, const glm::mat4& transform, const glm::vec4& color)
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -211,6 +208,27 @@ namespace CADMageddon
         s_RenderLineData.Count++;
     }
 
+    void Renderer::RenderBezierC0(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, unsigned int subdivisionCount, const glm::vec4& color)
+    {
+        float delta = 1.0f / subdivisionCount;
+        for (int i = 0; i <= subdivisionCount - 1; i++)
+        {
+            glm::vec3 start = GetBezierPoint(p0, p1, p2, i * delta);
+            glm::vec3 end = GetBezierPoint(p0, p1, p2, (i + 1) * delta);
+            RenderLine(start, end, color);
+        }
+    }
+
+    void Renderer::RenderBezierC0(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, unsigned int subdivisionCount, const glm::vec4& color)
+    {
+        float delta = 1.0f / subdivisionCount;
+        for (int i = 0; i <= subdivisionCount - 1; i++)
+        {
+            glm::vec3 start = GetBezierPoint(p0, p1, p2, p3, i * delta);
+            glm::vec3 end = GetBezierPoint(p0, p1, p2, p3, (i + 1) * delta);
+            RenderLine(start, end, color);
+        }
+    }
 
     void Renderer::FlushAndResetPoints()
     {
@@ -255,5 +273,18 @@ namespace CADMageddon
         s_RenderLineData.Shader->SetMat4("u_ViewProjectionMatrix", s_SceneData->ViewProjectionMatrix);
 
         glDrawArrays(GL_LINES, 0, s_RenderLineData.Count);
+    }
+
+    glm::vec3 Renderer::GetBezierPoint(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, float t)
+    {
+        float oneMinutT = 1.0f - t;
+        return oneMinutT * oneMinutT * oneMinutT * p0 + 3.0f * oneMinutT * oneMinutT * t * p1 + oneMinutT * t * t * p2 + t * t * t * p3;
+    }
+
+    glm::vec3 Renderer::GetBezierPoint(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, float t)
+    {
+        float oneMinutT = 1.0f - t;
+        return oneMinutT * oneMinutT * p0 + 2.0f * oneMinutT * t * p1 + t * t * p2;
+
     }
 }

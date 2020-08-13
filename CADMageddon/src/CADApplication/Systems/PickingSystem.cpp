@@ -30,19 +30,13 @@ namespace CADMageddon
 
         for (auto entity : entities)
         {
-            if (!entity.HasComponent<TransformComponent>())
-            {
-                continue;
-            }
-
             if (!entity.HasComponent<PointComponent>())
             {
                 continue;
             }
 
             auto& pointComponent = entity.GetComponent<PointComponent>();
-            auto& transformComponent = entity.GetComponent<TransformComponent>();
-            auto frustumPosition = camera.GetViewProjectionMatrix() * transformComponent.GetMatrix() * glm::vec4(pointComponent.Point.GetPosition(), 1.0f);
+            auto frustumPosition = camera.GetViewProjectionMatrix() * glm::vec4(pointComponent.Point->GetWorldPositon(), 1.0f);
             if (!IsInsideFrustum(frustumPosition))
             {
                 continue;
@@ -93,6 +87,8 @@ namespace CADMageddon
                 hierarchySelectable.IsSelected = false;
             }
         }
+
+        m_TransformationSystem->ClearSelection();
     }
 
     bool PickingSystem::IsInsideFrustum(const glm::vec4& position)

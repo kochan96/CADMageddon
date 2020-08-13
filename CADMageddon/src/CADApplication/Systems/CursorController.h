@@ -14,7 +14,9 @@ namespace CADMageddon
 
         void Update(Timestep ts, FPSCamera& camera, glm::vec2 mousePosition);
 
-        const Cursor3D getCursor() const { return m_Cursor; }
+        const Cursor3D getCursor() const { return *m_Cursor; }
+
+        Ref<Cursor3D> getCursor() { return m_Cursor; }
 
         void UpdateScreenPosition(const glm::vec2& screenPosition);
         void UpdateWorldPosition(const glm::vec3& worldPosition);
@@ -29,6 +31,6 @@ namespace CADMageddon
         FPSCamera& m_Camera;
         std::pair<glm::vec2, glm::vec2> m_Viewport;
         glm::vec2 m_ViewPortSize = { 0.0f,0.0f };
-        Cursor3D m_Cursor;
+        Ref<Cursor3D> m_Cursor;
     };
 }

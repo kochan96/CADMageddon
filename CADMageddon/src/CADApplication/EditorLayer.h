@@ -12,6 +12,9 @@
 #include "Systems\CursorController.h"
 #include "Systems\TransformationSystem.h"
 
+#include "Panels\HierarchyPanel.h"
+#include "Panels\InspectorPanel.h"
+
 namespace CADMageddon
 {
     enum class EditorMode
@@ -38,9 +41,8 @@ namespace CADMageddon
         bool OnKeyPressedEventViewport(KeyPressedEvent& e);
         bool OnKeyPressedEvent(KeyPressedEvent& e);
 
-        void ClearSelection();
-        void HandleSingleSelection(Entity& entity, HierarchyComponent& hierarchyComponent);
-        void HandleMultiSelection(Entity& entity, HierarchyComponent& hierarchyComponent);
+        void OnSelectionChanged(bool selected, Entity entity);
+        void OnSelectionCleared(std::vector<Entity> cleared);
 
         bool IsEditMode() const;
 
@@ -50,8 +52,6 @@ namespace CADMageddon
         void InitGridVertexArray();
 
         void RenderMainMenuBar();
-        void RenderHierarchy();
-        void RenderInspector();
         void RenderViewport();
         void RenderOptions();
         void RenderCursor(glm::vec3 position, float size);
@@ -76,12 +76,15 @@ namespace CADMageddon
 
 
         Ref<Scene> m_Scene;
-        Entity m_SelectedEntity;
         EditorMode m_EditorMode = EditorMode::MoveCursor;
 
         CursorController m_CursorController;
 
         Ref<PickingSystem> m_PickingSystem;
         Ref<TransformationSystem> m_TransformationSystem;
+
+        Ref<HierarchyPanel> m_HierarchyPanel;
+        Ref<InspectorPanel> m_InspectorPanel;
+
     };
 }

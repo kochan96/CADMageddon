@@ -52,31 +52,31 @@ namespace CADMageddon
         int SelectedAxis = -1;
     };
 
-    struct TransformComponent;
+    struct Transform;
 
     class Gizmo
     {
     public:
         static bool IsActive() { return context->IsActive; }
-        static void Manipulate(GizmoMode mode, TransformComponent& transform, const glm::mat4& cameraMatrix, glm::vec2 ndcMousePosition);
+        static void Manipulate(GizmoMode mode, Transform& transform, const glm::mat4& cameraMatrix, glm::vec2 ndcMousePosition);
 
     private:
         static constexpr float SELECTION_THRESHOLD = 0.04f;
 
-        static void ManipulateTranslation(TransformComponent& transform, const glm::mat4& cameraMatrix, glm::vec2 ndcMousePosition);
-        static void ManipulateRotation(TransformComponent& transform, const glm::mat4& cameraMatrix, glm::vec2 ndcMousePosition);
-        static void ManipulateScale(TransformComponent& transform, const glm::mat4& cameraMatrix, glm::vec2 ndcMousePosition);
+        static void ManipulateTranslation(Transform& transform, const glm::mat4& cameraMatrix, glm::vec2 ndcMousePosition);
+        static void ManipulateRotation(Transform& transform, const glm::mat4& cameraMatrix, glm::vec2 ndcMousePosition);
+        static void ManipulateScale(Transform& transform, const glm::mat4& cameraMatrix, glm::vec2 ndcMousePosition);
 
-        static void RenderTranslation(TransformComponent& transform);
-        static void RenderRotation(TransformComponent& transform);
-        static void RenderScale(TransformComponent& transform);
+        static void RenderTranslation(Transform& transform);
+        static void RenderRotation(Transform& transform);
+        static void RenderScale(Transform& transform);
 
 
         static void RenderCircle(glm::vec3 position, float radius, glm::vec3 normal, glm::vec4 color);
 
-        static bool CheckIfActiveTranslation(TransformComponent& transform, const glm::mat4& cameraMatrix, glm::vec2 ndcMousePosition);
-        static bool CheckIfActiveRotation(TransformComponent& transform, const glm::mat4& cameraMatrix, glm::vec2 ndcMousePosition);
-        static bool CheckIfActiveScale(TransformComponent& transform, const glm::mat4& cameraMatrix, glm::vec2 ndcMousePosition);
+        static bool CheckIfActiveTranslation(Transform& transform, const glm::mat4& cameraMatrix, glm::vec2 ndcMousePosition);
+        static bool CheckIfActiveRotation(Transform& transform, const glm::mat4& cameraMatrix, glm::vec2 ndcMousePosition);
+        static bool CheckIfActiveScale(Transform& transform, const glm::mat4& cameraMatrix, glm::vec2 ndcMousePosition);
 
 
         static float ClosestDistanceBetweenLines(CameraRay& ray1, CameraRay& ray2);

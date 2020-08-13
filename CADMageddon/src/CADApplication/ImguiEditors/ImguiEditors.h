@@ -4,3 +4,4 @@
 #include "PointComponentEditor.h"
 #include "TransformComponentEditor.h"
 #include "ColorComponentEditor.h"
+#include "BezierC0ComponentEditor.h"

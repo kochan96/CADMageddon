@@ -5,6 +5,7 @@
 #include <glm\gtc\matrix_transform.hpp>
 #include "Point.h"
 #include "ObjectFactory.h"
+#include "Transform.h"
 
 namespace CADMageddon
 {
@@ -42,63 +43,18 @@ namespace CADMageddon
 
     struct TransformComponent
     {
-        glm::vec3 Translation = { 0.0f,0.0f,0.0f };
-        glm::vec3 Rotation = { 0.0f,0.0f,0.0f }; //TODO maybe quaternion or at least keep it in radians
-        glm::vec3 Scale = { 1.0f,1.0f,1.0f };
+        Ref<Transform> Transform;
 
-        Ref<TransformComponent> Parent = nullptr;
-
-        glm::mat4 GetMatrix()
+        TransformComponent()
         {
-            auto translationMatrix = glm::translate(glm::mat4(1.0f), Translation);
-            auto rotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(Rotation.x), glm::vec3(1.0f, 0.0f, 0.0f))
-                * glm::rotate(glm::mat4(1.0f), glm::radians(Rotation.y), glm::vec3(0.0f, 1.0f, 0.0f))
-                * glm::rotate(glm::mat4(1.0f), glm::radians(Rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-            auto scaleMatrix = glm::scale(glm::mat4(1.0f), Scale);
-
-            glm::mat4 parentMatrix = glm::mat4(1.0f);
-
-            if (Parent)
-            {
-                parentMatrix = *Parent;
-            }
-
-            auto transform = parentMatrix * translationMatrix * rotationMatrix * scaleMatrix;
-            return transform;
+            Transform = CreateRef<CADMageddon::Transform>();
         }
 
-        const glm::mat4& GetMatrix() const
-        {
-            auto translationMatrix = glm::translate(glm::mat4(1.0f), Translation);
-            auto rotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(Rotation.y), glm::vec3(0.0f, 1.0f, 0.0f))
-                * glm::rotate(glm::mat4(1.0f), glm::radians(Rotation.x), glm::vec3(1.0f, 0.0f, 0.0f))
-                * glm::rotate(glm::mat4(1.0f), glm::radians(Rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-            auto scaleMatrix = glm::scale(glm::mat4(1.0f), Scale);
-
-            glm::mat4 parentMatrix = glm::mat4(1.0f);
-
-            if (Parent)
-            {
-                parentMatrix = *Parent;
-            }
-
-            auto transform = parentMatrix * translationMatrix * rotationMatrix * scaleMatrix;
-            return transform;
-        }
-
-        operator glm::mat4()
-        {
-            return GetMatrix();
-        }
-        operator const glm::mat4() const
-        {
-            return GetMatrix();
-        }
-
-        TransformComponent() = default;
         TransformComponent(const TransformComponent&) = default;
         TransformComponent(const glm::vec3& translation, const glm::vec3& rotation, const glm::vec3& scale)
-            : Translation(translation), Rotation(rotation), Scale(scale) {}
+        {
+            Transform = CreateRef<CADMageddon::Transform>(translation, rotation, scale);
+        }
     };
 
     struct ColorComponent
@@ -113,19 +69,38 @@ namespace CADMageddon
 
     struct PointComponent
     {
-        Point Point;
-        PointComponent() = default;
+        Ref<Point> Point;
+        PointComponent()
+        {
+            Point = std::make_shared<CADMageddon::Point>();
+        }
+
         PointComponent(const PointComponent&) = default;
         PointComponent(std::string name, const glm::vec3& position)
-            : Point(position, name) {}
+        {
+            Point = std::make_shared<CADMageddon::Point>(position, name);
+        }
     };
 
     struct HierarchyComponent
     {
         bool IsSelected = false;
+        
         HierarchyComponent() = default;
         HierarchyComponent(const HierarchyComponent&) = default;
         HierarchyComponent(bool isSelected)
             : IsSelected(isSelected) {}
+
+    };
+
+    struct BezierC0Component
+    {
+        std::vector<Ref<Point>> ControlPoints;
+        bool ShowPolygon = false;
+
+        BezierC0Component() = default;
+        BezierC0Component(const BezierC0Component&) = default;
+        BezierC0Component(bool showPolygon, std::vector<Ref<Point>> points)
+            : ShowPolygon(showPolygon), ControlPoints(points) {}
     };
 }

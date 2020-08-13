@@ -20,10 +20,12 @@ namespace CADMageddon
         Cursor,
     };
 
+    class Cursor3D;
+
     class TransformationSystem
     {
     public:
-        TransformationSystem();
+        TransformationSystem(Ref<Cursor3D> cursor);
         void Update(Ref<Scene> scene, FPSCamera& camera, glm::vec2 ndcMousePosition);
 
         void AddToSelected(Entity entity);
@@ -34,7 +36,7 @@ namespace CADMageddon
         void SetTransformationMode(TransformationMode mode) { m_TransformationMode = mode; RecalculateParentAndChildrenTransform(); }
 
         TransformationOrigin GetTransformationOrigin() const { return m_TransformationOrigin; }
-        void SetTransformationOrigin(TransformationOrigin origin) { m_TransformationOrigin = origin; }
+        void SetTransformationOrigin(TransformationOrigin origin) { m_TransformationOrigin = origin; RecalculateParentAndChildrenTransform(); }
 
     private:
         TransformComponent& GetTransformToModify();
@@ -48,6 +50,8 @@ namespace CADMageddon
         TransformationMode m_TransformationMode;
         TransformationOrigin m_TransformationOrigin;
         std::vector<Entity> m_SelectedEntities;
+        
+        Ref<Cursor3D> m_Cursor;
         Ref<TransformComponent> m_TransformationParent;
     };
 }
