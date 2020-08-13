@@ -23,11 +23,6 @@ namespace CADMageddon
                 continue;
             }
 
-            if (entity.HasComponent<PointComponent>() && entity.GetComponent<PointComponent>().Point->GetHierarchyVisible() == false)
-            {
-                continue;
-            }
-
             RenderNode(entity, id);
         }
 
@@ -83,11 +78,7 @@ namespace CADMageddon
                 && entity.GetComponent<HierarchyComponent>().IsSelected)
             {
                 Ref<Point> p = entity.GetComponent<PointComponent>().Point;
-                if (p->GetHierarchyVisible())
-                {
-                    p->SetHierarchyVisible(false);
-                    bezierComponent.ControlPoints.push_back(p);
-                }
+                bezierComponent.ControlPoints.push_back(p);
             }
         }
     }

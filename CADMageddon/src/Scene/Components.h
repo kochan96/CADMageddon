@@ -85,7 +85,7 @@ namespace CADMageddon
     struct HierarchyComponent
     {
         bool IsSelected = false;
-        
+        std::vector<HierarchyComponent> Children;
         HierarchyComponent() = default;
         HierarchyComponent(const HierarchyComponent&) = default;
         HierarchyComponent(bool isSelected)

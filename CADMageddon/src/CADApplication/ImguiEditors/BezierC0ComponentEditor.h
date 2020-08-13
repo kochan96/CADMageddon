@@ -50,7 +50,6 @@ namespace CADMageddon
         for (auto point : toBeDeleted)
         {
             auto it = std::find(component.ControlPoints.begin(), component.ControlPoints.end(), point);
-            point->SetHierarchyVisible(true);
             component.ControlPoints.erase(it);
         }
 

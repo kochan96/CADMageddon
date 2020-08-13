@@ -36,24 +36,7 @@ namespace CADMageddon
 
         Ref<Transform> GetTransform() { return m_Transform; }
 
-        bool GetHierarchyVisible() const { return m_HierarchyVisisble; }
-        void SetHierarchyVisible(bool visible) { m_HierarchyVisisble = visible; }
-
-        void SetOnSelectionChanged(std::function<void(bool)> onSelectionChanged) { m_OnSelectionChanged = onSelectionChanged; }
-
-        bool GetIsSelected() const { return m_IsSelected; }
-        void SetIsSelected(bool isSelected) 
-        { 
-            m_IsSelected = isSelected;
-            if (m_OnSelectionChanged)
-                m_OnSelectionChanged(isSelected);
-        }
-
     private:
-        std::function<void(bool)> m_OnSelectionChanged;
-
-        bool m_IsSelected;
-        bool m_HierarchyVisisble;
         Ref<Transform> m_Transform;
         std::string m_Name;
         glm::vec3 m_Position;

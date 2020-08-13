@@ -64,7 +64,5 @@ namespace CADMageddon
 
         ImGui::End();
     }
-
-
 }
 

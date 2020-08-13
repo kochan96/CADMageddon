@@ -29,14 +29,6 @@ namespace CADMageddon
             CheckPoint(*it, it->GetComponent<PointComponent>().Point);
         }
 
-        if (it->HasComponent<BezierC0Component>())
-        {
-            for (auto point : it->GetComponent<BezierC0Component>().ControlPoints)
-            {
-                point->SetHierarchyVisible(true);
-            }
-        }
-
         m_Entities.erase(it);
         m_Registry.destroy(entity.m_EntityHandle);
     }
@@ -95,7 +87,6 @@ namespace CADMageddon
 
         if (AddPointToSelectedBezierC0(point))
         {
-            point->SetHierarchyVisible(false);
         }
 
         return pointEntity;
