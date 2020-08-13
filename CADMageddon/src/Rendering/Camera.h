@@ -13,6 +13,8 @@ namespace CADMageddon
         float GetAspectRatio() const { return m_aspectRatio; }
         void SetAspectRatio(float aspectRatio) { m_aspectRatio = aspectRatio; RecalculateProjectionMatrix(); };
 
+        float GetNearPlane() const { return m_nearClipPlane; }
+
         float GetFieldOfView() const { return m_fov; }
         void SetFieldOfView(float fov) { m_fov = fov; RecalculateProjectionMatrix(); }
 

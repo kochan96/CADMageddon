@@ -13,7 +13,7 @@ namespace CADMageddon
         Cursor3D() = default;
 
         glm::vec2 getScreenPosition() const { return m_ScreenPosition; }
-        void setScreenPosition(glm::vec2& screenPosition) { m_ScreenPosition = screenPosition; }
+        void setScreenPosition(const glm::vec2& screenPosition) { m_ScreenPosition = screenPosition; }
 
         glm::vec3 getPosition() const { return m_Position; }
         void setPosition(const glm::vec3& position) { m_Position = position; }

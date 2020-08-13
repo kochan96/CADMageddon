@@ -22,7 +22,8 @@
 
 namespace CADMageddon
 {
-    EditorLayer::EditorLayer(const std::string& debugName) :Layer(debugName), m_CameraController(45.0f, 1280.0f / 720.0f, 0.1f, 100.0f)
+    EditorLayer::EditorLayer(const std::string& debugName) :
+        Layer(debugName), m_CameraController(45.0f, 1280.0f / 720.0f, 0.1f, 100.0f), m_CursorController(m_CameraController.GetCamera())
     {
         m_Viewport = std::make_pair<glm::vec2, glm::vec2>(glm::vec2(0.0f), glm::vec2(0.0f));
         m_Scene = CreateRef<Scene>();
@@ -209,12 +210,15 @@ namespace CADMageddon
         {
             m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
             m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);
-            m_CursorController.Resize(m_ViewportSize, m_CameraController.GetCamera());
+            m_CursorController.Resize(m_ViewportSize, m_Viewport, m_CameraController.GetCamera());
         }
 
 
         if (m_ViewportFocused)
+        {
             m_CameraController.OnUpdate(ts);
+            m_CursorController.UpdateWorldPosition(m_CursorController.getCursor().getPosition());
+        }
 
         if (!m_BlockEvents && Input::IsMouseButtonPressed(CDM_MOUSE_BUTTON_LEFT) && m_EditorMode == EditorMode::MoveCursor)
         {
@@ -596,6 +600,28 @@ namespace CADMageddon
         {
             m_EditorMode = EditorMode::Scale;
             m_TransformationSystem->SetTransformationMode(TransformationMode::Scaling);
+        }
+
+        ImGui::EndGroup();
+
+        ImGui::Separator();
+
+        ImGui::BeginGroup();
+
+
+        auto cursor = m_CursorController.getCursor();
+        auto m_WorldPosition = cursor.getPosition();
+        auto m_ScreenPosition = cursor.getScreenPosition();
+        ImGui::Text("Cursor");
+
+        if (ImGui::DragFloat3("WorldPosition", &m_WorldPosition.x, 0.1f))
+        {
+            m_CursorController.UpdateWorldPosition(m_WorldPosition);
+        }
+
+        if (ImGui::DragFloat2("ScreenPosition", &m_ScreenPosition.x, 0.1f))
+        {
+            m_CursorController.UpdateScreenPosition(m_ScreenPosition);
         }
 
         ImGui::EndGroup();

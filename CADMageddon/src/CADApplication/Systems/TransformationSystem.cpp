@@ -7,6 +7,9 @@
 
 namespace CADMageddon
 {
+
+    ///TODO: fix rotation issues
+
     TransformationSystem::TransformationSystem()
     {
         m_TransformationParent = CreateRef<TransformComponent>();
@@ -93,6 +96,8 @@ namespace CADMageddon
         glm::vec4 perspective;
 
         glm::decompose(newLocal, scale, orientation, translation, skew, perspective);
+        orientation = glm::conjugate(orientation);
+
 
         transform.Parent = m_TransformationParent;
         glm::vec3 rotation = glm::degrees(glm::eulerAngles(orientation));
@@ -117,6 +122,7 @@ namespace CADMageddon
         glm::vec4 perspective;
 
         glm::decompose(newLocal, scale, orientation, translation, skew, perspective);
+        orientation = glm::conjugate(orientation);
 
         transform.Parent = nullptr;
         glm::vec3 rotation = glm::degrees(glm::eulerAngles(orientation));
