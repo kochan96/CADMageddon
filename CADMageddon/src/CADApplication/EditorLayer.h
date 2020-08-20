@@ -6,14 +6,10 @@
 #include "Rendering\FrameBuffer.h"
 
 #include "Rendering\FPSCameraController.h"
-#include "Scene\Entity.h"
 
 #include "Systems\PickingSystem.h"
 #include "Systems\CursorController.h"
 #include "Systems\TransformationSystem.h"
-
-#include "Panels\HierarchyPanel.h"
-#include "Panels\InspectorPanel.h"
 
 namespace CADMageddon
 {

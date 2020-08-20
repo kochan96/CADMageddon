@@ -2,6 +2,7 @@
 #include "cadpch.h"
 #include "Core\Base.h"
 #include <glm\glm.hpp>
+#include <glm\gtc\matrix_inverse.hpp>
 #include "Transform.h"
 #include "Core\Base.h"
 
@@ -33,8 +34,10 @@ namespace CADMageddon
         void SetPosition(const glm::vec3& position) { m_Position = position; }
 
         glm::vec3 GetWorldPositon() const { return m_Transform->GetMatrix() * glm::vec4(m_Position, 1.0f); }
+        void SetWorldPosition(glm::vec3 worldPosition) { m_Position = glm::affineInverse(m_Transform->GetMatrix()) * glm::vec4(worldPosition, 1.0f); }
 
         Ref<Transform> GetTransform() { return m_Transform; }
+        void SetTransform(Ref<Transform> transform) { m_Transform = transform; }
 
     private:
         Ref<Transform> m_Transform;

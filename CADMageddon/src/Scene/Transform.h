@@ -1,42 +1,25 @@
 #pragma once
 #include <glm\glm.hpp>
-#include <Core\Base.h>
+#include <glm\gtc\matrix_transform.hpp>
 
 namespace CADMageddon
 {
-    class Transform
+    struct Transform
     {
-
-    public:
-        Transform() = default;
-        Transform(const Transform&) = default;
-        Transform(const glm::vec3& translation, const glm::vec3& rotation, const glm::vec3& scale)
-            : Translation(translation), Rotation(rotation), Scale(scale) {}
-
-        glm::vec3 Translation = { 0.0f,0.0f,0.0f };
-        glm::vec3 Rotation = { 0.0f,0.0f,0.0f }; //TODO maybe quaternion or at least keep it in radians
+        glm::vec3 Position = { 0.0f,0.0f,0.0f };
+        glm::vec3 Rotation = { 0.0f,0.0f,0.0f };
         glm::vec3 Scale = { 1.0f,1.0f,1.0f };
 
-        void SetParent(Ref<Transform> parent);
-
-        operator glm::mat4()
+        glm::mat4 GetMatrix()
         {
-            return GetMatrix();
+            auto translationMatrix = glm::translate(glm::mat4(1.0f), Position);
+            auto rotationMatrix =
+                glm::rotate(glm::mat4(1.0f), Rotation.x, glm::vec3(1.0f, 0.0f, 0.0f))
+                * glm::rotate(glm::mat4(1.0f), Rotation.y, glm::vec3(0.0f, 1.0f, 0.0f))
+                * glm::rotate(glm::mat4(1.0f), Rotation.z, glm::vec3(0.0f, 0.0f, -1.0f));
+            auto scaleMatrix = glm::scale(glm::mat4(1.0f), Scale);
+
+            return translationMatrix * rotationMatrix * scaleMatrix;
         }
-        operator const glm::mat4() const
-        {
-            return GetMatrix();
-        }
-
-        glm::mat4 GetMatrix();
-        const glm::mat4& GetMatrix() const;
-
-    private:
-       
-        void UnAssignParentTransform();
-        void AssignParentTransform(Ref<Transform> transform);
-
-    private:
-        Ref<Transform> Parent = nullptr;
     };
 }
