@@ -3,11 +3,12 @@
 
 namespace CADMageddon
 {
-    Torus::Torus(std::string name)
+    Torus::Torus(glm::vec3 position, std::string name)
     {
         SetName(name);
         RecalculateMesh();
         m_Transform = CreateRef<Transform>();
+        m_Transform->Translation = position;
     }
 
     void Torus::RecalculateMesh()

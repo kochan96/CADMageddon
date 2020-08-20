@@ -1,5 +1,4 @@
 #include "TransformationSystem.h"
-#include "Scene\Entity.h"
 #include <glm\gtc\quaternion.hpp>
 #include <glm\glm.hpp>
 #include <glm\gtx\matrix_decompose.hpp>
@@ -14,14 +13,14 @@ namespace CADMageddon
     TransformationSystem::TransformationSystem(Ref<Cursor3D> cursor)
         :m_Cursor(cursor)
     {
-        m_TransformationParent = CreateRef<TransformComponent>();
+        //m_TransformationParent = CreateRef<TransformComponent>();
         m_TransformationMode = TransformationMode::Translation;
-        m_TransformationOrigin = TransformationOrigin::Cursor;
+        m_TransformationOrigin = TransformationOrigin::Center;
     }
 
     void TransformationSystem::Update(Ref<Scene> scene, FPSCamera& camera, glm::vec2 ndcMousePosition)
     {
-        if (m_SelectedEntities.empty())
+       /* if (m_SelectedEntities.empty())
         {
             return;
         }
@@ -44,10 +43,10 @@ namespace CADMageddon
         if (m_TransformationOrigin == TransformationOrigin::Cursor && m_TransformationMode == TransformationMode::Translation)
         {
             RecalculateParentAndChildrenTransform();
-        }
+        }*/
     }
 
-    void TransformationSystem::AddToSelected(Entity entity)
+   /* void TransformationSystem::AddToSelected(Entity entity)
     {
         if (entity.HasComponent<TransformComponent>())
         {
@@ -151,5 +150,5 @@ namespace CADMageddon
 
         center = glm::vec3(center.x / count, center.y / count, center.z / count);
         return center;
-    }
+    }*/
 }

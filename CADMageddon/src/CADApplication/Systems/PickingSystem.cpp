@@ -1,6 +1,7 @@
 #include "PickingSystem.h"
 #include "Core\Input.h"
 #include "TransformationSystem.h"
+#include "Scene\Scene.h"
 
 namespace CADMageddon
 {
@@ -17,7 +18,7 @@ namespace CADMageddon
         const FPSCamera& camera)
     {
 
-        bool multiSelect = Input::IsKeyPressed(CDM_KEY_LEFT_CONTROL);
+       /* bool multiSelect = Input::IsKeyPressed(CDM_KEY_LEFT_CONTROL);
 
         if (!multiSelect)
         {
@@ -69,12 +70,12 @@ namespace CADMageddon
             }
 
 
-        }
+        }*/
     }
 
     void PickingSystem::ClearSelection(const Scene& scene)
     {
-        for (auto entity : scene.GetEntities())
+      /*  for (auto entity : scene.GetEntities())
         {
             if (!entity.HasComponent<PointComponent>())
             {
@@ -88,7 +89,7 @@ namespace CADMageddon
             }
         }
 
-        m_TransformationSystem->ClearSelection();
+        m_TransformationSystem->ClearSelection();*/
     }
 
     bool PickingSystem::IsInsideFrustum(const glm::vec4& position)

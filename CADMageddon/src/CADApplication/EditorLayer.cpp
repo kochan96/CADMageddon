@@ -15,7 +15,6 @@
 #include "Core/Input.h"
 
 #include "Scene/ObjectFactory.h"
-#include "Scene\Components.h"
 
 #include "Gizmos\Gizmo.h"
 
@@ -30,10 +29,10 @@ namespace CADMageddon
         m_PickingSystem = CreateRef<PickingSystem>(m_TransformationSystem);
         m_HierarchyPanel = CreateRef<HierarchyPanel>(m_Scene);
 
-        m_HierarchyPanel->SetOnSelectionChangedCallback(std::bind(&EditorLayer::OnSelectionChanged, this, std::placeholders::_1, std::placeholders::_2));
-        m_HierarchyPanel->SetOnSelectionClearedCallback(std::bind(&EditorLayer::OnSelectionCleared, this, std::placeholders::_1));
+        /*m_HierarchyPanel->SetOnSelectionChangedCallback(std::bind(&EditorLayer::OnSelectionChanged, this, std::placeholders::_1, std::placeholders::_2));
+        m_HierarchyPanel->SetOnSelectionClearedCallback(std::bind(&EditorLayer::OnSelectionCleared, this, std::placeholders::_1)); */
 
-        m_InspectorPanel = CreateRef<InspectorPanel>();
+        //m_InspectorPanel = CreateRef<InspectorPanel>();
     }
 
     void EditorLayer::OnAttach()
@@ -73,14 +72,14 @@ namespace CADMageddon
     {
         if (e.GetKeyCode() == CDM_KEY_SPACE)
         {
-            m_Scene->CreatePointEntity(m_CursorController.getCursor()->getPosition());
+            m_Scene->CreatePoint(m_CursorController.getCursor()->getPosition(), "Point");
         }
 
         if (e.GetKeyCode() == CDM_KEY_DELETE)
         {
-            m_TransformationSystem->ClearSelection();
-            m_InspectorPanel->Clear();
-            m_Scene->DestroySelected();
+            //m_TransformationSystem->ClearSelection();
+            //m_InspectorPanel->Clear();
+            //m_Scene->DestroySelected();
         }
 
         return false;
@@ -90,33 +89,33 @@ namespace CADMageddon
     {
         if (e.GetKeyCode() == CDM_KEY_DELETE)
         {
-            m_TransformationSystem->ClearSelection();
-            m_InspectorPanel->Clear();
-            m_Scene->DestroySelected();
+            //m_TransformationSystem->ClearSelection();
+            //m_InspectorPanel->Clear();
+            //m_Scene->DestroySelected();
         }
 
         return false;
     }
 
-    void EditorLayer::OnSelectionChanged(bool selected, Entity entity)
-    {
-        if (selected)
-        {
-            m_TransformationSystem->AddToSelected(entity);
-            m_InspectorPanel->Add(entity);
-        }
-        else
-        {
-            m_TransformationSystem->RemoveFromSelected(entity);
-            m_InspectorPanel->Remove(entity);
-        }
-    }
+    /*  void EditorLayer::OnSelectionChanged(bool selected, Entity entity)
+      {
+          if (selected)
+          {
+              m_TransformationSystem->AddToSelected(entity);
+              m_InspectorPanel->Add(entity);
+          }
+          else
+          {
+              m_TransformationSystem->RemoveFromSelected(entity);
+              m_InspectorPanel->Remove(entity);
+          }
+      }
 
-    void EditorLayer::OnSelectionCleared(std::vector<Entity> cleared)
-    {
-        m_TransformationSystem->ClearSelection();
-        m_InspectorPanel->Clear();
-    }
+      void EditorLayer::OnSelectionCleared(std::vector<Entity> cleared)
+      {
+          m_TransformationSystem->ClearSelection();
+          m_InspectorPanel->Clear();
+      }*/
 
     void EditorLayer::InitImGui()
     {
@@ -259,7 +258,7 @@ namespace CADMageddon
 
         Renderer::BeginScene(m_CameraController.GetCamera());
 
-        m_Scene->OnUpdate(ts);
+        m_Scene->Update();
 
         Renderer::RenderGrid(m_GridVertexArray, glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)), glm::vec4(1.0f));
         const float cursorSize = 1.0f;
@@ -354,7 +353,7 @@ namespace CADMageddon
 
         RenderMainMenuBar();
         m_HierarchyPanel->Render();
-        m_InspectorPanel->Render();
+        //m_InspectorPanel->Render();
         RenderViewport();
         RenderOptions();
 
@@ -386,9 +385,9 @@ namespace CADMageddon
             {
                 if (ImGui::MenuItem("New"))
                 {
-                    m_Scene.reset(new Scene());
-                    m_HierarchyPanel->SetScene(m_Scene);
-                    m_TransformationSystem->ClearSelection();
+                    //m_Scene.reset(new Scene());
+                    ////m_HierarchyPanel->SetScene(m_Scene);
+                    //m_TransformationSystem->ClearSelection();
                 }
 
                 if (ImGui::MenuItem("Save"))
@@ -413,18 +412,18 @@ namespace CADMageddon
             {
                 if (ImGui::MenuItem("Add Torus"))
                 {
-                    m_Scene->CreateTorusEntity(m_CursorController.getCursor()->getPosition());
+                    m_Scene->CreateTorus(m_CursorController.getCursor()->getPosition(), "Torus");
                 }
 
                 if (ImGui::MenuItem("Add Point"))
                 {
-                    m_Scene->CreatePointEntity(m_CursorController.getCursor()->getPosition());
+                    m_Scene->CreatePoint(m_CursorController.getCursor()->getPosition(), "Point");
                 }
 
-                if (ImGui::MenuItem("Add BezierC0"))
-                {
-                    m_Scene->CreateBezierC0Entity();
-                }
+                //if (ImGui::MenuItem("Add BezierC0"))
+                //{
+                //    m_Scene->CreateBezierC0Entity();
+                //}
 
 
                 ImGui::EndMenu();

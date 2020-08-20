@@ -39,10 +39,14 @@ namespace CADMageddon
         Ref<Transform> GetTransform() { return m_Transform; }
         void SetTransform(Ref<Transform> transform) { m_Transform = transform; }
 
+        bool GetIsSelected() const { return m_IsSelected; }
+        void SetIsSelected(bool isSelected) { m_IsSelected = isSelected; }
+
     private:
         Ref<Transform> m_Transform;
         std::string m_Name;
         glm::vec3 m_Position;
+        bool m_IsSelected = false;
     };
 }
 

@@ -1,12 +1,13 @@
 #pragma once
 #include "cadpch.h"
+#include "Core\Base.h"
 #include "Rendering\Camera.h"
-#include "Scene\Entity.h"
-#include "Scene\Components.h"
+
 
 namespace CADMageddon
 {
     class TransformationSystem;
+    class Scene;
 
     class PickingSystem
     {

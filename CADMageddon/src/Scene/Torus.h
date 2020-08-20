@@ -16,14 +16,21 @@ namespace CADMageddon
     class Torus
     {
     public:
-        Torus(std::string name = "Torus");
+        Torus(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), std::string name = "Torus");
 
         std::string GetName() const { return m_Name; }
         void SetName(std::string name) { m_Name = name; }
 
         TorusParameters& GetTorusParameters() { return m_TorusParameters; }
 
+        std::vector<Ref<Point>> GetPoints() { return m_Points; }
+        std::vector<uint32_t> GetIndices() { return m_Indices; }
+        Ref<Transform> GetTransform() { return m_Transform; }
+
         void RecalculateMesh();
+
+        bool GetIsSelected() { return m_IsSelected; }
+        void SetIsSelected(bool isSelected) { m_IsSelected = isSelected; }
 
     private:
         Ref<Transform> m_Transform;
@@ -32,6 +39,8 @@ namespace CADMageddon
 
         std::vector<Ref<Point>> m_Points;
         std::vector<uint32_t> m_Indices;
+
+        bool m_IsSelected = false;
     };
 
 }
