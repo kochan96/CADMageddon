@@ -33,16 +33,13 @@ namespace CADMageddon
         m_HierarchyPanel->SetOnSelectionChangedTorusCallback(std::bind(&EditorLayer::OnSelectionChangedTorus, this, std::placeholders::_1, std::placeholders::_2));
         m_HierarchyPanel->SetOnSelectionClearedCallback(std::bind(&EditorLayer::OnSelectionCleared, this)); 
 
-        //m_InspectorPanel = CreateRef<InspectorPanel>();
+        m_InspectorPanel = CreateRef<InspectorPanel>();
     }
 
     void EditorLayer::OnAttach()
     {
-        //glClearColor(0.39f, 0.58f, 0.93f, 1.0f);
         glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-        //glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glEnable(GL_DEPTH_TEST);
-        //glEnable(GL_MULTISAMPLE);
 
 
         FramebufferSpecification fbSpec;
@@ -79,7 +76,7 @@ namespace CADMageddon
         if (e.GetKeyCode() == CDM_KEY_DELETE)
         {
             m_TransformationSystem->ClearSelection();
-            //m_InspectorPanel->Clear();
+            m_InspectorPanel->Clear();
             m_Scene->DeleteSelected();
         }
 
@@ -91,7 +88,7 @@ namespace CADMageddon
         if (e.GetKeyCode() == CDM_KEY_DELETE)
         {
             m_TransformationSystem->ClearSelection();
-            //m_InspectorPanel->Clear();
+            m_InspectorPanel->Clear();
             m_Scene->DeleteSelected();
         }
 
@@ -103,12 +100,12 @@ namespace CADMageddon
           if (selected)
           {
               m_TransformationSystem->AddToSelected(point->GetTransform());
-              //m_InspectorPanel->Add(entity);
+              m_InspectorPanel->AddPoint(point);
           }
           else
           {
               m_TransformationSystem->RemoveFromSelected(point->GetTransform());
-              //m_InspectorPanel->Remove(entity);
+              m_InspectorPanel->RemovePoint(point);
           }
       }
 
@@ -117,19 +114,19 @@ namespace CADMageddon
           if (selected)
           {
               m_TransformationSystem->AddToSelected(torus->GetTransform());
-              //m_InspectorPanel->AddTorus(entity);
+              m_InspectorPanel->AddTorus(torus);
           }
           else
           {
               m_TransformationSystem->RemoveFromSelected(torus->GetTransform());
-              //m_InspectorPanel->Remove(entity);
+              m_InspectorPanel->RemoveTorus(torus);
           }
       }
 
       void EditorLayer::OnSelectionCleared()
       {
           m_TransformationSystem->ClearSelection();
-          //m_InspectorPanel->Clear();
+          m_InspectorPanel->Clear();
       }
 
     void EditorLayer::InitImGui()
@@ -368,7 +365,7 @@ namespace CADMageddon
 
         RenderMainMenuBar();
         m_HierarchyPanel->Render();
-        //m_InspectorPanel->Render();
+        m_InspectorPanel->Render();
         RenderViewport();
         RenderOptions();
 

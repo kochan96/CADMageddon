@@ -12,6 +12,7 @@
 #include "Systems\TransformationSystem.h"
 
 #include "CADApplication/Panels/HierarchyPanel.h"
+#include "CADApplication/Panels/InspectorPanel.h"
 
 namespace CADMageddon
 {
@@ -83,7 +84,7 @@ namespace CADMageddon
         Ref<TransformationSystem> m_TransformationSystem;
 
         Ref<HierarchyPanel> m_HierarchyPanel;
-        /*Ref<InspectorPanel> m_InspectorPanel;*/
+        Ref<InspectorPanel> m_InspectorPanel;
 
     };
 }
