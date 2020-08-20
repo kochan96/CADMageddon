@@ -27,31 +27,30 @@ namespace CADMageddon
         TransformationSystem(Ref<Cursor3D> cursor);
         void Update(Ref<Scene> scene, FPSCamera& camera, glm::vec2 ndcMousePosition);
 
-       /* void AddToSelected(Entity entity);
-        void RemoveFromSelected(Entity entity);
-        void ClearSelection();*/
+        void AddToSelected(Ref<Transform> transform);
+        void RemoveFromSelected(Ref<Transform> transform);
+        void ClearSelection();
 
         TransformationMode GetTransformationMode() const { return m_TransformationMode; }
-        void SetTransformationMode(TransformationMode mode) { m_TransformationMode = mode; /*RecalculateParentAndChildrenTransform(); */}
+        void SetTransformationMode(TransformationMode mode) { m_TransformationMode = mode; RecalculateParentAndChildrenTransform(); }
 
         TransformationOrigin GetTransformationOrigin() const { return m_TransformationOrigin; }
-        void SetTransformationOrigin(TransformationOrigin origin) { m_TransformationOrigin = origin; /*RecalculateParentAndChildrenTransform();*/ }
+        void SetTransformationOrigin(TransformationOrigin origin) { m_TransformationOrigin = origin; RecalculateParentAndChildrenTransform(); }
 
     private:
-       /* TransformComponent& GetTransformToModify();
-        void AssignParentTransform(TransformComponent& transform);
-        void UnAssignParentTransform(TransformComponent& transform);
+        Transform& GetTransformToModify();
+        void AssignParentTransform(Transform& transform);
+        void UnAssignParentTransform(Transform& transform);
         void RecalculateParentAndChildrenTransform();
 
-        glm::vec3 GetTransformCenter();*/
+        glm::vec3 GetTransformCenter();
 
     private:
         TransformationMode m_TransformationMode;
         TransformationOrigin m_TransformationOrigin;
+        std::vector<Ref<Transform>> m_SelectedEntities;
+
         Ref<Cursor3D> m_Cursor;
-       /* std::vector<Entity> m_SelectedEntities;
-        
-        Ref<Cursor3D> m_Cursor;
-        Ref<TransformComponent> m_TransformationParent;*/
+        Ref<Transform> m_TransformationParent;
     };
 }

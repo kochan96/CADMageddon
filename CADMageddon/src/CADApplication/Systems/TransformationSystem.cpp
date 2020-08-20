@@ -13,14 +13,14 @@ namespace CADMageddon
     TransformationSystem::TransformationSystem(Ref<Cursor3D> cursor)
         :m_Cursor(cursor)
     {
-        //m_TransformationParent = CreateRef<TransformComponent>();
+        m_TransformationParent = CreateRef<Transform>();
         m_TransformationMode = TransformationMode::Translation;
         m_TransformationOrigin = TransformationOrigin::Center;
     }
 
     void TransformationSystem::Update(Ref<Scene> scene, FPSCamera& camera, glm::vec2 ndcMousePosition)
     {
-       /* if (m_SelectedEntities.empty())
+        if (m_SelectedEntities.empty())
         {
             return;
         }
@@ -30,37 +30,34 @@ namespace CADMageddon
         switch (m_TransformationMode)
         {
             case TransformationMode::Translation:
-                Gizmo::Manipulate(GizmoMode::Translation, *transformToManipulate.Transform, camera.GetViewProjectionMatrix(), ndcMousePosition);
+                Gizmo::Manipulate(GizmoMode::Translation, transformToManipulate, camera.GetViewProjectionMatrix(), ndcMousePosition);
                 break;
             case TransformationMode::Rotation:
-                Gizmo::Manipulate(GizmoMode::Rotation, *transformToManipulate.Transform, camera.GetViewProjectionMatrix(), ndcMousePosition);
+                Gizmo::Manipulate(GizmoMode::Rotation, transformToManipulate, camera.GetViewProjectionMatrix(), ndcMousePosition);
                 break;
             case TransformationMode::Scaling:
-                Gizmo::Manipulate(GizmoMode::Scale, *transformToManipulate.Transform, camera.GetViewProjectionMatrix(), ndcMousePosition);
+                Gizmo::Manipulate(GizmoMode::Scale, transformToManipulate, camera.GetViewProjectionMatrix(), ndcMousePosition);
                 break;
         }
 
         if (m_TransformationOrigin == TransformationOrigin::Cursor && m_TransformationMode == TransformationMode::Translation)
         {
             RecalculateParentAndChildrenTransform();
-        }*/
-    }
-
-   /* void TransformationSystem::AddToSelected(Entity entity)
-    {
-        if (entity.HasComponent<TransformComponent>())
-        {
-            m_SelectedEntities.push_back(entity);
-            RecalculateParentAndChildrenTransform();
         }
     }
 
-    void TransformationSystem::RemoveFromSelected(Entity entity)
+    void TransformationSystem::AddToSelected(Ref<Transform> entity)
+    {
+        m_SelectedEntities.push_back(entity);
+        RecalculateParentAndChildrenTransform();
+    }
+
+    void TransformationSystem::RemoveFromSelected(Ref<Transform> entity)
     {
         auto it = std::find(m_SelectedEntities.begin(), m_SelectedEntities.end(), entity);
         if (it != m_SelectedEntities.end())
         {
-            UnAssignParentTransform(it->GetComponent<TransformComponent>());
+            UnAssignParentTransform(**it);
             m_SelectedEntities.erase(it);
             RecalculateParentAndChildrenTransform();
         }
@@ -70,18 +67,18 @@ namespace CADMageddon
     {
         for (auto selected : m_SelectedEntities)
         {
-            UnAssignParentTransform(selected.GetComponent<TransformComponent>());
+            UnAssignParentTransform(*selected);
         }
 
         m_SelectedEntities.clear();
     }
 
-    TransformComponent& TransformationSystem::GetTransformToModify()
+    Transform& TransformationSystem::GetTransformToModify()
     {
 
         if (m_SelectedEntities.size() == 1 && m_TransformationOrigin == TransformationOrigin::Center)
         {
-            return m_SelectedEntities[0].GetComponent<TransformComponent>();
+            return *m_SelectedEntities[0];
         }
         else
         {
@@ -89,14 +86,18 @@ namespace CADMageddon
         }
     }
 
-    void TransformationSystem::AssignParentTransform(TransformComponent& transform)
+    void TransformationSystem::AssignParentTransform(Transform& transform)
     {
-        transform.Transform->SetParent(m_TransformationParent->Transform);
+        transform.Parent = m_TransformationParent;
+        transform.Translation -= m_TransformationParent->Translation;
+
     }
 
-    void TransformationSystem::UnAssignParentTransform(TransformComponent& transform)
+    void TransformationSystem::UnAssignParentTransform(Transform& transform)
     {
-        transform.Transform->SetParent(nullptr);
+        glm::vec3 parentTranslation = transform.GetMatrix() * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+        transform.Translation = parentTranslation;
+        transform.Parent = nullptr;
     }
 
     void TransformationSystem::RecalculateParentAndChildrenTransform()
@@ -108,8 +109,7 @@ namespace CADMageddon
 
         for (auto selected : m_SelectedEntities)
         {
-            auto& transformComponent = selected.GetComponent<TransformComponent>();
-            UnAssignParentTransform(transformComponent);
+            UnAssignParentTransform(*selected);
         }
 
         if (m_TransformationOrigin == TransformationOrigin::Center && m_SelectedEntities.size() == 1)
@@ -118,14 +118,13 @@ namespace CADMageddon
         }
 
         auto center = GetTransformCenter();
-        m_TransformationParent->Transform->Translation = center;
-        m_TransformationParent->Transform->Rotation = glm::vec3(0.0f, 0.0f, 0.0f);
-        m_TransformationParent->Transform->Scale = glm::vec3(1.0f, 1.0f, 1.0f);
+        m_TransformationParent->Translation = center;
+        m_TransformationParent->Rotation = glm::vec3(0.0f, 0.0f, 0.0f);
+        m_TransformationParent->Scale = glm::vec3(1.0f, 1.0f, 1.0f);
 
         for (auto selected : m_SelectedEntities)
         {
-            auto& transformComponent = selected.GetComponent<TransformComponent>();
-            AssignParentTransform(transformComponent);
+            AssignParentTransform(*selected);
         }
     }
 
@@ -142,7 +141,7 @@ namespace CADMageddon
         for (auto selected : m_SelectedEntities)
         {
 
-            glm::vec3 position = selected.GetComponent<TransformComponent>().Transform->GetMatrix() * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+            glm::vec3 position = selected->GetMatrix() * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
             center += position;
             count++;
         }
@@ -150,5 +149,5 @@ namespace CADMageddon
 
         center = glm::vec3(center.x / count, center.y / count, center.z / count);
         return center;
-    }*/
+    }
 }

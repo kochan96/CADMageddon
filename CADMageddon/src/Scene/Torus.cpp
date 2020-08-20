@@ -18,7 +18,7 @@ namespace CADMageddon
         for (auto vertex : mesh.Vertices)
         {
             auto point = CreateRef<Point>(vertex, "Point");
-            point->SetTransform(m_Transform);
+            point->GetTransform()->Parent = m_Transform;
             m_Points.push_back(point);
         }
 

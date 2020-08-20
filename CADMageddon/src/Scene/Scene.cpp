@@ -12,6 +12,7 @@ namespace CADMageddon
     {
         auto point = CreateRef<Point>(position, name);
         m_FreePoints.push_back(point);
+        m_Points.push_back(point);
         return point;
     }
 
@@ -29,7 +30,7 @@ namespace CADMageddon
             std::vector<glm::vec3> vertices;
             for (auto point : torus->GetPoints())
             {
-                vertices.push_back(point->GetPosition());
+                vertices.push_back(point->GetTransform()->Translation);
             }
 
             auto color = torus->GetIsSelected() ? Renderer::SELECTED_COLOR : Renderer::DEFAULT_COLOR;
@@ -40,21 +41,64 @@ namespace CADMageddon
         for (auto point : m_FreePoints)
         {
             auto color = point->GetIsSelected() ? Renderer::SELECTED_COLOR : Renderer::DEFAULT_COLOR;
-            Renderer::RenderPoint(point->GetWorldPositon(), color);
+            glm::vec3 position = point->GetTransform()->GetMatrix() * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+            Renderer::RenderPoint(position, color);
         }
     }
 
-    std::vector<Ref<Point>> Scene::GetAllPoints()
+    void Scene::DeleteSelected()
     {
-        std::vector<Ref<Point>> points = m_FreePoints;
+        std::vector<Ref<Point>> pointsToDelete;
+        std::vector<Ref<Torus>> torusToDelete;
+
+        for (auto point : m_FreePoints)
+        {
+            if (point->GetIsSelected())
+                pointsToDelete.push_back(point);
+        }
 
         for (auto torus : m_Torus)
         {
-            auto torusPoints = torus->GetPoints();
-            points.insert(points.end(), torusPoints.begin(), torusPoints.end());
+            if (torus->GetIsSelected())
+                torusToDelete.push_back(torus);
         }
 
+        for (auto point : pointsToDelete)
+        {
+            DeleteFreePoint(point);
+        }
 
-        return points;
+        for (auto torus : torusToDelete)
+        {
+            DeleteTorus(torus);
+        }
+    }
+
+
+    void Scene::DeleteFreePoint(Ref<Point> point)
+    {
+        {
+            auto it = std::find(m_Points.begin(), m_Points.end(), point);
+            if (it != m_Points.end())
+            {
+                m_Points.erase(it);
+            }
+        }
+        {
+            auto it = std::find(m_FreePoints.begin(), m_FreePoints.end(), point);
+            if (it != m_FreePoints.end())
+            {
+                m_FreePoints.erase(it);
+            }
+        }
+    }
+
+    void Scene::DeleteTorus(Ref<Torus> torus)
+    {
+        auto it = std::find(m_Torus.begin(), m_Torus.end(), torus);
+        if (it != m_Torus.end())
+        {
+            m_Torus.erase(it);
+        }
     }
 }

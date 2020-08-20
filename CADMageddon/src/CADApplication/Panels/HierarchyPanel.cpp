@@ -41,28 +41,21 @@ namespace CADMageddon
         ImGui::End();
     }
 
-    /* void HierarchyPanel::HandleSingleSelection(Entity entity, HierarchyComponent& hierarchyComponent)
-     {
-         bool isSelectedPreviousValue = hierarchyComponent.IsSelected;
-         ClearSelection();
-
-         hierarchyComponent.IsSelected = !isSelectedPreviousValue;
-
-         if (m_OnSelectionChanged)
-             m_OnSelectionChanged(hierarchyComponent.IsSelected, entity);
-     }
-
-     void HierarchyPanel::HandleMultiSelection(Entity entity, HierarchyComponent& hierarchyComponent)
-     {
-         hierarchyComponent.IsSelected = !hierarchyComponent.IsSelected;
-
-         if (m_OnSelectionChanged)
-             m_OnSelectionChanged(hierarchyComponent.IsSelected, entity);
-     }*/
 
     void HierarchyPanel::ClearSelection()
     {
+        for (auto point : m_Scene->GetFreePoints())
+        {
+            point->SetIsSelected(false);
+        }
 
+        for (auto torus : m_Scene->GetTorus())
+        {
+            torus->SetIsSelected(false);
+        }
+
+        if (m_OnSelectionCleared)
+            m_OnSelectionCleared();
     }
 
 
@@ -76,15 +69,25 @@ namespace CADMageddon
             node_flags |= ImGuiTreeNodeFlags_Selected;
         }
 
-        //if (hierarchyComponent.Children.empty())
-        {
-            node_flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
-        }
+        node_flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
 
         bool node_open = ImGui::TreeNodeEx((void*)(intptr_t)id, node_flags, point->GetName().c_str());
         if (ImGui::IsItemClicked())
         {
-            point->SetIsSelected(!point->GetIsSelected());
+            if (ImGui::GetIO().KeyCtrl)
+            {
+                point->SetIsSelected(!point->GetIsSelected());
+                if (m_OnSelectionPointChanged)
+                    m_OnSelectionPointChanged(point->GetIsSelected(), point);
+            }
+            else
+            {
+                bool oldSelected = point->GetIsSelected();
+                ClearSelection();
+                point->SetIsSelected(!oldSelected);
+                if (m_OnSelectionPointChanged)
+                    m_OnSelectionPointChanged(point->GetIsSelected(), point);
+            }
         }
 
     }
@@ -99,15 +102,25 @@ namespace CADMageddon
             node_flags |= ImGuiTreeNodeFlags_Selected;
         }
 
-        //if (hierarchyComponent.Children.empty())
-        {
-            node_flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
-        }
+        node_flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
 
         bool node_open = ImGui::TreeNodeEx((void*)(intptr_t)id, node_flags, torus->GetName().c_str());
         if (ImGui::IsItemClicked())
         {
-            torus->SetIsSelected(!torus->GetIsSelected());
+            if (ImGui::GetIO().KeyCtrl)
+            {
+                torus->SetIsSelected(!torus->GetIsSelected());
+                if (m_OnSelectionTorusChanged)
+                    m_OnSelectionTorusChanged(torus->GetIsSelected(), torus);
+            }
+            else
+            {
+                bool oldSelected = torus->GetIsSelected();
+                ClearSelection();
+                torus->SetIsSelected(!oldSelected);
+                if (m_OnSelectionTorusChanged)
+                    m_OnSelectionTorusChanged(torus->GetIsSelected(), torus);
+            }
         }
     }
 }

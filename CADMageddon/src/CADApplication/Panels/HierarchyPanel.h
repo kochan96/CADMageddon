@@ -20,9 +20,9 @@ namespace CADMageddon
             m_OnSelectionPointChanged = selectionPointChangedCallback;
         }
 
-        void SetOnSelectionChangedTorusCallback(std::function<void(bool, Ref<Point>)> selectionPointChangedCallback)
+        void SetOnSelectionChangedTorusCallback(std::function<void(bool, Ref<Torus>)> selectionTorusChangedCallback)
         {
-            m_OnSelectionPointChanged = selectionPointChangedCallback;
+            m_OnSelectionTorusChanged = selectionTorusChangedCallback;
         }
 
         void SetOnSelectionClearedCallback(std::function<void()> selectionClearedCallback)

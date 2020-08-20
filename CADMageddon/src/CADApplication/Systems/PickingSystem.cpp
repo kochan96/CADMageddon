@@ -18,7 +18,7 @@ namespace CADMageddon
         const FPSCamera& camera)
     {
 
-       /* bool multiSelect = Input::IsKeyPressed(CDM_KEY_LEFT_CONTROL);
+        bool multiSelect = Input::IsKeyPressed(CDM_KEY_LEFT_CONTROL);
 
         if (!multiSelect)
         {
@@ -27,17 +27,12 @@ namespace CADMageddon
 
         const float pointSize = 5.0f;
 
-        auto entities = m_Scene.GetEntities();
+        auto points = m_Scene.GetPoints();
 
-        for (auto entity : entities)
+        for (auto point : points)
         {
-            if (!entity.HasComponent<PointComponent>())
-            {
-                continue;
-            }
-
-            auto& pointComponent = entity.GetComponent<PointComponent>();
-            auto frustumPosition = camera.GetViewProjectionMatrix() * glm::vec4(pointComponent.Point->GetWorldPositon(), 1.0f);
+            glm::vec4 worldPosition = point->GetTransform()->GetMatrix() * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+            auto frustumPosition = camera.GetViewProjectionMatrix() * worldPosition;
             if (!IsInsideFrustum(frustumPosition))
             {
                 continue;
@@ -54,42 +49,62 @@ namespace CADMageddon
                 continue;
             }
 
-            if (entity.HasComponent<HierarchyComponent>())
+            point->SetIsSelected(!point->GetIsSelected());
+            if (point->GetIsSelected())
             {
-                auto& hierarchySelectable = entity.GetComponent<HierarchyComponent>();
-                hierarchySelectable.IsSelected = !hierarchySelectable.IsSelected;
-
-                if (hierarchySelectable.IsSelected)
-                {
-                    m_TransformationSystem->AddToSelected(entity);
-                }
-                else
-                {
-                    m_TransformationSystem->RemoveFromSelected(entity);
-                }
+                m_TransformationSystem->AddToSelected(point->GetTransform());
             }
+            else
+            {
+                m_TransformationSystem->RemoveFromSelected(point->GetTransform());
+            }
+        }
 
-
-        }*/
-    }
-
-    void PickingSystem::ClearSelection(const Scene& scene)
-    {
-      /*  for (auto entity : scene.GetEntities())
+        for (auto torus : m_Scene.GetTorus())
         {
-            if (!entity.HasComponent<PointComponent>())
+            glm::vec4 worldPosition = torus->GetTransform()->GetMatrix() * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+            auto frustumPosition = camera.GetViewProjectionMatrix() * worldPosition;
+            if (!IsInsideFrustum(frustumPosition))
             {
                 continue;
             }
 
-            if (entity.HasComponent<HierarchyComponent>())
+            frustumPosition /= frustumPosition.w;
+
+            float x = (frustumPosition.x + 1.0f) * viewPortSize.x / 2;
+            float y = (1.0f - frustumPosition.y) * viewPortSize.y / 2;
+
+            glm::vec2 screenPosition(x, y);
+            if (!IsInsidePickingArea(screenPosition, mousePosition, pointSize))
             {
-                auto& hierarchySelectable = entity.GetComponent<HierarchyComponent>();
-                hierarchySelectable.IsSelected = false;
+                continue;
+            }
+
+            torus->SetIsSelected(!torus->GetIsSelected());
+            if (torus->GetIsSelected())
+            {
+                m_TransformationSystem->AddToSelected(torus->GetTransform());
+            }
+            else
+            {
+                m_TransformationSystem->RemoveFromSelected(torus->GetTransform());
             }
         }
+    }
 
-        m_TransformationSystem->ClearSelection();*/
+    void PickingSystem::ClearSelection(const Scene& scene)
+    {
+        for (auto point : scene.GetPoints())
+        {
+            point->SetIsSelected(false);
+        }
+
+        for (auto torus : scene.GetTorus())
+        {
+            torus->SetIsSelected(false);
+        }
+
+        m_TransformationSystem->ClearSelection();
     }
 
     bool PickingSystem::IsInsideFrustum(const glm::vec4& position)

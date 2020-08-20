@@ -39,8 +39,9 @@ namespace CADMageddon
         bool OnKeyPressedEventViewport(KeyPressedEvent& e);
         bool OnKeyPressedEvent(KeyPressedEvent& e);
 
-        /*void OnSelectionChanged(bool selected, Entity entity);
-        void OnSelectionCleared(std::vector<Entity> cleared);*/
+        void OnSelectionChangedPoint(bool selected, Ref<Point> point);
+        void OnSelectionChangedTorus(bool selected, Ref<Torus> torus);
+        void OnSelectionCleared();
 
         bool IsEditMode() const;
 
