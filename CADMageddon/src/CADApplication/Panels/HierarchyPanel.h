@@ -1,5 +1,4 @@
 #pragma once
-#pragma once
 #include "cadpch.h"
 #include "Core/Base.h"
 
@@ -8,6 +7,7 @@ namespace CADMageddon
     class Scene;
     class Point;
     class Torus;
+    class BezierC0;
 
     class HierarchyPanel
     {
@@ -36,6 +36,8 @@ namespace CADMageddon
         void ClearSelection();
         void RenderPointNode(Ref<Point> point, int& id);
         void RenderTorusNode(Ref<Torus> torus, int& id);
+        void RenderBezierC0Node(Ref<BezierC0> bezierC0, int& id);
+        void RenderBezierControlPointNode(Ref<BezierC0> bezierc0, Ref<Point> point, int& id);
 
     private:
         std::function<void(bool, Ref<Point>)> m_OnSelectionPointChanged;

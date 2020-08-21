@@ -432,10 +432,10 @@ namespace CADMageddon
                     m_Scene->CreatePoint(m_CursorController.getCursor()->getPosition(), "Point");
                 }
 
-                //if (ImGui::MenuItem("Add BezierC0"))
-                //{
-                //    m_Scene->CreateBezierC0Entity();
-                //}
+                if (ImGui::MenuItem("Add BezierC0"))
+                {
+                    m_Scene->CreateBezierC0("BezierC0");
+                }
 
 
                 ImGui::EndMenu();

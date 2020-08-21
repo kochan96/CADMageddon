@@ -23,6 +23,13 @@ namespace CADMageddon
         return torus;
     }
 
+    Ref<BezierC0> Scene::CreateBezierC0(std::string name)
+    {
+        auto bezierC0 = CreateRef<BezierC0>(name);
+        m_BezierC0.push_back(bezierC0);
+        return bezierC0;
+    }
+
     void Scene::Update()
     {
         for (auto torus : m_Torus)
@@ -38,7 +45,7 @@ namespace CADMageddon
         }
 
 
-        for (auto point : m_FreePoints)
+        for (auto point : m_Points)
         {
             auto color = point->GetIsSelected() ? Renderer::SELECTED_COLOR : Renderer::DEFAULT_COLOR;
             glm::vec3 position = point->GetTransform()->GetMatrix() * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -50,6 +57,7 @@ namespace CADMageddon
     {
         std::vector<Ref<Point>> pointsToDelete;
         std::vector<Ref<Torus>> torusToDelete;
+        std::vector<Ref<BezierC0>> bezierC0ToDelete;
 
         for (auto point : m_FreePoints)
         {
@@ -63,6 +71,12 @@ namespace CADMageddon
                 torusToDelete.push_back(torus);
         }
 
+        for (auto bezierC0 : m_BezierC0)
+        {
+            if (bezierC0->GetIsSelected())
+                bezierC0ToDelete.push_back(bezierC0);
+        }
+
         for (auto point : pointsToDelete)
         {
             DeleteFreePoint(point);
@@ -72,6 +86,31 @@ namespace CADMageddon
         {
             DeleteTorus(torus);
         }
+
+        for (auto bezierC0 : bezierC0ToDelete)
+        {
+            DeleteBezierC0(bezierC0);
+        }
+    }
+
+    void Scene::AssignSelectedFreeToBezier(Ref<BezierC0> bezier)
+    {
+        auto points = m_FreePoints;
+        for (auto point : points)
+        {
+            if (point->GetIsSelected())
+            {
+                bezier->AddControlPoint(point);
+                auto it = std::find(m_FreePoints.begin(), m_FreePoints.end(), point);
+                m_FreePoints.erase(it);
+            }
+        }
+    }
+
+    void Scene::RemovePointFromBezier(Ref<BezierC0> bezier, Ref<Point> point)
+    {
+        m_FreePoints.push_back(point);
+        bezier->RemoveControlPoint(point);
     }
 
 
@@ -99,6 +138,20 @@ namespace CADMageddon
         if (it != m_Torus.end())
         {
             m_Torus.erase(it);
+        }
+    }
+
+    void Scene::DeleteBezierC0(Ref<BezierC0> bezierC0)
+    {
+        auto it = std::find(m_BezierC0.begin(), m_BezierC0.end(), bezierC0);
+        if (it != m_BezierC0.end())
+        {
+            for (auto point : bezierC0->GetControlPoints())
+            {
+                m_FreePoints.push_back(point);
+            }
+
+            m_BezierC0.erase(it);
         }
     }
 }
