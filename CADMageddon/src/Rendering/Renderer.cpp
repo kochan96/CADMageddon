@@ -44,7 +44,7 @@ namespace CADMageddon
         glDepthFunc(GL_LEQUAL);
 
         /*glEnable(GL_BLEND);
-        glBlendFunc(GL_DST_ALPHA, GL_ALWA);*/
+        glBlendFunc(GL_DST_ALPHA, GL_ONE_MINUS_DST_ALPHA);*/
 
         s_ShaderLibrary->Load("FlatColorShader", "assets/shaders/FlatColorShader.glsl");
         s_ShaderLibrary->Load("ColorShader", "assets/shaders/ColorShader.glsl");
@@ -134,9 +134,9 @@ namespace CADMageddon
         glViewport(0, 0, width, height);
     }
 
-    void Renderer::BeginScene(FPSCamera& camera)
+    void Renderer::BeginScene(const glm::mat4& viewProjectionMatrix)
     {
-        s_SceneData->ViewProjectionMatrix = camera.GetViewProjectionMatrix();
+        s_SceneData->ViewProjectionMatrix = viewProjectionMatrix;
 
         s_RenderPointData.PointVertexBufferPtr = s_RenderPointData.PointVertexBufferBase;
         s_RenderPointData.Count = 0;

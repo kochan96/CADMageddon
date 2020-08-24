@@ -21,7 +21,7 @@
 namespace CADMageddon
 {
     EditorLayer::EditorLayer(const std::string& debugName) :
-        Layer(debugName), m_CameraController(45.0f, 1280.0f / 720.0f, 0.1f, 100.0f), m_CursorController(m_CameraController.GetCamera())
+        Layer(debugName), m_CameraController(45.0f, 1280.0f / 720.0f, 1.0f, 100.0f), m_CursorController(m_CameraController.GetCamera())
     {
         m_Viewport = std::make_pair<glm::vec2, glm::vec2>(glm::vec2(0.0f), glm::vec2(0.0f));
         m_Scene = CreateRef<Scene>();
@@ -49,9 +49,13 @@ namespace CADMageddon
         fbSpec.Width = 1280;
         fbSpec.Height = 720;
         m_Framebuffer = CreateRef<OpenGLFramebuffer>(fbSpec);
+        m_FramebufferLeft = CreateRef<OpenGLFramebuffer>(fbSpec);
+        m_FramebufferRight = CreateRef<OpenGLFramebuffer>(fbSpec);
 
         InitImGui();
         InitGridVertexArray();
+        InitQuadVertexArray();
+        InitQuadShader();
 
         std::srand(0);
     }
@@ -264,6 +268,33 @@ namespace CADMageddon
         m_GridVertexArray->SetIndexBuffer(indexBuffer);
     }
 
+    void EditorLayer::InitQuadVertexArray()
+    {
+        float quadVertices[24] = {
+        -1.0f,  1.0f,  0.0f, 1.0f,
+        -1.0f, -1.0f,  0.0f, 0.0f,
+         1.0f, -1.0f,  1.0f, 0.0f,
+
+        -1.0f,  1.0f,  0.0f, 1.0f,
+         1.0f, -1.0f,  1.0f, 0.0f,
+         1.0f,  1.0f,  1.0f, 1.0f
+        };
+
+        m_QuadVertexArray = CreateRef<OpenGLVertexArray>();
+        auto vertexBuffer = CreateRef<OpenGLVertexBuffer>(quadVertices, sizeof(quadVertices));
+        vertexBuffer->SetLayout({
+            { ShaderDataType::Float2, "a_Position" },
+            { ShaderDataType::Float2, "a_TextureCoord" }
+            });
+
+        m_QuadVertexArray->AddVertexBuffer(vertexBuffer);
+    }
+
+    void EditorLayer::InitQuadShader()
+    {
+        m_QuadShader = CreateRef<OpenGLShader>("assets/shaders/QuadShader.glsl");
+    }
+
     void EditorLayer::OnDetach()
     {
         ShutDownImGui();
@@ -284,6 +315,8 @@ namespace CADMageddon
             (spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
         {
             m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+            m_FramebufferLeft->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+            m_FramebufferRight->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
             m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);
             m_CursorController.Resize(m_ViewportSize, m_Viewport, m_CameraController.GetCamera());
         }
@@ -303,27 +336,98 @@ namespace CADMageddon
             m_CursorController.Update(ts, m_CameraController.GetCamera(), viewPortMousePosition);
         }
 
-        m_Framebuffer->Bind();
-
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        Renderer::BeginScene(m_CameraController.GetCamera());
-
-        m_Scene->Update();
-
-        Renderer::RenderGrid(m_GridVertexArray, glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)), glm::vec4(1.0f));
-        const float cursorSize = 1.0f;
-        RenderCursor(m_CursorController.getCursor()->getPosition(), cursorSize);
-
-        if (IsEditMode())
+        if (!m_EnableStereoscopic)
         {
-            auto pos = ImGui::GetIO().MousePos;
-            m_TransformationSystem->Update(m_Scene, m_CameraController.GetCamera(), GetNDCMousePosition({ pos.x,pos.y }));
+            m_Framebuffer->Bind();
+
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            Renderer::BeginScene(m_CameraController.GetCamera().GetViewProjectionMatrix());
+
+            m_Scene->Update();
+
+            Renderer::RenderGrid(m_GridVertexArray, glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)), glm::vec4(1.0f));
+            const float cursorSize = 1.0f;
+            RenderCursor(m_CursorController.getCursor()->getPosition(), cursorSize);
+
+            if (IsEditMode())
+            {
+                auto pos = ImGui::GetIO().MousePos;
+                m_TransformationSystem->Update(m_Scene, m_CameraController.GetCamera(), GetNDCMousePosition({ pos.x,pos.y }));
+            }
+
+            Renderer::EndScene();
+
+            m_Framebuffer->UnBind();
         }
+        else
+        {
+            m_FramebufferLeft->Bind();
+            glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            glColorMask(GL_TRUE, GL_FALSE, GL_FALSE, GL_FALSE);
 
-        Renderer::EndScene();
+            auto leftEyeMatrix = m_CameraController.GetCamera().GetLeftEyeProjectionMatrix() * m_CameraController.GetCamera().GetLeftViewMatrix();
+            Renderer::BeginScene(leftEyeMatrix);
 
-        m_Framebuffer->UnBind();
+            m_Scene->Update();
+
+            Renderer::RenderGrid(m_GridVertexArray, glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)), glm::vec4(1.0f));
+            const float cursorSize = 1.0f;
+            RenderCursor(m_CursorController.getCursor()->getPosition(), cursorSize);
+
+            if (IsEditMode())
+            {
+                auto pos = ImGui::GetIO().MousePos;
+                m_TransformationSystem->Update(m_Scene, m_CameraController.GetCamera(), GetNDCMousePosition({ pos.x,pos.y }));
+            }
+
+            Renderer::EndScene();
+
+            m_FramebufferRight->Bind();
+            glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            glColorMask(GL_FALSE, GL_TRUE, GL_TRUE, GL_FALSE);
+            
+            auto rightEyeMatrix = m_CameraController.GetCamera().GetRightEyeProjectionMatrix() * m_CameraController.GetCamera().GetRightViewMatrix();
+            Renderer::BeginScene(rightEyeMatrix);
+
+            m_Scene->Update();
+
+            Renderer::RenderGrid(m_GridVertexArray, glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)), glm::vec4(1.0f));
+            RenderCursor(m_CursorController.getCursor()->getPosition(), cursorSize);
+
+            if (IsEditMode())
+            {
+                auto pos = ImGui::GetIO().MousePos;
+                m_TransformationSystem->Update(m_Scene, m_CameraController.GetCamera(), GetNDCMousePosition({ pos.x,pos.y }));
+            }
+
+            Renderer::EndScene();
+           
+            m_Framebuffer->Bind();
+            glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+            glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+            
+            m_QuadVertexArray->Bind();
+            m_QuadShader->Bind();
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, m_FramebufferLeft->GetColorAttachmentRendererID());
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, m_FramebufferRight->GetColorAttachmentRendererID());
+
+            m_QuadShader->SetInt("leftEyeFrame", 0);
+            m_QuadShader->SetInt("rightEyeFrame", 1);
+            //m_QuadShader->SetFloat3("leftFilter", m_LeftFilter);
+            //m_QuadShader->SetFloat3("rightFilter", m_RightFilter);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+
+            m_Framebuffer->UnBind();
+
+        }
 
         RenderImGui();
     }
@@ -606,6 +710,27 @@ namespace CADMageddon
         {
             m_CursorController.UpdateScreenPosition(m_ScreenPosition);
         }
+
+        ImGui::EndGroup();
+
+        ImGui::BeginGroup();
+        ImGui::Text("Stereo");
+        ImGui::Checkbox("Enable stereoscopic", &m_EnableStereoscopic);
+
+        auto eyeDistance = m_CameraController.GetCamera().GetEyeDistance();
+        if (ImGui::DragFloat("Eye Distance", &eyeDistance, 0.001f))
+        {
+            m_CameraController.GetCamera().SetEyeDistance(eyeDistance);
+        }
+
+        auto projectionPlaneDistance = m_CameraController.GetCamera().GetProjectionPlaneDistance();
+        if (ImGui::DragFloat("ProjectionPlaneDistance", &projectionPlaneDistance,0.1f))
+        {
+            m_CameraController.GetCamera().SetProjectionPlaneDistance(projectionPlaneDistance);
+        }
+
+        ImGui::ColorEdit3("LeftFilter", &m_LeftFilter.x);
+        ImGui::ColorEdit3("RightFilter", &m_RightFilter.x);
 
         ImGui::EndGroup();
 

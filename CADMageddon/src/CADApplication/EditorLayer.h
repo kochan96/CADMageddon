@@ -53,6 +53,8 @@ namespace CADMageddon
         void ShutDownImGui();
         void RenderImGui();
         void InitGridVertexArray();
+        void InitQuadVertexArray();
+        void InitQuadShader();
 
         void RenderMainMenuBar();
         void RenderViewport();
@@ -65,7 +67,12 @@ namespace CADMageddon
 
     private:
         Ref<OpenGLVertexArray> m_GridVertexArray;
+        Ref<OpenGLVertexArray> m_QuadVertexArray;
+        Ref<OpenGLShader> m_QuadShader;
+
         Ref<OpenGLFramebuffer> m_Framebuffer;
+        Ref<OpenGLFramebuffer> m_FramebufferLeft;
+        Ref<OpenGLFramebuffer> m_FramebufferRight;
 
         FPSCameraController m_CameraController;
 
@@ -76,6 +83,10 @@ namespace CADMageddon
         bool m_ViewportFocused = false;
         bool m_ViewportHovered = false;
         bool m_BlockEvents = false;
+
+        bool m_EnableStereoscopic = false;
+        glm::vec3 m_LeftFilter = glm::vec3(1, 0, 0);
+        glm::vec3 m_RightFilter = glm::vec3(0, 0, 1);
 
 
         Ref<Scene> m_Scene;
