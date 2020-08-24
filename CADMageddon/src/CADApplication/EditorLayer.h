@@ -42,7 +42,9 @@ namespace CADMageddon
 
         void OnSelectionChangedPoint(bool selected, Ref<Point> point);
         void OnSelectionChangedTorus(bool selected, Ref<Torus> torus);
-        void OnSelectionChangedBezierC0(bool selected, Ref<BezierC0> torus);
+        void OnSelectionChangedBezierC0(bool selected, Ref<BezierC0> bezier);
+        void OnSelectionChangedBSpline(bool selected, Ref<BSpline> bSpline);
+        void OnSelectionInterpolatedChanged(bool selected, Ref<InterpolatedCurve> bSpline);
         void OnSelectionCleared();
 
         bool IsEditMode() const;

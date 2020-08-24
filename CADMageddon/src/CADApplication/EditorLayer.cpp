@@ -32,6 +32,8 @@ namespace CADMageddon
         m_HierarchyPanel->SetOnSelectionChangedPointCallback(std::bind(&EditorLayer::OnSelectionChangedPoint, this, std::placeholders::_1, std::placeholders::_2));
         m_HierarchyPanel->SetOnSelectionChangedTorusCallback(std::bind(&EditorLayer::OnSelectionChangedTorus, this, std::placeholders::_1, std::placeholders::_2));
         m_HierarchyPanel->SetOnBezierSelectionChangedCallback(std::bind(&EditorLayer::OnSelectionChangedBezierC0, this, std::placeholders::_1, std::placeholders::_2));
+        m_HierarchyPanel->SetOnBSplineSelectionChangedCallback(std::bind(&EditorLayer::OnSelectionChangedBSpline, this, std::placeholders::_1, std::placeholders::_2));
+        m_HierarchyPanel->SetOnInterpolatedSelectionChangedCallback(std::bind(&EditorLayer::OnSelectionInterpolatedChanged, this, std::placeholders::_1, std::placeholders::_2));
         m_HierarchyPanel->SetOnSelectionClearedCallback(std::bind(&EditorLayer::OnSelectionCleared, this));
 
         m_InspectorPanel = CreateRef<InspectorPanel>();
@@ -96,51 +98,75 @@ namespace CADMageddon
         return false;
     }
 
-      void EditorLayer::OnSelectionChangedPoint(bool selected, Ref<Point> point)
-      {
-          if (selected)
-          {
-              m_TransformationSystem->AddToSelected(point->GetTransform());
-              m_InspectorPanel->AddPoint(point);
-          }
-          else
-          {
-              m_TransformationSystem->RemoveFromSelected(point->GetTransform());
-              m_InspectorPanel->RemovePoint(point);
-          }
-      }
+    void EditorLayer::OnSelectionChangedPoint(bool selected, Ref<Point> point)
+    {
+        if (selected)
+        {
+            m_TransformationSystem->AddToSelected(point->GetTransform());
+            m_InspectorPanel->AddPoint(point);
+        }
+        else
+        {
+            m_TransformationSystem->RemoveFromSelected(point->GetTransform());
+            m_InspectorPanel->RemovePoint(point);
+        }
+    }
 
-      void EditorLayer::OnSelectionChangedTorus(bool selected, Ref<Torus> torus)
-      {
-          if (selected)
-          {
-              m_TransformationSystem->AddToSelected(torus->GetTransform());
-              m_InspectorPanel->AddTorus(torus);
-          }
-          else
-          {
-              m_TransformationSystem->RemoveFromSelected(torus->GetTransform());
-              m_InspectorPanel->RemoveTorus(torus);
-          }
-      }
+    void EditorLayer::OnSelectionChangedTorus(bool selected, Ref<Torus> torus)
+    {
+        if (selected)
+        {
+            m_TransformationSystem->AddToSelected(torus->GetTransform());
+            m_InspectorPanel->AddTorus(torus);
+        }
+        else
+        {
+            m_TransformationSystem->RemoveFromSelected(torus->GetTransform());
+            m_InspectorPanel->RemoveTorus(torus);
+        }
+    }
 
-      void EditorLayer::OnSelectionChangedBezierC0(bool selected, Ref<BezierC0> bezier)
-      {
-          if (selected)
-          {
-              m_InspectorPanel->AddBezierC0(bezier);
-          }
-          else
-          {
-              m_InspectorPanel->RemoveBezierC0(bezier);
-          }
-      }
+    void EditorLayer::OnSelectionChangedBezierC0(bool selected, Ref<BezierC0> bezier)
+    {
+        if (selected)
+        {
+            m_InspectorPanel->AddBezierC0(bezier);
+        }
+        else
+        {
+            m_InspectorPanel->RemoveBezierC0(bezier);
+        }
+    }
 
-      void EditorLayer::OnSelectionCleared()
-      {
-          m_TransformationSystem->ClearSelection();
-          m_InspectorPanel->Clear();
-      }
+    void EditorLayer::OnSelectionChangedBSpline(bool selected, Ref<BSpline> bSpline)
+    {
+        if (selected)
+        {
+            m_InspectorPanel->AddBSpline(bSpline);
+        }
+        else
+        {
+            m_InspectorPanel->RemoveBSpline(bSpline);
+        }
+    }
+
+    void EditorLayer::OnSelectionInterpolatedChanged(bool selected, Ref<InterpolatedCurve> interpolated)
+    {
+        if (selected)
+        {
+            m_InspectorPanel->AddInterpolatedCurve(interpolated);
+        }
+        else
+        {
+            m_InspectorPanel->RemoveInterpolatedCurve(interpolated);
+        }
+    }
+
+    void EditorLayer::OnSelectionCleared()
+    {
+        m_TransformationSystem->ClearSelection();
+        m_InspectorPanel->Clear();
+    }
 
     void EditorLayer::InitImGui()
     {
@@ -448,6 +474,16 @@ namespace CADMageddon
                 if (ImGui::MenuItem("Add BezierC0"))
                 {
                     m_Scene->CreateBezierC0("BezierC0");
+                }
+
+                if (ImGui::MenuItem("Add BSpline"))
+                {
+                    m_Scene->CreateBSpline("BSpline");
+                }
+
+                if (ImGui::MenuItem("Add Interpolated"))
+                {
+                    m_Scene->CreateInterpolated("Interpolated");
                 }
 
 

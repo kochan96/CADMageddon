@@ -270,7 +270,7 @@ namespace CADMageddon
     }
 
 
-    void Renderer::ShaderRenderBezierC0(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, unsigned int subdivisionCount, const glm::vec4& color)
+    void Renderer::ShaderRenderBezierC0(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, const glm::vec4& color)
     {
         float vertices[] = { p0.x,p0.y,p0.z,p1.x,p1.y,p1.z,p2.x,p2.y,p2.z };
 
@@ -278,14 +278,13 @@ namespace CADMageddon
         s_RenderBezierData.BezierVertexBuffer->SetData(vertices, sizeof(float) * 9);
         s_RenderBezierData.QuadraticBezierShader->Bind();
         s_RenderBezierData.QuadraticBezierShader->SetFloat4("u_Color", color);
-        s_RenderBezierData.QuadraticBezierShader->SetFloat("u_SubdivisionCount", subdivisionCount);
         s_RenderBezierData.QuadraticBezierShader->SetMat4("u_ViewProjectionMatrix", s_SceneData->ViewProjectionMatrix);
 
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
     }
 
-    void Renderer::ShaderRenderBezierC0(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, unsigned int subdivisionCount, const glm::vec4& color)
+    void Renderer::ShaderRenderBezierC0(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, const glm::vec4& color)
     {
         float vertices[] = { p0.x,p0.y,p0.z,p1.x,p1.y,p1.z,p2.x,p2.y,p2.z,p3.x,p3.y,p3.z };
 
@@ -293,7 +292,6 @@ namespace CADMageddon
         s_RenderBezierData.BezierVertexBuffer->SetData(vertices, sizeof(float) * 12);
         s_RenderBezierData.CubicBezierShader->Bind();
         s_RenderBezierData.CubicBezierShader->SetFloat4("u_Color", color);
-        s_RenderBezierData.CubicBezierShader->SetFloat("u_SubdivisionCount", subdivisionCount);
         s_RenderBezierData.CubicBezierShader->SetMat4("u_ViewProjectionMatrix", s_SceneData->ViewProjectionMatrix);
 
         glDrawArrays(GL_LINES_ADJACENCY, 0, 4);

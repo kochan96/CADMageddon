@@ -44,18 +44,44 @@ namespace CADMageddon
             m_Bezier.erase(it);
     }
 
+    void InspectorPanel::AddBSpline(Ref<BSpline> bSpline)
+    {
+        m_BSpline.push_back(bSpline);
+    }
+
+    void InspectorPanel::RemoveBSpline(Ref<BSpline> bSpline)
+    {
+        auto it = std::find(m_BSpline.begin(), m_BSpline.end(), bSpline);
+        if (it != m_BSpline.end())
+            m_BSpline.erase(it);
+    }
+
+    void InspectorPanel::AddInterpolatedCurve(Ref<InterpolatedCurve> interPolatedCurve)
+    {
+        m_InterPolatedCurve.push_back(interPolatedCurve);
+    }
+
+    void InspectorPanel::RemoveInterpolatedCurve(Ref<InterpolatedCurve> interPolatedCurve)
+    {
+        auto it = std::find(m_InterPolatedCurve.begin(), m_InterPolatedCurve.end(), interPolatedCurve);
+        if (it != m_InterPolatedCurve.end())
+            m_InterPolatedCurve.erase(it);
+    }
+
     void InspectorPanel::Clear()
     {
         m_Points.clear();
         m_Torus.clear();
         m_Bezier.clear();
+        m_BSpline.clear();
+        m_InterPolatedCurve.clear();
     }
 
     void InspectorPanel::Render()
     {
         ImGui::Begin("Inspector");
 
-        unsigned int size = m_Points.size() + m_Torus.size() + m_Bezier.size();
+        unsigned int size = m_Points.size() + m_Torus.size() + m_Bezier.size() + m_BSpline.size() + m_InterPolatedCurve.size();
         if (size != 1)
         {
             ImGui::End();
@@ -73,6 +99,14 @@ namespace CADMageddon
         else if (m_Bezier.size() == 1)
         {
             BezierEditor(m_Bezier[0]);
+        }
+        else if (m_BSpline.size() == 1)
+        {
+            BSplineEditor(m_BSpline[0]);
+        }
+        else if (m_InterPolatedCurve.size() == 1)
+        {
+            InterpolatedCurveEditor(m_InterPolatedCurve[0]);
         }
 
         ImGui::End();

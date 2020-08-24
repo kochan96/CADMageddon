@@ -33,7 +33,7 @@ namespace CADMageddon
             const glm::vec3& p1,
             const glm::vec3& p2,
             const glm::vec4& color = DEFAULT_COLOR,
-            float tolerance = 1.001f
+            float tolerance = 1.0005f
         );
 
         static void RenderBezierC0(
@@ -42,21 +42,20 @@ namespace CADMageddon
             const glm::vec3& p2,
             const glm::vec3& p3,
             const glm::vec4& color = DEFAULT_COLOR,
-            float tolerance = 1.001f
+            float tolerance = 1.0005f
         );
 
         static void ShaderRenderBezierC0(
             const glm::vec3& p0,
             const glm::vec3& p1,
             const glm::vec3& p2,
-            unsigned int subdivisionCount = 100,
             const glm::vec4& color = DEFAULT_COLOR);
+
         static void ShaderRenderBezierC0(
             const glm::vec3& p0,
             const glm::vec3& p1,
             const glm::vec3& p2,
             const glm::vec3& p3,
-            unsigned int subdivisionCount = 100,
             const glm::vec4& color = DEFAULT_COLOR);
 
     private:
