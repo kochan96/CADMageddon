@@ -28,22 +28,48 @@ namespace CADMageddon
         static void RenderPoint(const glm::vec3& position, const glm::vec4& color = DEFAULT_COLOR);
         static void RenderLine(const glm::vec3& start, const glm::vec3& end, const glm::vec4& color = DEFAULT_COLOR);
 
-        static void RenderBezierC0(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, unsigned int subdivisionCount, const glm::vec4& color = DEFAULT_COLOR);
-        static void RenderBezierC0(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, unsigned int subdivisionCount, const glm::vec4& color = DEFAULT_COLOR);
+        static void RenderBezierC0(
+            const glm::vec3& p0,
+            const glm::vec3& p1,
+            const glm::vec3& p2,
+            const glm::vec4& color = DEFAULT_COLOR,
+            float tolerance = 1.001f
+        );
+
+        static void RenderBezierC0(
+            const glm::vec3& p0,
+            const glm::vec3& p1,
+            const glm::vec3& p2,
+            const glm::vec3& p3,
+            const glm::vec4& color = DEFAULT_COLOR,
+            float tolerance = 1.001f
+        );
+
+        static void ShaderRenderBezierC0(
+            const glm::vec3& p0,
+            const glm::vec3& p1,
+            const glm::vec3& p2,
+            unsigned int subdivisionCount = 100,
+            const glm::vec4& color = DEFAULT_COLOR);
+        static void ShaderRenderBezierC0(
+            const glm::vec3& p0,
+            const glm::vec3& p1,
+            const glm::vec3& p2,
+            const glm::vec3& p3,
+            unsigned int subdivisionCount = 100,
+            const glm::vec4& color = DEFAULT_COLOR);
 
     private:
         static void InitTorusRenderData();
         static void InitPointRenderData();
         static void InitLineRenderData();
+        static void InitBezierRenderData();
 
         static void FlushAndResetPoints();
         static void FlushAndResetLines();
 
         static void FlushPoints();
         static void FlushLines();
-
-        static glm::vec3 GetBezierPoint(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, float t);
-        static glm::vec3 GetBezierPoint(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, float t);
 
         struct SceneData
         {
@@ -52,5 +78,8 @@ namespace CADMageddon
 
         static Scope<SceneData> s_SceneData;
         static Scope<ShaderLibrary> s_ShaderLibrary;
+
+        static bool IsBezierFlatEnough(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, float tolerance);
+        static bool IsBezierFlatEnough(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, float tolerance);
     };
 }

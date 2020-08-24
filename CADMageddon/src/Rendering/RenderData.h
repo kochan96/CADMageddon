@@ -53,4 +53,14 @@ namespace CADMageddon
 
         int Count = 0;
     };
+
+    struct RenderBezierData
+    {
+        static const int MaxPoints = 4;
+
+        Ref<OpenGLVertexArray> BezierVertexArray;
+        Ref<OpenGLVertexBuffer> BezierVertexBuffer;
+        Ref<OpenGLShader> QuadraticBezierShader;
+        Ref<OpenGLShader> CubicBezierShader;
+    };
 }

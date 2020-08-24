@@ -30,6 +30,11 @@ namespace CADMageddon
             m_OnSelectionCleared = selectionClearedCallback;
         }
 
+        void SetOnBezierSelectionChangedCallback(std::function<void(bool, Ref<BezierC0>)> selectionBezierChangedCallback)
+        {
+            m_OnSelectionBezierC0Changed = selectionBezierChangedCallback;
+        }
+
         void SetScene(Ref<Scene> scene) { m_Scene = scene; }
 
     private:
@@ -42,6 +47,7 @@ namespace CADMageddon
     private:
         std::function<void(bool, Ref<Point>)> m_OnSelectionPointChanged;
         std::function<void(bool, Ref<Torus>)> m_OnSelectionTorusChanged;
+        std::function<void(bool, Ref<BezierC0>)> m_OnSelectionBezierC0Changed;
         std::function<void()> m_OnSelectionCleared;
         Ref<Scene> m_Scene;
 

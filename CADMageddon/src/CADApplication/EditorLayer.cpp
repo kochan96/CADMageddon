@@ -31,7 +31,8 @@ namespace CADMageddon
 
         m_HierarchyPanel->SetOnSelectionChangedPointCallback(std::bind(&EditorLayer::OnSelectionChangedPoint, this, std::placeholders::_1, std::placeholders::_2));
         m_HierarchyPanel->SetOnSelectionChangedTorusCallback(std::bind(&EditorLayer::OnSelectionChangedTorus, this, std::placeholders::_1, std::placeholders::_2));
-        m_HierarchyPanel->SetOnSelectionClearedCallback(std::bind(&EditorLayer::OnSelectionCleared, this)); 
+        m_HierarchyPanel->SetOnBezierSelectionChangedCallback(std::bind(&EditorLayer::OnSelectionChangedBezierC0, this, std::placeholders::_1, std::placeholders::_2));
+        m_HierarchyPanel->SetOnSelectionClearedCallback(std::bind(&EditorLayer::OnSelectionCleared, this));
 
         m_InspectorPanel = CreateRef<InspectorPanel>();
     }
@@ -120,6 +121,18 @@ namespace CADMageddon
           {
               m_TransformationSystem->RemoveFromSelected(torus->GetTransform());
               m_InspectorPanel->RemoveTorus(torus);
+          }
+      }
+
+      void EditorLayer::OnSelectionChangedBezierC0(bool selected, Ref<BezierC0> bezier)
+      {
+          if (selected)
+          {
+              m_InspectorPanel->AddBezierC0(bezier);
+          }
+          else
+          {
+              m_InspectorPanel->RemoveBezierC0(bezier);
           }
       }
 

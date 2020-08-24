@@ -38,6 +38,8 @@ namespace CADMageddon
         bool GetIsSelected() const { return m_IsSelected; }
         void SetIsSelected(bool isSelected) { m_IsSelected = isSelected; }
 
+        glm::vec3 GetPosition() { return m_Transform->GetMatrix() * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f); }
+
     private:
         Ref<Transform> m_Transform;
         std::string m_Name;

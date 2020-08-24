@@ -14,6 +14,9 @@ namespace CADMageddon
         void DeleteSelected();
         void AssignSelectedFreeToBezier(Ref<BezierC0> bezier);
         void RemovePointFromBezier(Ref<BezierC0> bezier, Ref<Point> point);
+        bool AddNewPointToBezier(Ref<Point> point);
+
+        void RenderBezier(Ref<BezierC0> bezierC0);
 
 
         Ref<Point> CreatePoint(glm::vec3 position, std::string name);

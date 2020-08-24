@@ -32,17 +32,30 @@ namespace CADMageddon
         }
     }
 
+    void InspectorPanel::AddBezierC0(Ref<BezierC0> bezier)
+    {
+        m_Bezier.push_back(bezier);
+    }
+
+    void InspectorPanel::RemoveBezierC0(Ref<BezierC0> bezier)
+    {
+        auto it = std::find(m_Bezier.begin(), m_Bezier.end(), bezier);
+        if (it != m_Bezier.end())
+            m_Bezier.erase(it);
+    }
+
     void InspectorPanel::Clear()
     {
         m_Points.clear();
         m_Torus.clear();
+        m_Bezier.clear();
     }
 
     void InspectorPanel::Render()
     {
         ImGui::Begin("Inspector");
 
-        unsigned int size = m_Points.size() + m_Torus.size();
+        unsigned int size = m_Points.size() + m_Torus.size() + m_Bezier.size();
         if (size != 1)
         {
             ImGui::End();
@@ -56,6 +69,10 @@ namespace CADMageddon
         else if (m_Torus.size() == 1)
         {
             TorusEditor(m_Torus[0]);
+        }
+        else if (m_Bezier.size() == 1)
+        {
+            BezierEditor(m_Bezier[0]);
         }
 
         ImGui::End();

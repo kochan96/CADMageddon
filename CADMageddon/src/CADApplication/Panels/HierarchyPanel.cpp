@@ -56,7 +56,7 @@ namespace CADMageddon
 
     void HierarchyPanel::ClearSelection()
     {
-        for (auto point : m_Scene->GetFreePoints())
+        for (auto point : m_Scene->GetPoints())
         {
             point->SetIsSelected(false);
         }
@@ -64,6 +64,11 @@ namespace CADMageddon
         for (auto torus : m_Scene->GetTorus())
         {
             torus->SetIsSelected(false);
+        }
+
+        for (auto bezier : m_Scene->GetBezierC0())
+        {
+            bezier->SetIsSelected(false);
         }
 
         if (m_OnSelectionCleared)
@@ -179,6 +184,9 @@ namespace CADMageddon
                 ClearSelection();
                 bezierC0->SetIsSelected(!oldSelected);
             }
+
+            if (m_OnSelectionBezierC0Changed)
+                m_OnSelectionBezierC0Changed(bezierC0->GetIsSelected(), bezierC0);
         }
 
         if (node_open && !isBezierEmpty)

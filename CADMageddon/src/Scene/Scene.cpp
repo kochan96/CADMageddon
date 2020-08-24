@@ -11,8 +11,12 @@ namespace CADMageddon
     Ref<Point> Scene::CreatePoint(glm::vec3 position, std::string name)
     {
         auto point = CreateRef<Point>(position, name);
-        m_FreePoints.push_back(point);
         m_Points.push_back(point);
+        auto added = AddNewPointToBezier(point);
+
+        if (!added)
+            m_FreePoints.push_back(point);
+        
         return point;
     }
 
@@ -44,8 +48,13 @@ namespace CADMageddon
             Renderer::RenderTorus(vertices, torus->GetIndices(), torus->GetTransform()->GetMatrix(), color);
         }
 
+        for (auto bezierC0 : m_BezierC0)
+        {
+            RenderBezier(bezierC0);
+        }
 
-        for (auto point : m_Points)
+
+        for (auto point : m_FreePoints)
         {
             auto color = point->GetIsSelected() ? Renderer::SELECTED_COLOR : Renderer::DEFAULT_COLOR;
             glm::vec3 position = point->GetTransform()->GetMatrix() * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -113,6 +122,80 @@ namespace CADMageddon
         bezier->RemoveControlPoint(point);
     }
 
+    bool Scene::AddNewPointToBezier(Ref<Point> point)
+    {
+        bool added = false;
+        for (auto bezier : m_BezierC0)
+        {
+            if (bezier->GetIsSelected())
+            {
+                added = true;
+                bezier->AddControlPoint(point);
+
+                point = CreateRef<Point>(point->GetPosition(), point->GetName());
+            }
+        }
+
+
+        return added;
+    }
+
+    void Scene::RenderBezier(Ref<BezierC0> bezierC0)
+    {
+        auto controlPoints = bezierC0->GetControlPoints();
+        if (controlPoints.empty())
+            return;
+
+
+        std::vector<glm::vec3> controlPointsPositions;
+        for (int i = 0; i < controlPoints.size(); i++)
+        {
+            auto point = controlPoints[i];
+            auto color = point->GetIsSelected() ? Renderer::SELECTED_COLOR : Renderer::DEFAULT_COLOR;
+            glm::vec3 position = point->GetTransform()->GetMatrix() * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+            Renderer::RenderPoint(position, color);
+
+            controlPointsPositions.push_back(position);
+        }
+
+
+        if (bezierC0->GetShowPolygon())
+        {
+            for (int i = 0; i < controlPointsPositions.size() - 1; i++)
+            {
+                auto start = controlPointsPositions[i];
+                auto end = controlPointsPositions[i + 1];
+                Renderer::RenderLine(start, end, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+            }
+        }
+
+        auto bezierColor = bezierC0->GetIsSelected() ? Renderer::SELECTED_COLOR : Renderer::DEFAULT_COLOR;
+
+        for (int i = 0; i < controlPointsPositions.size(); i += 3)
+        {
+            if (i + 3 < controlPointsPositions.size())
+            {
+                Renderer::RenderBezierC0(
+                    controlPointsPositions[i],
+                    controlPointsPositions[i + 1],
+                    controlPointsPositions[i + 2],
+                    controlPointsPositions[i + 3],
+                    bezierColor);
+            }
+            else if (i + 2 < controlPointsPositions.size())
+            {
+                Renderer::RenderBezierC0(
+                    controlPointsPositions[i],
+                    controlPointsPositions[i + 1],
+                    controlPointsPositions[i + 2],
+                    bezierColor);
+            }
+            else if (i + 1 < controlPointsPositions.size())
+            {
+                Renderer::RenderLine(controlPointsPositions[i], controlPointsPositions[i + 1], bezierColor);
+            }
+        }
+    }
 
     void Scene::DeleteFreePoint(Ref<Point> point)
     {

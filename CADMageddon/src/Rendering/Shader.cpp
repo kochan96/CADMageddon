@@ -13,6 +13,8 @@ namespace CADMageddon {
             return GL_VERTEX_SHADER;
         if (type == "fragment" || type == "pixel")
             return GL_FRAGMENT_SHADER;
+        if (type == "geometry")
+            return GL_GEOMETRY_SHADER;
 
         LOG_ERROR("Unknown shader type!");
 
@@ -104,9 +106,11 @@ namespace CADMageddon {
     {
 
         GLuint program = glCreateProgram();
-        //HZ_CORE_ASSERT(shaderSources.size() <= 2, "We only support 2 shaders for now");
-        std::array<GLenum, 2> glShaderIDs;
+        auto size = shaderSources.size();
+        
+        std::vector<GLenum> glShaderIDs(size);
         int glShaderIDIndex = 0;
+        
         for (auto& kv : shaderSources)
         {
             GLenum type = kv.first;
