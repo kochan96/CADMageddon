@@ -50,6 +50,32 @@ namespace CADMageddon
         return interpolated;
     }
 
+    Ref<BezierPatch> Scene::CreateBezierPatchRect(std::string name, const BezierPatchRectCreationParameters& parameters)
+    {
+        auto bezier = BezierPatch::CreateRectPatch(name, parameters.Position, parameters.PatchCountX, parameters.PatchCountY, parameters.Width, parameters.Height);
+        for (auto controlPoints : bezier->GetControlPoints())
+        {
+            m_Points.push_back(controlPoints);
+        }
+
+        m_BezierPatch.push_back(bezier);
+
+        return bezier;
+    }
+
+    Ref<BezierPatch> Scene::CreateBezierPatchCylinder(std::string name, const BezierPatchCylinderCreationParameters& parameters)
+    {
+        auto bezier = BezierPatch::CreateCyliderPatch(name, parameters.Center, parameters.PatchCountX, parameters.PatchCountY, parameters.Radius, parameters.Height);
+        for (auto controlPoints : bezier->GetControlPoints())
+        {
+            m_Points.push_back(controlPoints);
+        }
+
+        m_BezierPatch.push_back(bezier);
+
+        return bezier;
+    }
+
     void Scene::Update()
     {
         for (auto torus : m_Torus)
@@ -79,6 +105,11 @@ namespace CADMageddon
             RenderInterpolatedCurve(interpolated);
         }
 
+        for (auto bezierPatch : m_BezierPatch)
+        {
+            RenderBezierPatch(bezierPatch);
+        }
+
         for (auto point : m_FreePoints)
         {
             auto color = point->GetIsSelected() ? Renderer::SELECTED_COLOR : Renderer::DEFAULT_COLOR;
@@ -89,65 +120,52 @@ namespace CADMageddon
 
     void Scene::DeleteSelected()
     {
-        std::vector<Ref<Point>> pointsToDelete;
         std::vector<Ref<Torus>> torusToDelete;
         std::vector<Ref<BezierC0>> bezierC0ToDelete;
         std::vector<Ref<BSpline>> bSplineToDelete;
         std::vector<Ref<InterpolatedCurve>> interpolatedToDelete;
 
-        for (auto point : m_FreePoints)
+        auto points = m_FreePoints;
+        auto toruses = m_Torus;
+        auto beziers = m_BezierC0;
+        auto splines = m_BSpline;
+        auto interpolatedCurves = m_InterpolatedCurve;
+        auto bezierPatches = m_BezierPatch;
+
+        for (auto point : points)
         {
             if (point->GetIsSelected())
-                pointsToDelete.push_back(point);
+                DeleteFreePoint(point);
         }
 
-        for (auto torus : m_Torus)
+        for (auto torus : toruses)
         {
             if (torus->GetIsSelected())
-                torusToDelete.push_back(torus);
+                DeleteTorus(torus);
         }
 
-        for (auto bezierC0 : m_BezierC0)
+        for (auto bezierC0 : beziers)
         {
             if (bezierC0->GetIsSelected())
-                bezierC0ToDelete.push_back(bezierC0);
+                DeleteBezierC0(bezierC0);
         }
 
-        for (auto bSpline : m_BSpline)
+        for (auto bSpline : splines)
         {
             if (bSpline->GetIsSelected())
-                bSplineToDelete.push_back(bSpline);
+                DeleteBSpline(bSpline);
         }
 
-        for (auto interpolated : m_InterpolatedCurve)
+        for (auto interpolated : interpolatedCurves)
         {
             if (interpolated->GetIsSelected())
-                interpolatedToDelete.push_back(interpolated);
+                DeleteInterpolatedCurve(interpolated);
         }
 
-        for (auto point : pointsToDelete)
+        for (auto bezierPatch : bezierPatches)
         {
-            DeleteFreePoint(point);
-        }
-
-        for (auto torus : torusToDelete)
-        {
-            DeleteTorus(torus);
-        }
-
-        for (auto bezierC0 : bezierC0ToDelete)
-        {
-            DeleteBezierC0(bezierC0);
-        }
-
-        for (auto bSpline : bSplineToDelete)
-        {
-            DeleteBSpline(bSpline);
-        }
-
-        for (auto interpolated : interpolatedToDelete)
-        {
-            DeleteInterpolatedCurve(interpolated);
+            if (bezierPatch->GetIsSelected())
+                DeleteBezierPatch(bezierPatch);
         }
     }
 
@@ -441,6 +459,50 @@ namespace CADMageddon
         }
     }
 
+    void Scene::RenderBezierPatch(Ref<BezierPatch> bezierPatch)
+    {
+        auto renderControlPoints = bezierPatch->GetRenderingControlPoints();
+        std::vector<glm::vec3> controlPointsPositions;
+        std::transform(renderControlPoints.begin(), renderControlPoints.end(), std::back_inserter(controlPointsPositions), [](Ref<Point> point) {return point->GetPosition(); });
+
+        auto color = bezierPatch->GetIsSelected() ? Renderer::SELECTED_COLOR : Renderer::DEFAULT_COLOR;
+        for (int i = 0; i < controlPointsPositions.size(); i += 16)
+        {
+            Renderer::RenderBezierPatch(
+                controlPointsPositions[i],
+                controlPointsPositions[i + 1],
+                controlPointsPositions[i + 2],
+                controlPointsPositions[i + 3],
+                controlPointsPositions[i + 4],
+                controlPointsPositions[i + 5],
+                controlPointsPositions[i + 6],
+                controlPointsPositions[i + 7],
+                controlPointsPositions[i + 8],
+                controlPointsPositions[i + 9],
+                controlPointsPositions[i + 10],
+                controlPointsPositions[i + 11],
+                controlPointsPositions[i + 12],
+                controlPointsPositions[i + 13],
+                controlPointsPositions[i + 14],
+                controlPointsPositions[i + 15],
+                bezierPatch->GetUDivisionCount(),
+                bezierPatch->GetVDivisionCount(),
+                color);
+        }
+
+        auto controlPoints = bezierPatch->GetControlPoints();
+        for (auto controlPoint : controlPoints)
+        {
+            auto color = controlPoint->GetIsSelected() ? Renderer::SELECTED_COLOR : Renderer::DEFAULT_COLOR;
+            Renderer::RenderPoint(controlPoint->GetPosition(), color);
+        }
+
+        if (bezierPatch->GetShowPolygon())
+        {
+
+        }
+    }
+
     void Scene::DeleteFreePoint(Ref<Point> point)
     {
         {
@@ -507,6 +569,20 @@ namespace CADMageddon
             }
 
             m_InterpolatedCurve.erase(it);
+        }
+    }
+
+    void Scene::DeleteBezierPatch(Ref<BezierPatch> bezierPatch)
+    {
+        auto it = std::find(m_BezierPatch.begin(), m_BezierPatch.end(), bezierPatch);
+        if (it != m_BezierPatch.end())
+        {
+            for (auto point : bezierPatch->GetControlPoints())
+            {
+                m_FreePoints.push_back(point);
+            }
+
+            m_BezierPatch.erase(it);
         }
     }
 }

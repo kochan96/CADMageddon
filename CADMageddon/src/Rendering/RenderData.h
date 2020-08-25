@@ -54,7 +54,7 @@ namespace CADMageddon
         int Count = 0;
     };
 
-    struct RenderBezierData
+    struct RenderBezierCurveData
     {
         static const int MaxPoints = 4;
 
@@ -62,5 +62,22 @@ namespace CADMageddon
         Ref<OpenGLVertexBuffer> BezierVertexBuffer;
         Ref<OpenGLShader> QuadraticBezierShader;
         Ref<OpenGLShader> CubicBezierShader;
+    };
+
+    struct RenderBezierPatchData
+    {
+        static const int PointCount = 32;
+        Ref<OpenGLVertexArray> BezierPatchVertexArray;
+        Ref<OpenGLVertexBuffer> BezierPatchVertexBuffer;
+        Ref<OpenGLShader> BezierPatchShader;
+    };
+
+    struct RenderSelectionBoxData
+    {
+        static const int PointCount = 4;
+        Ref<OpenGLVertexArray> BoxVertexArray;
+        Ref<OpenGLVertexBuffer> BoxVertexBuffer;
+        Ref<OpenGLIndexBuffer> BoxIndexBuffer;
+        Ref<OpenGLShader> BoxShader;
     };
 }

@@ -17,7 +17,7 @@ namespace CADMageddon
         }
 
         auto position = torus->GetTransform()->Translation;
-        if (ImGui::DragFloat3("Position", &position.x))
+        if (ImGui::DragFloat3("Position", &position.x, 0.1f))
         {
             torus->GetTransform()->Translation = position;
         }
@@ -29,7 +29,7 @@ namespace CADMageddon
         }
 
         auto scale = torus->GetTransform()->Scale;
-        if (ImGui::DragFloat3("Scale", &scale.x))
+        if (ImGui::DragFloat3("Scale", &scale.x, 0.1f))
         {
             torus->GetTransform()->Scale = scale;
         }

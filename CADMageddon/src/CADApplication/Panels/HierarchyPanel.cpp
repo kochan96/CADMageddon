@@ -83,6 +83,18 @@ namespace CADMageddon
             ImGui::TreePop();
         }
 
+        auto bezierPatches = m_Scene->GetBezierPatch();
+        if (!bezierPatches.empty() && ImGui::TreeNode("BezierPatches"))
+        {
+            int id = 0;
+            for (auto bezierPatch : bezierPatches)
+            {
+                RenderBezierPatchRectNode(bezierPatch, id);
+            }
+
+            ImGui::TreePop();
+        }
+
         ImGui::End();
     }
 
@@ -112,7 +124,6 @@ namespace CADMageddon
         if (m_OnSelectionCleared)
             m_OnSelectionCleared();
     }
-
 
     void HierarchyPanel::RenderPointNode(Ref<Point> point, int& id)
     {
@@ -470,6 +481,89 @@ namespace CADMageddon
             ImGui::EndPopup();
         }
 
+        if (ImGui::IsItemClicked())
+        {
+            if (ImGui::GetIO().KeyCtrl)
+            {
+                point->SetIsSelected(!point->GetIsSelected());
+                if (m_OnSelectionPointChanged)
+                    m_OnSelectionPointChanged(point->GetIsSelected(), point);
+            }
+            else
+            {
+                bool oldSelected = point->GetIsSelected();
+                ClearSelection();
+                point->SetIsSelected(!oldSelected);
+                if (m_OnSelectionPointChanged)
+                    m_OnSelectionPointChanged(point->GetIsSelected(), point);
+            }
+        }
+
+        id++;
+    }
+
+    void HierarchyPanel::RenderBezierPatchRectNode(Ref<BezierPatch> bezierPatch, int& id)
+    {
+        static ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
+        ImGuiTreeNodeFlags node_flags = base_flags;
+
+        if (bezierPatch->GetIsSelected())
+        {
+            node_flags |= ImGuiTreeNodeFlags_Selected;
+        }
+
+        bool isBezierPatchEmpty = bezierPatch->GetControlPoints().empty();
+
+        if (isBezierPatchEmpty)
+        {
+            node_flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+        }
+
+        bool node_open = ImGui::TreeNodeEx((void*)(intptr_t)id, node_flags, bezierPatch->GetName().c_str());
+        if (ImGui::IsItemClicked())
+        {
+            if (ImGui::GetIO().KeyCtrl)
+            {
+                bezierPatch->SetIsSelected(!bezierPatch->GetIsSelected());
+            }
+            else
+            {
+                bool oldSelected = bezierPatch->GetIsSelected();
+                ClearSelection();
+                bezierPatch->SetIsSelected(!oldSelected);
+            }
+
+            if (m_OnBezierPatchSelectionChanged)
+                m_OnBezierPatchSelectionChanged(bezierPatch->GetIsSelected(), bezierPatch);
+        }
+
+        if (node_open && !isBezierPatchEmpty)
+        {
+            auto points = bezierPatch->GetControlPoints();
+            for (auto point : points)
+            {
+                RenderBezierPatchControlPointNode(bezierPatch, point, id);
+            }
+
+            ImGui::TreePop();
+        }
+
+        id++;
+    }
+
+    void HierarchyPanel::RenderBezierPatchControlPointNode(Ref<BezierPatch> bezierPatch, Ref<Point> point, int& id)
+    {
+        static ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
+        ImGuiTreeNodeFlags node_flags = base_flags;
+
+        if (point->GetIsSelected())
+        {
+            node_flags |= ImGuiTreeNodeFlags_Selected;
+        }
+
+        node_flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+
+        bool node_open = ImGui::TreeNodeEx((void*)(intptr_t)id, node_flags, point->GetName().c_str());
         if (ImGui::IsItemClicked())
         {
             if (ImGui::GetIO().KeyCtrl)

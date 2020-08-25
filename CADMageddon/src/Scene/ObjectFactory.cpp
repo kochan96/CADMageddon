@@ -86,16 +86,16 @@ namespace CADMageddon
         auto halfHeight = height / 2.0f;
 
         std::vector<glm::vec3> vertices;
-        for (auto u = -halfWidth; u <= halfWidth; u += 1.0f)
+        for (auto u = -halfWidth; u <= halfWidth; u += 4.0f)
         {
-            for (auto v = -halfHeight; v <= halfHeight; v += 1.0f)
+            for (auto v = -halfHeight; v <= halfHeight; v += 4.0f)
             {
                 vertices.push_back(glm::vec3(u, v, 0));
             }
         }
 
-        int WidthCount = static_cast<int>(width) + 1;
-        int HeightCount = static_cast<int>(height) + 1;
+        int WidthCount = static_cast<int>(width / 4.0f) + 1;
+        int HeightCount = static_cast<int>(height / 4.0f) + 1;
 
         std::vector<uint32_t> indices;
 

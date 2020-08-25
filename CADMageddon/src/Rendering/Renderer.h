@@ -8,8 +8,7 @@ namespace CADMageddon
     class Renderer
     {
     public:
-        //static constexpr glm::vec4 DEFAULT_COLOR = glm::vec4(0.0f, 0.8f, 0.0f, 1.0f);
-        static constexpr glm::vec4 DEFAULT_COLOR = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+        static constexpr glm::vec4 DEFAULT_COLOR = glm::vec4(0.0f, 0.8f, 0.0f, 1.0f);
         static constexpr glm::vec4 SELECTED_COLOR = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f);
 
         static void Init();
@@ -28,6 +27,9 @@ namespace CADMageddon
         static void RenderPoint(const glm::vec3& position, const glm::vec4& color = DEFAULT_COLOR);
         static void RenderLine(const glm::vec3& start, const glm::vec3& end, const glm::vec4& color = DEFAULT_COLOR);
 
+        static void RenderScreenQuad(const glm::vec2& bottomLeft, const glm::vec2& topRight, const glm::vec4& color = DEFAULT_COLOR);
+        static void RenderScreenQuadBorder(const glm::vec2& bottomLeft, const glm::vec2& topRight,const glm::vec4& color = DEFAULT_COLOR);
+
         static void RenderBezierC0(
             const glm::vec3& p0,
             const glm::vec3& p1,
@@ -57,12 +59,37 @@ namespace CADMageddon
             const glm::vec3& p2,
             const glm::vec3& p3,
             const glm::vec4& color = DEFAULT_COLOR);
+
+
+        static void RenderBezierPatch(
+            const glm::vec3& p0,
+            const glm::vec3& p1,
+            const glm::vec3& p2,
+            const glm::vec3& p3,
+            const glm::vec3& p4,
+            const glm::vec3& p5,
+            const glm::vec3& p6,
+            const glm::vec3& p7,
+            const glm::vec3& p8,
+            const glm::vec3& p9,
+            const glm::vec3& p10,
+            const glm::vec3& p11,
+            const glm::vec3& p12,
+            const glm::vec3& p13,
+            const glm::vec3& p14,
+            const glm::vec3& p15,
+            float uSubdivisionCount,
+            float vSubdivionCount,
+            const glm::vec4& color = DEFAULT_COLOR
+        );
 
     private:
         static void InitTorusRenderData();
         static void InitPointRenderData();
         static void InitLineRenderData();
-        static void InitBezierRenderData();
+        static void InitBezierCurveRenderData();
+        static void InitBezierPatchRenderData();
+        static void InitSelectionBoxRenderData();
 
         static void FlushAndResetPoints();
         static void FlushAndResetLines();

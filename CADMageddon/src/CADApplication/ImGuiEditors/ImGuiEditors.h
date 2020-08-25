@@ -4,3 +4,4 @@
 #include "BezierEditor.h"
 #include "BSplineEditor.h"
 #include "InterpolatedCurveEditor.h"
+#include "BezierPatchEditor.h"

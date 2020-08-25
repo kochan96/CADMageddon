@@ -1,4 +1,4 @@
-//Flat Color Shader
+//Quadratic Bezier
 
 #type vertex
 #version 440 core

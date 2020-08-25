@@ -1,4 +1,4 @@
-//Flat Color Shader
+//Quad Shader
 
 #type vertex
 #version 440 core

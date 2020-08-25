@@ -1,4 +1,4 @@
-//Flat Color Shader
+//Color Shader
 
 #type vertex
 #version 440 core

@@ -44,7 +44,8 @@ namespace CADMageddon
         void OnSelectionChangedTorus(bool selected, Ref<Torus> torus);
         void OnSelectionChangedBezierC0(bool selected, Ref<BezierC0> bezier);
         void OnSelectionChangedBSpline(bool selected, Ref<BSpline> bSpline);
-        void OnSelectionInterpolatedChanged(bool selected, Ref<InterpolatedCurve> bSpline);
+        void OnSelectionInterpolatedChanged(bool selected, Ref<InterpolatedCurve> interpolated);
+        void OnSelectionChangedBezierPatch(bool selected, Ref<BezierPatch> bezierPatch);
         void OnSelectionCleared();
 
         bool IsEditMode() const;
@@ -83,6 +84,11 @@ namespace CADMageddon
         bool m_ViewportFocused = false;
         bool m_ViewportHovered = false;
         bool m_BlockEvents = false;
+
+        bool m_ShowBezierPatchRectCreationPopup = false;
+        bool m_ShowBezierPatchCylinderCreationPopup = false;
+        BezierPatchRectCreationParameters m_BezierPatchRectCreationParameters;
+        BezierPatchCylinderCreationParameters m_BezierPatchCylinderCreationParameters;
 
         bool m_EnableStereoscopic = false;
         glm::vec3 m_LeftFilter = glm::vec3(1, 0, 0);

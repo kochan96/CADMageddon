@@ -30,7 +30,9 @@ namespace CADMageddon
     static RenderTorusData s_RenderTorusData;
     static RenderPointData s_RenderPointData;
     static RenderLineData s_RenderLineData;
-    static RenderBezierData s_RenderBezierData;
+    static RenderBezierCurveData s_RenderBezierCurveData;
+    static RenderBezierPatchData s_RenderBezierPatchData;
+    static RenderSelectionBoxData s_RenderSelectionBoxData;
 
     void Renderer::Init()
     {
@@ -43,18 +45,22 @@ namespace CADMageddon
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LEQUAL);
 
-        /*glEnable(GL_BLEND);
-        glBlendFunc(GL_DST_ALPHA, GL_ONE_MINUS_DST_ALPHA);*/
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         s_ShaderLibrary->Load("FlatColorShader", "assets/shaders/FlatColorShader.glsl");
         s_ShaderLibrary->Load("ColorShader", "assets/shaders/ColorShader.glsl");
         s_ShaderLibrary->Load("CubicBezierCurveShader", "assets/shaders/CubicBezierCurveShader.glsl");
         s_ShaderLibrary->Load("QuadraticBezierCurveShader", "assets/shaders/QuadraticBezierCurveShader.glsl");
+        s_ShaderLibrary->Load("BezierPatchShader", "assets/shaders/BezierPatchShader.glsl");
+        s_ShaderLibrary->Load("SelectionBoxShader", "assets/shaders/SelectionBoxShader.glsl");
 
         InitTorusRenderData();
         InitPointRenderData();
         InitLineRenderData();
-        InitBezierRenderData();
+        InitBezierCurveRenderData();
+        InitBezierPatchRenderData();
+        InitSelectionBoxRenderData();
     }
 
     void Renderer::InitTorusRenderData()
@@ -110,19 +116,57 @@ namespace CADMageddon
         //glLineWidth(10.0f);
     }
 
-    void Renderer::InitBezierRenderData()
+    void Renderer::InitBezierCurveRenderData()
     {
-        s_RenderBezierData.BezierVertexArray = CreateRef<OpenGLVertexArray>();
+        s_RenderBezierCurveData.BezierVertexArray = CreateRef<OpenGLVertexArray>();
 
-        s_RenderBezierData.BezierVertexBuffer = CreateRef<OpenGLVertexBuffer>(s_RenderBezierData.MaxPoints * sizeof(Vertex));
-        s_RenderBezierData.BezierVertexBuffer->SetLayout({
+        s_RenderBezierCurveData.BezierVertexBuffer = CreateRef<OpenGLVertexBuffer>(s_RenderBezierCurveData.MaxPoints * sizeof(Vertex));
+        s_RenderBezierCurveData.BezierVertexBuffer->SetLayout({
             { ShaderDataType::Float3, "a_Position" },
             });
 
-        s_RenderBezierData.BezierVertexArray->AddVertexBuffer(s_RenderBezierData.BezierVertexBuffer);
+        s_RenderBezierCurveData.BezierVertexArray->AddVertexBuffer(s_RenderBezierCurveData.BezierVertexBuffer);
 
-        s_RenderBezierData.QuadraticBezierShader = s_ShaderLibrary->Get("QuadraticBezierCurveShader");
-        s_RenderBezierData.CubicBezierShader = s_ShaderLibrary->Get("CubicBezierCurveShader");
+        s_RenderBezierCurveData.QuadraticBezierShader = s_ShaderLibrary->Get("QuadraticBezierCurveShader");
+        s_RenderBezierCurveData.CubicBezierShader = s_ShaderLibrary->Get("CubicBezierCurveShader");
+    }
+
+    void Renderer::InitBezierPatchRenderData()
+    {
+        s_RenderBezierPatchData.BezierPatchVertexArray = CreateRef<OpenGLVertexArray>();
+
+        s_RenderBezierPatchData.BezierPatchVertexBuffer = CreateRef<OpenGLVertexBuffer>(s_RenderBezierPatchData.PointCount * sizeof(Vertex));
+        s_RenderBezierPatchData.BezierPatchVertexBuffer->SetLayout({
+            { ShaderDataType::Float3, "a_Position" },
+            });
+
+        s_RenderBezierPatchData.BezierPatchVertexArray->AddVertexBuffer(s_RenderBezierPatchData.BezierPatchVertexBuffer);
+
+        s_RenderBezierPatchData.BezierPatchShader = s_ShaderLibrary->Get("BezierPatchShader");
+
+    }
+
+    void Renderer::InitSelectionBoxRenderData()
+    {
+        s_RenderSelectionBoxData.BoxVertexArray = CreateRef<OpenGLVertexArray>();
+
+        s_RenderSelectionBoxData.BoxVertexBuffer = CreateRef<OpenGLVertexBuffer>(s_RenderSelectionBoxData.PointCount * 2 * sizeof(float));
+        s_RenderSelectionBoxData.BoxVertexBuffer->SetLayout({
+            { ShaderDataType::Float2, "a_Position" },
+            });
+
+        uint32_t indices[] =
+        {
+            0,1,2,
+            2,3,0
+        };
+
+        s_RenderSelectionBoxData.BoxIndexBuffer = CreateRef<OpenGLIndexBuffer>(indices, 6);
+
+        s_RenderSelectionBoxData.BoxVertexArray->AddVertexBuffer(s_RenderSelectionBoxData.BoxVertexBuffer);
+        s_RenderSelectionBoxData.BoxVertexArray->SetIndexBuffer(s_RenderSelectionBoxData.BoxIndexBuffer);
+
+        s_RenderSelectionBoxData.BoxShader = s_ShaderLibrary->Get("SelectionBoxShader");
     }
 
     void Renderer::ShutDown()
@@ -227,6 +271,54 @@ namespace CADMageddon
         s_RenderLineData.Count++;
     }
 
+    void Renderer::RenderScreenQuad(const glm::vec2& bottomLeft, const glm::vec2& topRight, const glm::vec4& color)
+    {
+        glDisable(GL_DEPTH_TEST);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        float vertices[] =
+        {
+            bottomLeft.x,bottomLeft.y,
+            topRight.x,bottomLeft.y,
+            topRight.x,topRight.y,
+            bottomLeft.x,topRight.y
+        };
+
+        s_RenderSelectionBoxData.BoxVertexArray->Bind();
+        s_RenderSelectionBoxData.BoxVertexBuffer->SetData(vertices, sizeof(vertices));
+        s_RenderSelectionBoxData.BoxShader->Bind();
+        s_RenderSelectionBoxData.BoxShader->SetFloat4("u_Color", color);
+
+        glDrawElements(GL_TRIANGLES, s_RenderSelectionBoxData.BoxIndexBuffer->GetCount(), GL_UNSIGNED_INT, 0);
+
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glEnable(GL_DEPTH_TEST);
+
+    }
+
+    void Renderer::RenderScreenQuadBorder(const glm::vec2& bottomLeft, const glm::vec2& topRight, const glm::vec4& color)
+    {
+        glDisable(GL_DEPTH_TEST);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        float vertices[] =
+        {
+            bottomLeft.x,bottomLeft.y,
+            topRight.x,bottomLeft.y,
+            topRight.x,topRight.y,
+            bottomLeft.x,topRight.y
+        };
+
+        s_RenderSelectionBoxData.BoxVertexArray->Bind();
+        s_RenderSelectionBoxData.BoxVertexBuffer->SetData(vertices, sizeof(vertices));
+        s_RenderSelectionBoxData.BoxShader->Bind();
+        s_RenderSelectionBoxData.BoxShader->SetFloat4("u_Color", color);
+
+        glDrawElements(GL_TRIANGLES, s_RenderSelectionBoxData.BoxIndexBuffer->GetCount(), GL_UNSIGNED_INT, 0);
+
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glEnable(GL_DEPTH_TEST);
+
+    }
+
     void Renderer::RenderBezierC0(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, const glm::vec4& color, float tolerance)
     {
         if (IsBezierFlatEnough(p0, p1, p2, tolerance))
@@ -274,11 +366,11 @@ namespace CADMageddon
     {
         float vertices[] = { p0.x,p0.y,p0.z,p1.x,p1.y,p1.z,p2.x,p2.y,p2.z };
 
-        s_RenderBezierData.BezierVertexArray->Bind();
-        s_RenderBezierData.BezierVertexBuffer->SetData(vertices, sizeof(float) * 9);
-        s_RenderBezierData.QuadraticBezierShader->Bind();
-        s_RenderBezierData.QuadraticBezierShader->SetFloat4("u_Color", color);
-        s_RenderBezierData.QuadraticBezierShader->SetMat4("u_ViewProjectionMatrix", s_SceneData->ViewProjectionMatrix);
+        s_RenderBezierCurveData.BezierVertexArray->Bind();
+        s_RenderBezierCurveData.BezierVertexBuffer->SetData(vertices, sizeof(float) * 9);
+        s_RenderBezierCurveData.QuadraticBezierShader->Bind();
+        s_RenderBezierCurveData.QuadraticBezierShader->SetFloat4("u_Color", color);
+        s_RenderBezierCurveData.QuadraticBezierShader->SetMat4("u_ViewProjectionMatrix", s_SceneData->ViewProjectionMatrix);
 
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
@@ -288,13 +380,109 @@ namespace CADMageddon
     {
         float vertices[] = { p0.x,p0.y,p0.z,p1.x,p1.y,p1.z,p2.x,p2.y,p2.z,p3.x,p3.y,p3.z };
 
-        s_RenderBezierData.BezierVertexArray->Bind();
-        s_RenderBezierData.BezierVertexBuffer->SetData(vertices, sizeof(float) * 12);
-        s_RenderBezierData.CubicBezierShader->Bind();
-        s_RenderBezierData.CubicBezierShader->SetFloat4("u_Color", color);
-        s_RenderBezierData.CubicBezierShader->SetMat4("u_ViewProjectionMatrix", s_SceneData->ViewProjectionMatrix);
+        s_RenderBezierCurveData.BezierVertexArray->Bind();
+        s_RenderBezierCurveData.BezierVertexBuffer->SetData(vertices, sizeof(float) * 12);
+        s_RenderBezierCurveData.CubicBezierShader->Bind();
+        s_RenderBezierCurveData.CubicBezierShader->SetFloat4("u_Color", color);
+        s_RenderBezierCurveData.CubicBezierShader->SetMat4("u_ViewProjectionMatrix", s_SceneData->ViewProjectionMatrix);
 
         glDrawArrays(GL_LINES_ADJACENCY, 0, 4);
+    }
+
+    void Renderer::RenderBezierPatch(
+        const glm::vec3& p0,
+        const glm::vec3& p1,
+        const glm::vec3& p2,
+        const glm::vec3& p3,
+        const glm::vec3& p4,
+        const glm::vec3& p5,
+        const glm::vec3& p6,
+        const glm::vec3& p7,
+        const glm::vec3& p8,
+        const glm::vec3& p9,
+        const glm::vec3& p10,
+        const glm::vec3& p11,
+        const glm::vec3& p12,
+        const glm::vec3& p13,
+        const glm::vec3& p14,
+        const glm::vec3& p15,
+        float uSubdivisionCount,
+        float vSubdivisionCount,
+        const glm::vec4& color)
+    {
+        float vertices[] =
+        {
+            p0.x,p0.y,p0.z,
+            p1.x,p1.y,p1.z,
+            p2.x,p2.y,p2.z,
+            p3.x,p3.y,p3.z,
+            p4.x,p4.y,p4.z,
+            p5.x,p5.y,p5.z,
+            p6.x,p6.y,p6.z,
+            p7.x,p7.y,p7.z,
+            p8.x,p8.y,p8.z,
+            p9.x,p9.y,p9.z,
+            p10.x,p10.y,p10.z,
+            p11.x,p11.y,p11.z,
+            p12.x,p12.y,p12.z,
+            p13.x,p13.y,p13.z,
+            p14.x,p14.y,p14.z,
+            p15.x,p15.y,p15.z,
+
+            p0.x,p0.y,p0.z,
+            p4.x,p4.y,p4.z,
+            p8.x,p8.y,p8.z,
+            p12.x,p12.y,p12.z,
+            p1.x,p1.y,p1.z,
+            p5.x,p5.y,p5.z,
+            p9.x,p9.y,p9.z,
+            p13.x,p13.y,p13.z,
+            p2.x,p2.y,p2.z,
+            p6.x,p6.y,p6.z,
+            p10.x,p10.y,p10.z,
+            p14.x,p14.y,p14.z,
+            p3.x,p3.y,p3.z,
+            p7.x,p7.y,p7.z,
+            p11.x,p11.y,p11.z,
+            p15.x,p15.y,p15.z,
+        };
+
+        s_RenderBezierPatchData.BezierPatchVertexArray->Bind();
+        s_RenderBezierPatchData.BezierPatchVertexBuffer->SetData(vertices, sizeof(vertices));
+        s_RenderBezierPatchData.BezierPatchShader->Bind();
+        s_RenderBezierPatchData.BezierPatchShader->SetMat4("u_ViewProjectionMatrix", s_SceneData->ViewProjectionMatrix);
+        s_RenderBezierPatchData.BezierPatchShader->SetFloat4("u_Color", color);
+        s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_SubdivisionCount", uSubdivisionCount);
+
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glPatchParameteri(GL_PATCH_VERTICES, 16);
+        glDrawArrays(GL_PATCHES, 0, 16);
+
+        s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_SubdivisionCount", vSubdivisionCount);
+        glDrawArrays(GL_PATCHES, 16, 16);
+
+        float t = 1.0f;
+        float invT = 1.0f - t;
+        glm::vec4 basisV(invT * invT * invT,
+            3.0f * t * invT * invT,
+            3.0f * t * t * invT,
+            t * t * t);
+
+        glm::vec3 pp0 = (basisV.x * p0 + basisV.y * p1 + basisV.z * p2 + basisV.w * p3);
+        glm::vec3 pp1 = (basisV.x * p4 + basisV.y * p5 + basisV.z * p6 + basisV.w * p7);
+        glm::vec3 pp2 = (basisV.x * p8 + basisV.y * p9 + basisV.z * p10 + basisV.w * p11);
+        glm::vec3 pp3 = (basisV.x * p12 + basisV.y * p13 + basisV.z * p14 + basisV.w * p15);
+
+        ShaderRenderBezierC0(pp0, pp1, pp2, pp3, color);
+
+        pp0 = (basisV.x * p0 + basisV.y * p4 + basisV.z * p8 + basisV.w * p12);
+        pp1 = (basisV.x * p1 + basisV.y * p5 + basisV.z * p9 + basisV.w * p13);
+        pp2 = (basisV.x * p2 + basisV.y * p6 + basisV.z * p10 + basisV.w * p14);
+        pp3 = (basisV.x * p3 + basisV.y * p7 + basisV.z * p11 + basisV.w * p15);
+
+        ShaderRenderBezierC0(pp0, pp1, pp2, pp3, color);
+
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
 
     void Renderer::FlushAndResetPoints()

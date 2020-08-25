@@ -2,6 +2,7 @@
 #include "Core\Input.h"
 #include "TransformationSystem.h"
 #include "Scene\Scene.h"
+#include "Rendering\Renderer.h"
 
 namespace CADMageddon
 {
@@ -23,6 +24,13 @@ namespace CADMageddon
         if (!multiSelect)
         {
             ClearSelection(m_Scene);
+            m_IsMultiSelect = false;
+        }
+        else
+        {
+            m_IsMultiSelect = true;
+            multiSelectStart = mousePosition;
+            multiSelectEnd = mousePosition;
         }
 
         const float pointSize = 5.0f;
@@ -92,6 +100,95 @@ namespace CADMageddon
         }
     }
 
+    void PickingSystem::UpdateMultiSelect(const glm::vec2& mousePosition, const glm::vec2& viewPortSize, const Scene& m_Scene, const FPSCamera& camera)
+    {
+        if (!m_IsMultiSelect)
+        {
+            return;
+        }
+
+        if (Input::IsKeyPressed(CDM_KEY_LEFT_CONTROL) == false || Input::IsMouseButtonPressed(MouseCode::ButtonLeft) == false)
+        {
+            m_IsMultiSelect = false;
+        }
+
+        if (mousePosition == multiSelectEnd)
+        {
+            RenderPickingBox(viewPortSize);
+            return;
+        }
+
+
+        ClearSelection(m_Scene);
+        multiSelectEnd = mousePosition;
+        RenderPickingBox(viewPortSize);
+
+        auto points = m_Scene.GetPoints();
+
+        for (auto point : points)
+        {
+            glm::vec4 worldPosition = point->GetTransform()->GetMatrix() * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+            auto frustumPosition = camera.GetViewProjectionMatrix() * worldPosition;
+            if (!IsInsideFrustum(frustumPosition))
+            {
+                continue;
+            }
+
+            frustumPosition /= frustumPosition.w;
+
+            float x = (frustumPosition.x + 1.0f) * viewPortSize.x / 2;
+            float y = (1.0f - frustumPosition.y) * viewPortSize.y / 2;
+
+            glm::vec2 screenPosition(x, y);
+            if (!IsInsidePickingBox(multiSelectStart, multiSelectEnd, screenPosition))
+            {
+                continue;
+            }
+
+            point->SetIsSelected(true);
+            m_TransformationSystem->AddToSelected(point->GetTransform());
+        }
+
+        for (auto torus : m_Scene.GetTorus())
+        {
+            glm::vec4 worldPosition = torus->GetTransform()->GetMatrix() * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+            auto frustumPosition = camera.GetViewProjectionMatrix() * worldPosition;
+            if (!IsInsideFrustum(frustumPosition))
+            {
+                continue;
+            }
+
+            frustumPosition /= frustumPosition.w;
+
+            float x = (frustumPosition.x + 1.0f) * viewPortSize.x / 2;
+            float y = (1.0f - frustumPosition.y) * viewPortSize.y / 2;
+
+            glm::vec2 screenPosition(x, y);
+            if (!IsInsidePickingBox(multiSelectStart, multiSelectEnd, screenPosition))
+            {
+                continue;
+            }
+
+            torus->SetIsSelected(true);
+            m_TransformationSystem->AddToSelected(torus->GetTransform());
+            m_TransformationSystem->RemoveFromSelected(torus->GetTransform());
+        }
+
+
+    }
+
+    void PickingSystem::RenderPickingBox(const glm::vec2& viewPortSize)
+    {
+        glm::vec4 COLOR_SELECTION_BOX_BORDER(0.2, 0.65, 1.0, 1.0);
+        glm::vec4 COLOR_SELECTION_BOX_FILL(0.2, 0.65, 1.0, 0.1);
+
+        auto ndcStart = toNDC(multiSelectStart, viewPortSize);
+        auto ndcEnd = toNDC(multiSelectEnd, viewPortSize);
+
+        Renderer::RenderScreenQuad(ndcStart, ndcEnd, COLOR_SELECTION_BOX_FILL);
+        Renderer::RenderScreenQuadBorder(ndcStart, ndcEnd, COLOR_SELECTION_BOX_BORDER);
+    }
+
     void PickingSystem::ClearSelection(const Scene& scene)
     {
         for (auto point : scene.GetPoints())
@@ -151,4 +248,28 @@ namespace CADMageddon
 
         return true;
     }
+
+    bool PickingSystem::IsInsidePickingBox(const glm::vec2& selectionBoxStart, const glm::vec2& selectionBoxEnd, const  glm::vec2& position)
+    {
+        float minX = glm::min(selectionBoxEnd.x, selectionBoxStart.x);
+        float minY = glm::min(selectionBoxEnd.y, selectionBoxStart.y);
+        float maxX = glm::max(selectionBoxEnd.x, selectionBoxStart.x);
+        float maxY = glm::max(selectionBoxEnd.y, selectionBoxStart.y);
+
+        if (position.x >= minX && position.x <= maxX && position.y > minY && position.y < maxY)
+            return true;
+
+        return false;
+    }
+
+    glm::vec2 PickingSystem::toNDC(const glm::vec2& position, const glm::vec2& viewPortSize)
+    {
+        glm::vec2 ndc;
+
+        ndc.x = (position.x * 2.0f) / viewPortSize.x - 1.0f;
+        ndc.y = 1.0f - (position.y * 2.0f) / viewPortSize.y;
+
+        return ndc;
+    }
+
 }

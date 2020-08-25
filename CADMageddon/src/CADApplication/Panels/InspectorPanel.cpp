@@ -68,6 +68,18 @@ namespace CADMageddon
             m_InterPolatedCurve.erase(it);
     }
 
+    void InspectorPanel::AddBezierPatch(Ref<BezierPatch> bezierPatch)
+    {
+        m_BezierPatch.push_back(bezierPatch);
+    }
+
+    void InspectorPanel::RemoveBezierPatch(Ref<BezierPatch> bezierPatch)
+    {
+        auto it = std::find(m_BezierPatch.begin(), m_BezierPatch.end(), bezierPatch);
+        if (it != m_BezierPatch.end())
+            m_BezierPatch.erase(it);
+    }
+
     void InspectorPanel::Clear()
     {
         m_Points.clear();
@@ -75,13 +87,14 @@ namespace CADMageddon
         m_Bezier.clear();
         m_BSpline.clear();
         m_InterPolatedCurve.clear();
+        m_BezierPatch.clear();
     }
 
     void InspectorPanel::Render()
     {
         ImGui::Begin("Inspector");
 
-        unsigned int size = m_Points.size() + m_Torus.size() + m_Bezier.size() + m_BSpline.size() + m_InterPolatedCurve.size();
+        unsigned int size = m_Points.size() + m_Torus.size() + m_Bezier.size() + m_BSpline.size() + m_InterPolatedCurve.size() + m_BezierPatch.size();
         if (size != 1)
         {
             ImGui::End();
@@ -107,6 +120,10 @@ namespace CADMageddon
         else if (m_InterPolatedCurve.size() == 1)
         {
             InterpolatedCurveEditor(m_InterPolatedCurve[0]);
+        }
+        else if (m_BezierPatch.size() == 1)
+        {
+            BezierPatchEditor(m_BezierPatch[0]);
         }
 
         ImGui::End();

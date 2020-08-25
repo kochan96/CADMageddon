@@ -15,6 +15,10 @@ namespace CADMageddon {
             return GL_FRAGMENT_SHADER;
         if (type == "geometry")
             return GL_GEOMETRY_SHADER;
+        if (type == "tessControl")
+            return GL_TESS_CONTROL_SHADER;
+        if (type == "tessEval")
+            return GL_TESS_EVALUATION_SHADER;
 
         LOG_ERROR("Unknown shader type!");
 

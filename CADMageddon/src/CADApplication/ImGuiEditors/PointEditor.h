@@ -17,7 +17,7 @@ namespace CADMageddon
         }
 
         auto position = point->GetTransform()->Translation;
-        if (ImGui::DragFloat3("Position", &position.x))
+        if (ImGui::DragFloat3("Position", &position.x, 0.1f))
         {
             point->GetTransform()->Translation = position;
         }

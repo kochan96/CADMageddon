@@ -34,9 +34,19 @@ namespace CADMageddon
         m_HierarchyPanel->SetOnBezierSelectionChangedCallback(std::bind(&EditorLayer::OnSelectionChangedBezierC0, this, std::placeholders::_1, std::placeholders::_2));
         m_HierarchyPanel->SetOnBSplineSelectionChangedCallback(std::bind(&EditorLayer::OnSelectionChangedBSpline, this, std::placeholders::_1, std::placeholders::_2));
         m_HierarchyPanel->SetOnInterpolatedSelectionChangedCallback(std::bind(&EditorLayer::OnSelectionInterpolatedChanged, this, std::placeholders::_1, std::placeholders::_2));
+        m_HierarchyPanel->SetOnBezierPatchSelectionChanged(std::bind(&EditorLayer::OnSelectionChangedBezierPatch, this, std::placeholders::_1, std::placeholders::_2));
         m_HierarchyPanel->SetOnSelectionClearedCallback(std::bind(&EditorLayer::OnSelectionCleared, this));
 
         m_InspectorPanel = CreateRef<InspectorPanel>();
+
+        BezierPatchCylinderCreationParameters parameters;
+        parameters.Center = glm::vec3(0.0f, 0.0f, 0.0f);
+        parameters.Height = 2.0f;
+        parameters.Radius = 2.0f;
+        parameters.PatchCountX = 2;
+        parameters.PatchCountY = 1;
+
+        m_Scene->CreateBezierPatchCylinder("BezierCylinder", parameters);
     }
 
     void EditorLayer::OnAttach()
@@ -163,6 +173,18 @@ namespace CADMageddon
         else
         {
             m_InspectorPanel->RemoveInterpolatedCurve(interpolated);
+        }
+    }
+
+    void EditorLayer::OnSelectionChangedBezierPatch(bool selected, Ref<BezierPatch> bezierPatch)
+    {
+        if (selected)
+        {
+            m_InspectorPanel->AddBezierPatch(bezierPatch);
+        }
+        else
+        {
+            m_InspectorPanel->RemoveBezierPatch(bezierPatch);
         }
     }
 
@@ -356,6 +378,13 @@ namespace CADMageddon
                 m_TransformationSystem->Update(m_Scene, m_CameraController.GetCamera(), GetNDCMousePosition({ pos.x,pos.y }));
             }
 
+            if (!m_BlockEvents && m_EditorMode == EditorMode::Selection)
+            {
+                auto pos = ImGui::GetIO().MousePos;
+                auto viewPortMousePosition = GetViewPortMousePosition(glm::vec2(pos.x, pos.y));
+                m_PickingSystem->UpdateMultiSelect(viewPortMousePosition, m_ViewportSize, *(m_Scene.get()), m_CameraController.GetCamera());
+            }
+
             Renderer::EndScene();
 
             m_Framebuffer->UnBind();
@@ -382,6 +411,13 @@ namespace CADMageddon
                 m_TransformationSystem->Update(m_Scene, m_CameraController.GetCamera(), GetNDCMousePosition({ pos.x,pos.y }));
             }
 
+            if (!m_BlockEvents && m_EditorMode == EditorMode::Selection)
+            {
+                auto pos = ImGui::GetIO().MousePos;
+                auto viewPortMousePosition = GetViewPortMousePosition(glm::vec2(pos.x, pos.y));
+                m_PickingSystem->UpdateMultiSelect(viewPortMousePosition, m_ViewportSize, *(m_Scene.get()), m_CameraController.GetCamera());
+            }
+
             Renderer::EndScene();
 
             m_FramebufferRight->Bind();
@@ -389,7 +425,7 @@ namespace CADMageddon
             glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             glColorMask(GL_FALSE, GL_TRUE, GL_TRUE, GL_FALSE);
-            
+
             auto rightEyeMatrix = m_CameraController.GetCamera().GetRightEyeProjectionMatrix() * m_CameraController.GetCamera().GetRightViewMatrix();
             Renderer::BeginScene(rightEyeMatrix);
 
@@ -405,13 +441,13 @@ namespace CADMageddon
             }
 
             Renderer::EndScene();
-           
+
             m_Framebuffer->Bind();
             glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
             glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-            
+
             m_QuadVertexArray->Bind();
             m_QuadShader->Bind();
             glActiveTexture(GL_TEXTURE0);
@@ -590,6 +626,25 @@ namespace CADMageddon
                     m_Scene->CreateInterpolated("Interpolated");
                 }
 
+                if (ImGui::MenuItem("Add BezierPatchRect"))
+                {
+                    m_ShowBezierPatchRectCreationPopup = true;
+                    m_BezierPatchRectCreationParameters.Position = m_CursorController.getCursor()->getPosition();
+                    m_BezierPatchRectCreationParameters.PatchCountX = 1;
+                    m_BezierPatchRectCreationParameters.PatchCountY = 1;
+                    m_BezierPatchRectCreationParameters.Width = 4.0f;
+                    m_BezierPatchRectCreationParameters.Height = 4.0f;
+                }
+
+                if (ImGui::MenuItem("Add BezierPatchCylinder"))
+                {
+                    m_ShowBezierPatchCylinderCreationPopup = true;
+                    m_BezierPatchCylinderCreationParameters.Center = m_CursorController.getCursor()->getPosition();
+                    m_BezierPatchCylinderCreationParameters.PatchCountX = 1;
+                    m_BezierPatchCylinderCreationParameters.PatchCountY = 1;
+                    m_BezierPatchCylinderCreationParameters.Radius = 4.0f;
+                    m_BezierPatchCylinderCreationParameters.Height = 4.0f;
+                }
 
                 ImGui::EndMenu();
             }
@@ -597,6 +652,63 @@ namespace CADMageddon
 
         ImGui::EndMainMenuBar();
 
+        if (m_ShowBezierPatchRectCreationPopup)
+        {
+            ImGui::OpenPopup("BezierPatchRect Creation");
+        }
+
+        if (ImGui::BeginPopupModal("BezierPatchRect Creation", &m_ShowBezierPatchRectCreationPopup))
+        {
+            ImGui::DragInt("PatchCountX", &m_BezierPatchRectCreationParameters.PatchCountX, 1.0f, 1);
+            ImGui::DragInt("PatchCountY", &m_BezierPatchRectCreationParameters.PatchCountY, 1.0f, 1);
+            ImGui::DragFloat("Width", &m_BezierPatchRectCreationParameters.Width, 0.1f);
+            ImGui::DragFloat("Height", &m_BezierPatchRectCreationParameters.Height, 0.1f);
+
+            if (ImGui::Button("Cancel"))
+            {
+                m_ShowBezierPatchRectCreationPopup = false;
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Create"))
+            {
+                m_Scene->CreateBezierPatchRect("BezierPatchRect", m_BezierPatchRectCreationParameters);
+                m_ShowBezierPatchRectCreationPopup = false;
+            }
+
+            ImGui::EndPopup();
+
+        }
+
+        if (m_ShowBezierPatchCylinderCreationPopup)
+        {
+            ImGui::OpenPopup("BezierPatchCylinder Creation");
+        }
+
+        if (ImGui::BeginPopupModal("BezierPatchCylinder Creation", &m_ShowBezierPatchCylinderCreationPopup))
+        {
+            int patchX = m_BezierPatchCylinderCreationParameters.PatchCountX;
+            if (ImGui::DragInt("PatchCountX", &patchX, 1.0f, 1))
+            {
+                m_BezierPatchCylinderCreationParameters.PatchCountX = patchX;
+            }
+            ImGui::DragInt("PatchCountY", &m_BezierPatchCylinderCreationParameters.PatchCountY, 1.0f, 1);
+            ImGui::DragFloat("Radius", &m_BezierPatchCylinderCreationParameters.Radius, 0.1f);
+            ImGui::DragFloat("Height", &m_BezierPatchCylinderCreationParameters.Height, 0.1f);
+
+            if (ImGui::Button("Cancel"))
+            {
+                m_ShowBezierPatchCylinderCreationPopup = false;
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Create"))
+            {
+                m_Scene->CreateBezierPatchCylinder("BezierPatchCylinder", m_BezierPatchCylinderCreationParameters);
+                m_ShowBezierPatchCylinderCreationPopup = false;
+            }
+
+            ImGui::EndPopup();
+
+        }
     }
 
     void EditorLayer::RenderViewport()
@@ -724,7 +836,7 @@ namespace CADMageddon
         }
 
         auto projectionPlaneDistance = m_CameraController.GetCamera().GetProjectionPlaneDistance();
-        if (ImGui::DragFloat("ProjectionPlaneDistance", &projectionPlaneDistance,0.1f))
+        if (ImGui::DragFloat("ProjectionPlaneDistance", &projectionPlaneDistance, 0.1f))
         {
             m_CameraController.GetCamera().SetProjectionPlaneDistance(projectionPlaneDistance);
         }
