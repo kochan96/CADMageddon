@@ -128,5 +128,31 @@ namespace CADMageddon
                 }
             }
         }
+
+
+        for (int i = 0; i < verticesCountY; i++)
+        {
+            for (int j = 0; j < verticesCountX; j++)
+            {
+                int row = i * verticesCountX;
+                int index = row + j;
+                if (index < row + verticesCountX - 1)
+                {
+                    m_GridIndices.push_back(index);
+                    m_GridIndices.push_back(index + 1);
+                }
+                else
+                {
+                    m_GridIndices.push_back(index);
+                    m_GridIndices.push_back(row);
+                }
+
+                if (i < verticesCountY - 1)
+                {
+                    m_GridIndices.push_back(index);
+                    m_GridIndices.push_back(index + verticesCountX);
+                }
+            }
+        }
     }
 }

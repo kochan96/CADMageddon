@@ -171,10 +171,7 @@ namespace CADMageddon
 
             torus->SetIsSelected(true);
             m_TransformationSystem->AddToSelected(torus->GetTransform());
-            m_TransformationSystem->RemoveFromSelected(torus->GetTransform());
         }
-
-
     }
 
     void PickingSystem::RenderPickingBox(const glm::vec2& viewPortSize)

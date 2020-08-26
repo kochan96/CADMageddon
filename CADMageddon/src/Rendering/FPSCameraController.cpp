@@ -45,32 +45,38 @@ namespace CADMageddon
 
     void FPSCameraController::OnUpdate(Timestep ts)
     {
+        float translationSpeed = m_CameraTranslationSpeed;
+        if (Input::IsKeyPressed(CDM_KEY_LEFT_SHIFT))
+        {
+            translationSpeed *= 10;
+        }
+
 
         if (Input::IsKeyPressed(CDM_KEY_A))
         {
-            m_CameraPosition -= GetCameraRight() * (m_CameraTranslationSpeed * ts);
+            m_CameraPosition -= GetCameraRight() * (translationSpeed * ts);
         }
         else if (Input::IsKeyPressed(CDM_KEY_D))
         {
-            m_CameraPosition += GetCameraRight() * (m_CameraTranslationSpeed * ts);
+            m_CameraPosition += GetCameraRight() * (translationSpeed * ts);
         }
 
         if (Input::IsKeyPressed(CDM_KEY_W))
         {
-            m_CameraPosition += GetCameraFront() * (m_CameraTranslationSpeed * ts);
+            m_CameraPosition += GetCameraFront() * (translationSpeed * ts);
         }
         else if (Input::IsKeyPressed(CDM_KEY_S))
         {
-            m_CameraPosition -= GetCameraFront() * (m_CameraTranslationSpeed * ts);
+            m_CameraPosition -= GetCameraFront() * (translationSpeed * ts);
         }
 
         if (Input::IsKeyPressed(CDM_KEY_Q))
         {
-            m_CameraPosition += GetCameraUp() * (m_CameraTranslationSpeed * ts);
+            m_CameraPosition += GetCameraUp() * (translationSpeed * ts);
         }
         else if (Input::IsKeyPressed(CDM_KEY_E))
         {
-            m_CameraPosition -= GetCameraUp() * (m_CameraTranslationSpeed * ts);
+            m_CameraPosition -= GetCameraUp() * (translationSpeed * ts);
         }
 
         m_Camera.SetPosition(m_CameraPosition);

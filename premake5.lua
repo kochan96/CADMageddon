@@ -16,11 +16,13 @@ IncludeDir["Glad"] = "CADMageddon/vendor/glad/include"
 IncludeDir["ImGui"] = "CADMageddon/vendor/imgui"
 IncludeDir["glm"] = "CADMageddon/vendor/glm"
 IncludeDir["entt"] = "CADMageddon/vendor/entt/include"
+IncludeDir["tinyxml"] = "CADMageddon/vendor/tinyxml2"
 
 group "Dependencies"
     include "CADMageddon/vendor/glfw"
     include "CADMageddon/vendor/glad"
     include "CADMageddon/vendor/imgui"
+    include "CADMageddon/vendor/tinyxml2"
 group ""
 
 project "CADMageddon"
@@ -56,7 +58,8 @@ project "CADMageddon"
         "%{IncludeDir.Glad}",
         "%{IncludeDir.ImGui}",
         "%{IncludeDir.glm}",
-        "%{IncludeDir.entt}"
+        "%{IncludeDir.entt}",
+        "%{IncludeDir.tinyxml}",
     }
 
     links 
@@ -64,6 +67,7 @@ project "CADMageddon"
 		"GLFW",
         "Glad",
         "ImGui",
+        "tinyxml2",
 		"opengl32.lib"
     }
     
