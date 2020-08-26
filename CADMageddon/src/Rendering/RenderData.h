@@ -72,6 +72,14 @@ namespace CADMageddon
         Ref<OpenGLShader> BezierPatchShader;
     };
 
+    struct RenderBSplinePatchData
+    {
+        static const int PointCount = 32;
+        Ref<OpenGLVertexArray> BSplinePatchVertexArray;
+        Ref<OpenGLVertexBuffer> BSplinePatchVertexBuffer;
+        Ref<OpenGLShader> BSplinePatchShader;
+    };
+
     struct RenderSelectionBoxData
     {
         static const int PointCount = 4;

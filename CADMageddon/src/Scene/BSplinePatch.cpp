@@ -1,23 +1,23 @@
-#include "BezierPatch.h"
+#include "BSplinePatch.h"
 
 namespace CADMageddon
 {
-    BezierPatch::BezierPatch(std::string name, int patchCountX, int patchCountY, int uDivisionCount, int vDivisionCount)
+    BSplinePatch::BSplinePatch(std::string name, int patchCountX, int patchCountY, int uDivisionCount, int vDivisionCount)
         :m_Name(name), m_UDivisionCount(uDivisionCount), m_VDivisionCount(vDivisionCount), m_PatchCountX(patchCountX), m_PatchCountY(patchCountY)
     {
     }
 
-    Ref<BezierPatch> BezierPatch::CreateRectPatch(std::string name, glm::vec3 startPosition, int PatchCountx, int PatchCounty, float width, float height, int uDivisionCount, int vDivisionCount)
+    Ref<BSplinePatch> BSplinePatch::CreateRectPatch(std::string name, glm::vec3 startPosition, int PatchCountx, int PatchCounty, float width, float height, int uDivisionCount, int vDivisionCount)
     {
-        auto bezierPatch = CreateRef<BezierPatch>(name, uDivisionCount, vDivisionCount);
-        bezierPatch->GenerateRectControlPoints(startPosition, PatchCountx, PatchCounty, width, height);
-        return bezierPatch;
+        auto bSplinePatch = CreateRef<BSplinePatch>(name, uDivisionCount, vDivisionCount);
+        bSplinePatch->GenerateRectControlPoints(startPosition, PatchCountx, PatchCounty, width, height);
+        return bSplinePatch;
     }
 
-    void BezierPatch::GenerateRectControlPoints(glm::vec3 startPosition, int PatchCountx, int PatchCounty, float width, float height)
+    void BSplinePatch::GenerateRectControlPoints(glm::vec3 startPosition, int PatchCountx, int PatchCounty, float width, float height)
     {
-        int verticesCountX = PatchCountx * 3 + 1;
-        int verticesCountY = PatchCounty * 3 + 1;
+        int verticesCountX = PatchCountx + 3;
+        int verticesCountY = PatchCounty + 3;
 
         float deltaWidth = width / (verticesCountX - 1);
         float deltaHeight = height / (verticesCountY - 1);
@@ -37,10 +37,10 @@ namespace CADMageddon
 
         for (int j = 0; j < PatchCounty; j++)
         {
-            int startRow = j * 3 * verticesCountX;
+            int startRow = j * verticesCountX;
             for (int i = 0; i < PatchCountx; i++)
             {
-                int start = startRow + i * 3;
+                int start = startRow + i;
                 for (int k = 0; k < 4; k++)
                 {
                     for (int l = 0; l < 4; l++)
@@ -51,7 +51,6 @@ namespace CADMageddon
                 }
             }
         }
-
 
         for (int i = 0; i < verticesCountY; i++)
         {
@@ -74,22 +73,20 @@ namespace CADMageddon
         }
     }
 
-    Ref<BezierPatch> BezierPatch::CreateCyliderPatch(std::string name, glm::vec3 center, int PatchCountx, int PatchCounty, float radius, float height, int uDivisionCount, int vDivisionCount)
+    Ref<BSplinePatch> BSplinePatch::CreateCyliderPatch(std::string name, glm::vec3 center, int PatchCountx, int PatchCounty, float radius, float height, int uDivisionCount, int vDivisionCount)
     {
-        auto bezierPatch = CreateRef<BezierPatch>(name, PatchCountx, PatchCounty, uDivisionCount, vDivisionCount);
-        bezierPatch->GenerateCylinderControlPoints(center, PatchCountx, PatchCounty, radius, height);
-        return bezierPatch;
+        auto bSplinePatch = CreateRef<BSplinePatch>(name, PatchCountx, PatchCounty, uDivisionCount, vDivisionCount);
+        bSplinePatch->GenerateCylinderControlPoints(center, PatchCountx, PatchCounty, radius, height);
+        return bSplinePatch;
     }
 
-    void BezierPatch::GenerateCylinderControlPoints(glm::vec3 center, int PatchCountx, int PatchCounty, float radius, float height)
+    void BSplinePatch::GenerateCylinderControlPoints(glm::vec3 center, int PatchCountx, int PatchCounty, float radius, float height)
     {
-        int verticesCountX = PatchCountx * 3 + 1;
-        int verticesCountY = PatchCounty * 3 + 1;
+        int verticesCountX = PatchCountx;
+        int verticesCountY = PatchCounty + 3;
 
         float deltaAngle = glm::two_pi<float>() / (verticesCountX - 1);
         float deltaHeight = height / (verticesCountY - 1);
-
-        verticesCountX--;
 
         for (int i = 0; i < verticesCountY; i++)
         {
@@ -107,7 +104,7 @@ namespace CADMageddon
         }
 
 
-        for (int j = 0; j < PatchCounty; j++)
+        /*for (int j = 0; j < PatchCounty; j++)
         {
             int startRow = (j * 3 * verticesCountX);
             for (int i = 0; i < PatchCountx; i++)
@@ -127,6 +124,6 @@ namespace CADMageddon
                     }
                 }
             }
-        }
+        }*/
     }
 }

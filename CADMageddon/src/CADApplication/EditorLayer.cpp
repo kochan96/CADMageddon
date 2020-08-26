@@ -35,18 +35,10 @@ namespace CADMageddon
         m_HierarchyPanel->SetOnBSplineSelectionChangedCallback(std::bind(&EditorLayer::OnSelectionChangedBSpline, this, std::placeholders::_1, std::placeholders::_2));
         m_HierarchyPanel->SetOnInterpolatedSelectionChangedCallback(std::bind(&EditorLayer::OnSelectionInterpolatedChanged, this, std::placeholders::_1, std::placeholders::_2));
         m_HierarchyPanel->SetOnBezierPatchSelectionChanged(std::bind(&EditorLayer::OnSelectionChangedBezierPatch, this, std::placeholders::_1, std::placeholders::_2));
+        m_HierarchyPanel->SetOnBSplinePatchSelectionChanged(std::bind(&EditorLayer::OnSelectionChangedBSplinePatch, this, std::placeholders::_1, std::placeholders::_2));
         m_HierarchyPanel->SetOnSelectionClearedCallback(std::bind(&EditorLayer::OnSelectionCleared, this));
 
         m_InspectorPanel = CreateRef<InspectorPanel>();
-
-        BezierPatchCylinderCreationParameters parameters;
-        parameters.Center = glm::vec3(0.0f, 0.0f, 0.0f);
-        parameters.Height = 2.0f;
-        parameters.Radius = 2.0f;
-        parameters.PatchCountX = 2;
-        parameters.PatchCountY = 1;
-
-        m_Scene->CreateBezierPatchCylinder("BezierCylinder", parameters);
     }
 
     void EditorLayer::OnAttach()
@@ -185,6 +177,18 @@ namespace CADMageddon
         else
         {
             m_InspectorPanel->RemoveBezierPatch(bezierPatch);
+        }
+    }
+
+    void EditorLayer::OnSelectionChangedBSplinePatch(bool selected, Ref<BSplinePatch> bezierPatch)
+    {
+        if (selected)
+        {
+            m_InspectorPanel->AddBSplinePatch(bezierPatch);
+        }
+        else
+        {
+            m_InspectorPanel->RemoveBSplinePatch(bezierPatch);
         }
     }
 
@@ -392,18 +396,19 @@ namespace CADMageddon
         else
         {
             m_FramebufferLeft->Bind();
-            glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            glColorMask(GL_TRUE, GL_FALSE, GL_FALSE, GL_FALSE);
 
             auto leftEyeMatrix = m_CameraController.GetCamera().GetLeftEyeProjectionMatrix() * m_CameraController.GetCamera().GetLeftViewMatrix();
             Renderer::BeginScene(leftEyeMatrix);
 
+
+            m_Scene->SetDefaultColor(m_LeftEyeColor);
+            m_Scene->SetSelectionColor(m_LeftEyeColor);
             m_Scene->Update();
 
-            Renderer::RenderGrid(m_GridVertexArray, glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)), glm::vec4(1.0f));
+            Renderer::RenderGrid(m_GridVertexArray, glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)), m_LeftEyeColor);
             const float cursorSize = 1.0f;
-            RenderCursor(m_CursorController.getCursor()->getPosition(), cursorSize);
+            RenderCursor(m_CursorController.getCursor()->getPosition(), cursorSize, m_LeftEyeColor);
 
             if (IsEditMode())
             {
@@ -421,18 +426,17 @@ namespace CADMageddon
             Renderer::EndScene();
 
             m_FramebufferRight->Bind();
-            glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            glColorMask(GL_FALSE, GL_TRUE, GL_TRUE, GL_FALSE);
 
             auto rightEyeMatrix = m_CameraController.GetCamera().GetRightEyeProjectionMatrix() * m_CameraController.GetCamera().GetRightViewMatrix();
             Renderer::BeginScene(rightEyeMatrix);
 
+            m_Scene->SetDefaultColor(m_RightEyeColor);
+            m_Scene->SetSelectionColor(m_RightEyeColor);
             m_Scene->Update();
 
-            Renderer::RenderGrid(m_GridVertexArray, glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)), glm::vec4(1.0f));
-            RenderCursor(m_CursorController.getCursor()->getPosition(), cursorSize);
+            Renderer::RenderGrid(m_GridVertexArray, glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)), m_RightEyeColor);
+            RenderCursor(m_CursorController.getCursor()->getPosition(), cursorSize, m_RightEyeColor);
 
             if (IsEditMode())
             {
@@ -443,10 +447,7 @@ namespace CADMageddon
             Renderer::EndScene();
 
             m_Framebuffer->Bind();
-            glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-            glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
             m_QuadVertexArray->Bind();
             m_QuadShader->Bind();
@@ -626,24 +627,42 @@ namespace CADMageddon
                     m_Scene->CreateInterpolated("Interpolated");
                 }
 
-                if (ImGui::MenuItem("Add BezierPatchRect"))
+                if (ImGui::MenuItem("Add BezierPatch Rect"))
                 {
                     m_ShowBezierPatchRectCreationPopup = true;
-                    m_BezierPatchRectCreationParameters.Position = m_CursorController.getCursor()->getPosition();
-                    m_BezierPatchRectCreationParameters.PatchCountX = 1;
-                    m_BezierPatchRectCreationParameters.PatchCountY = 1;
-                    m_BezierPatchRectCreationParameters.Width = 4.0f;
-                    m_BezierPatchRectCreationParameters.Height = 4.0f;
                 }
 
-                if (ImGui::MenuItem("Add BezierPatchCylinder"))
+                if (ImGui::MenuItem("Add BezierPatch Cylinder"))
                 {
                     m_ShowBezierPatchCylinderCreationPopup = true;
-                    m_BezierPatchCylinderCreationParameters.Center = m_CursorController.getCursor()->getPosition();
-                    m_BezierPatchCylinderCreationParameters.PatchCountX = 1;
-                    m_BezierPatchCylinderCreationParameters.PatchCountY = 1;
-                    m_BezierPatchCylinderCreationParameters.Radius = 4.0f;
-                    m_BezierPatchCylinderCreationParameters.Height = 4.0f;
+                }
+
+                if (ImGui::MenuItem("Add BSplinePatch Rect"))
+                {
+                    m_ShowBSplinePatchRectCreationPopup = true;
+                }
+
+                if (ImGui::MenuItem("Add BSplinePatch Cylinder"))
+                {
+                    m_ShowBSplinePatchCylinderCreationPopup = true;
+                }
+
+                if (m_ShowBezierPatchCylinderCreationPopup || m_ShowBSplinePatchCylinderCreationPopup)
+                {
+                    m_PatchCylinderCreationParameters.Center = m_CursorController.getCursor()->getPosition();
+                    m_PatchCylinderCreationParameters.PatchCountX = 1;
+                    m_PatchCylinderCreationParameters.PatchCountY = 1;
+                    m_PatchCylinderCreationParameters.Radius = 4.0f;
+                    m_PatchCylinderCreationParameters.Height = 4.0f;
+                }
+
+                if (m_ShowBezierPatchRectCreationPopup || m_ShowBSplinePatchRectCreationPopup)
+                {
+                    m_PatchRectCreationParameters.Position = m_CursorController.getCursor()->getPosition();
+                    m_PatchRectCreationParameters.PatchCountX = 1;
+                    m_PatchRectCreationParameters.PatchCountY = 1;
+                    m_PatchRectCreationParameters.Width = 4.0f;
+                    m_PatchRectCreationParameters.Height = 4.0f;
                 }
 
                 ImGui::EndMenu();
@@ -659,10 +678,10 @@ namespace CADMageddon
 
         if (ImGui::BeginPopupModal("BezierPatchRect Creation", &m_ShowBezierPatchRectCreationPopup))
         {
-            ImGui::DragInt("PatchCountX", &m_BezierPatchRectCreationParameters.PatchCountX, 1.0f, 1);
-            ImGui::DragInt("PatchCountY", &m_BezierPatchRectCreationParameters.PatchCountY, 1.0f, 1);
-            ImGui::DragFloat("Width", &m_BezierPatchRectCreationParameters.Width, 0.1f);
-            ImGui::DragFloat("Height", &m_BezierPatchRectCreationParameters.Height, 0.1f);
+            ImGui::DragInt("PatchCountX", &m_PatchRectCreationParameters.PatchCountX, 1.0f, 1);
+            ImGui::DragInt("PatchCountY", &m_PatchRectCreationParameters.PatchCountY, 1.0f, 1);
+            ImGui::DragFloat("Width", &m_PatchRectCreationParameters.Width, 0.1f);
+            ImGui::DragFloat("Height", &m_PatchRectCreationParameters.Height, 0.1f);
 
             if (ImGui::Button("Cancel"))
             {
@@ -671,7 +690,7 @@ namespace CADMageddon
             ImGui::SameLine();
             if (ImGui::Button("Create"))
             {
-                m_Scene->CreateBezierPatchRect("BezierPatchRect", m_BezierPatchRectCreationParameters);
+                m_Scene->CreateBezierPatchRect("BezierPatchRect", m_PatchRectCreationParameters);
                 m_ShowBezierPatchRectCreationPopup = false;
             }
 
@@ -686,14 +705,14 @@ namespace CADMageddon
 
         if (ImGui::BeginPopupModal("BezierPatchCylinder Creation", &m_ShowBezierPatchCylinderCreationPopup))
         {
-            int patchX = m_BezierPatchCylinderCreationParameters.PatchCountX;
+            int patchX = m_PatchCylinderCreationParameters.PatchCountX;
             if (ImGui::DragInt("PatchCountX", &patchX, 1.0f, 1))
             {
-                m_BezierPatchCylinderCreationParameters.PatchCountX = patchX;
+                m_PatchCylinderCreationParameters.PatchCountX = patchX;
             }
-            ImGui::DragInt("PatchCountY", &m_BezierPatchCylinderCreationParameters.PatchCountY, 1.0f, 1);
-            ImGui::DragFloat("Radius", &m_BezierPatchCylinderCreationParameters.Radius, 0.1f);
-            ImGui::DragFloat("Height", &m_BezierPatchCylinderCreationParameters.Height, 0.1f);
+            ImGui::DragInt("PatchCountY", &m_PatchCylinderCreationParameters.PatchCountY, 1.0f, 1);
+            ImGui::DragFloat("Radius", &m_PatchCylinderCreationParameters.Radius, 0.1f);
+            ImGui::DragFloat("Height", &m_PatchCylinderCreationParameters.Height, 0.1f);
 
             if (ImGui::Button("Cancel"))
             {
@@ -702,12 +721,69 @@ namespace CADMageddon
             ImGui::SameLine();
             if (ImGui::Button("Create"))
             {
-                m_Scene->CreateBezierPatchCylinder("BezierPatchCylinder", m_BezierPatchCylinderCreationParameters);
+                m_Scene->CreateBezierPatchCylinder("BezierPatchCylinder", m_PatchCylinderCreationParameters);
                 m_ShowBezierPatchCylinderCreationPopup = false;
             }
 
             ImGui::EndPopup();
 
+        }
+
+        if (m_ShowBSplinePatchRectCreationPopup)
+        {
+            ImGui::OpenPopup("BSplinePatchRect Creation");
+        }
+
+        if (ImGui::BeginPopupModal("BSplinePatchRect Creation", &m_ShowBSplinePatchRectCreationPopup))
+        {
+            ImGui::DragInt("PatchCountX", &m_PatchRectCreationParameters.PatchCountX, 1.0f, 1);
+            ImGui::DragInt("PatchCountY", &m_PatchRectCreationParameters.PatchCountY, 1.0f, 1);
+            ImGui::DragFloat("Width", &m_PatchRectCreationParameters.Width, 0.1f);
+            ImGui::DragFloat("Height", &m_PatchRectCreationParameters.Height, 0.1f);
+
+            if (ImGui::Button("Cancel"))
+            {
+                m_ShowBSplinePatchRectCreationPopup = false;
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Create"))
+            {
+                m_Scene->CreateBSplinePatchRect("BSplinePatchRect", m_PatchRectCreationParameters);
+                m_ShowBSplinePatchRectCreationPopup = false;
+            }
+
+            ImGui::EndPopup();
+
+        }
+
+        if (m_ShowBSplinePatchCylinderCreationPopup)
+        {
+            ImGui::OpenPopup("BSplinePatch Cylinder Creation");
+        }
+
+        if (ImGui::BeginPopupModal("BSplinePatch Cylinder Creation", &m_ShowBSplinePatchCylinderCreationPopup))
+        {
+            int patchX = m_PatchCylinderCreationParameters.PatchCountX;
+            if (ImGui::DragInt("PatchCountX", &patchX, 1.0f, 1))
+            {
+                m_PatchCylinderCreationParameters.PatchCountX = patchX;
+            }
+            ImGui::DragInt("PatchCountY", &m_PatchCylinderCreationParameters.PatchCountY, 1.0f, 1);
+            ImGui::DragFloat("Radius", &m_PatchCylinderCreationParameters.Radius, 0.1f);
+            ImGui::DragFloat("Height", &m_PatchCylinderCreationParameters.Height, 0.1f);
+
+            if (ImGui::Button("Cancel"))
+            {
+                m_ShowBSplinePatchCylinderCreationPopup = false;
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Create"))
+            {
+                m_Scene->CreateBSplinePatchCylinder("BSplinePatch Cylinder", m_PatchCylinderCreationParameters);
+                m_ShowBSplinePatchCylinderCreationPopup = false;
+            }
+
+            ImGui::EndPopup();
         }
     }
 
@@ -827,7 +903,17 @@ namespace CADMageddon
 
         ImGui::BeginGroup();
         ImGui::Text("Stereo");
-        ImGui::Checkbox("Enable stereoscopic", &m_EnableStereoscopic);
+        if (ImGui::Checkbox("Enable stereoscopic", &m_EnableStereoscopic))
+        {
+            if (m_EnableStereoscopic)
+                glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+            else
+            {
+                glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+                m_Scene->SetDefaultColor(Renderer::DEFAULT_COLOR);
+                m_Scene->SetSelectionColor(Renderer::SELECTED_COLOR);
+            }
+        }
 
         auto eyeDistance = m_CameraController.GetCamera().GetEyeDistance();
         if (ImGui::DragFloat("Eye Distance", &eyeDistance, 0.001f))
@@ -841,15 +927,15 @@ namespace CADMageddon
             m_CameraController.GetCamera().SetProjectionPlaneDistance(projectionPlaneDistance);
         }
 
-        ImGui::ColorEdit3("LeftFilter", &m_LeftFilter.x);
-        ImGui::ColorEdit3("RightFilter", &m_RightFilter.x);
+        //ImGui::ColorEdit3("LeftFilter", &m_LeftFilter.x);
+        //ImGui::ColorEdit3("RightFilter", &m_RightFilter.x);
 
         ImGui::EndGroup();
 
         ImGui::End();
     }
 
-    void EditorLayer::RenderCursor(glm::vec3 position, float cursorSize)
+    void EditorLayer::RenderCursor(glm::vec3 position, float cursorSize, const glm::vec4& color)
     {
         constexpr glm::vec4 redColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
         constexpr glm::vec4 greenColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
@@ -864,10 +950,18 @@ namespace CADMageddon
         auto startZ = glm::vec3(position.x, position.y, position.z - cursorSize);
         auto endZ = glm::vec3(position.x, position.y, position.z + cursorSize);
 
-
-        Renderer::RenderLine(startX, endX, redColor);
-        Renderer::RenderLine(startY, endY, greenColor);
-        Renderer::RenderLine(startZ, endZ, blueColor);
+        if (m_EnableStereoscopic)
+        {
+            Renderer::RenderLine(startX, endX, color);
+            Renderer::RenderLine(startY, endY, color);
+            Renderer::RenderLine(startZ, endZ, color);
+        }
+        else
+        {
+            Renderer::RenderLine(startX, endX, redColor);
+            Renderer::RenderLine(startY, endY, greenColor);
+            Renderer::RenderLine(startZ, endZ, blueColor);
+        }
     }
 
     glm::vec2 EditorLayer::GetNDCMousePosition(const glm::vec2& mousePosition)

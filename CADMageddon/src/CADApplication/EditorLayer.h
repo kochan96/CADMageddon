@@ -46,6 +46,7 @@ namespace CADMageddon
         void OnSelectionChangedBSpline(bool selected, Ref<BSpline> bSpline);
         void OnSelectionInterpolatedChanged(bool selected, Ref<InterpolatedCurve> interpolated);
         void OnSelectionChangedBezierPatch(bool selected, Ref<BezierPatch> bezierPatch);
+        void OnSelectionChangedBSplinePatch(bool selected, Ref<BSplinePatch> bezierPatch);
         void OnSelectionCleared();
 
         bool IsEditMode() const;
@@ -60,7 +61,7 @@ namespace CADMageddon
         void RenderMainMenuBar();
         void RenderViewport();
         void RenderOptions();
-        void RenderCursor(glm::vec3 position, float size);
+        void RenderCursor(glm::vec3 position, float size, const glm::vec4& color = glm::vec4(1.0f));
 
         glm::vec2 GetViewPortMousePosition(const glm::vec2& mousePosition);
         glm::vec2 GetNDCMousePosition(const glm::vec2& mousePosition);
@@ -87,12 +88,16 @@ namespace CADMageddon
 
         bool m_ShowBezierPatchRectCreationPopup = false;
         bool m_ShowBezierPatchCylinderCreationPopup = false;
-        BezierPatchRectCreationParameters m_BezierPatchRectCreationParameters;
-        BezierPatchCylinderCreationParameters m_BezierPatchCylinderCreationParameters;
+
+        bool m_ShowBSplinePatchRectCreationPopup = false;
+        bool m_ShowBSplinePatchCylinderCreationPopup = false;
+
+        PatchRectCreationParameters m_PatchRectCreationParameters;
+        PatchCylinderCreationParameters m_PatchCylinderCreationParameters;
 
         bool m_EnableStereoscopic = false;
-        glm::vec3 m_LeftFilter = glm::vec3(1, 0, 0);
-        glm::vec3 m_RightFilter = glm::vec3(0, 0, 1);
+        glm::vec4 m_LeftEyeColor = glm::vec4(1, 0, 0, 1.0f);
+        glm::vec4 m_RightEyeColor = glm::vec4(0, 0, 1, 1.0f);
 
 
         Ref<Scene> m_Scene;

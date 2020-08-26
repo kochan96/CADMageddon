@@ -1,11 +1,6 @@
 #pragma once
 #include "cadpch.h"
-#include "Scene\Point.h"
-#include "Scene\Torus.h"
-#include "Scene\BezierC0.h"
-#include "Scene\BSpline.h"
-#include "Scene\InterpolatedCurve.h"
-#include "Scene\BezierPatch.h"
+#include "Scene\Scene.h"
 
 namespace CADMageddon
 {
@@ -32,6 +27,9 @@ namespace CADMageddon
         void AddBezierPatch(Ref<BezierPatch> bezierPatch);
         void RemoveBezierPatch(Ref<BezierPatch> bezierPatch);
 
+        void AddBSplinePatch(Ref<BSplinePatch> bSplinePatch);
+        void RemoveBSplinePatch(Ref<BSplinePatch> bSplinePatch);
+
         void Clear();
 
     private:
@@ -41,5 +39,6 @@ namespace CADMageddon
         std::vector<Ref<BSpline>> m_BSpline;
         std::vector<Ref<InterpolatedCurve>> m_InterPolatedCurve;
         std::vector<Ref<BezierPatch>> m_BezierPatch;
+        std::vector<Ref<BSplinePatch>> m_BSplinePatch;
     };
 }

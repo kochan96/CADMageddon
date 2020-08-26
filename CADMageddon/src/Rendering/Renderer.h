@@ -83,12 +83,42 @@ namespace CADMageddon
             const glm::vec4& color = DEFAULT_COLOR
         );
 
+        static void RenderBSplinePatch(
+            const glm::vec3& p0,
+            const glm::vec3& p1,
+            const glm::vec3& p2,
+            const glm::vec3& p3,
+            const glm::vec3& p4,
+            const glm::vec3& p5,
+            const glm::vec3& p6,
+            const glm::vec3& p7,
+            const glm::vec3& p8,
+            const glm::vec3& p9,
+            const glm::vec3& p10,
+            const glm::vec3& p11,
+            const glm::vec3& p12,
+            const glm::vec3& p13,
+            const glm::vec3& p14,
+            const glm::vec3& p15,
+            float uSubdivisionCount,
+            float vSubdivionCount,
+            const glm::vec4& color = DEFAULT_COLOR
+        );
+
+        static void RenderBSpline(
+            const glm::vec3& p0,
+            const glm::vec3& p1,
+            const glm::vec3& p2,
+            const glm::vec3& p3,
+            const glm::vec4& color = DEFAULT_COLOR);
+
     private:
         static void InitTorusRenderData();
         static void InitPointRenderData();
         static void InitLineRenderData();
         static void InitBezierCurveRenderData();
         static void InitBezierPatchRenderData();
+        static void InitBSplinePatchRenderData();
         static void InitSelectionBoxRenderData();
 
         static void FlushAndResetPoints();
@@ -96,6 +126,12 @@ namespace CADMageddon
 
         static void FlushPoints();
         static void FlushLines();
+
+        static float Spline(float t, float ti, float interval = 1.0f);
+        static float Spline1(float t, float ti, float interval = 1.0f);
+        static float Spline2(float t, float ti, float interval = 1.0f);
+        static float Spline3(float t, float ti, float interval = 1.0f);
+        static glm::vec4 SplineBasis(float t);
 
         struct SceneData
         {

@@ -11,6 +11,7 @@ namespace CADMageddon
     class BSpline;
     class InterpolatedCurve;
     class BezierPatch;
+    class BSplinePatch;
 
     class HierarchyPanel
     {
@@ -53,6 +54,11 @@ namespace CADMageddon
             m_OnBezierPatchSelectionChanged = selectionBezierPatchChangedCallback;
         }
 
+        void SetOnBSplinePatchSelectionChanged(std::function<void(bool, Ref<BSplinePatch>)> selectionBSplinePatchChangedCallback)
+        {
+            m_OnBSplinePatchSelectionChanged = selectionBSplinePatchChangedCallback;
+        }
+
         void SetScene(Ref<Scene> scene) { m_Scene = scene; }
 
     private:
@@ -72,6 +78,9 @@ namespace CADMageddon
         void RenderBezierPatchRectNode(Ref<BezierPatch> bezierPatch, int& id);
         void RenderBezierPatchControlPointNode(Ref<BezierPatch> bezierPatch, Ref<Point> point, int& id);
 
+        void RenderBSplinePatchRectNode(Ref<BSplinePatch> bSplinePatch, int& id);
+        void RenderBSplinePatchControlPointNode(Ref<BSplinePatch> bSplinePatch, Ref<Point> point, int& id);
+
     private:
         std::function<void(bool, Ref<Point>)> m_OnSelectionPointChanged;
         std::function<void(bool, Ref<Torus>)> m_OnSelectionTorusChanged;
@@ -79,6 +88,7 @@ namespace CADMageddon
         std::function<void(bool, Ref<BSpline>)> m_OnSelectionBSplineChanged;
         std::function<void(bool, Ref<InterpolatedCurve>)> m_OnSelectionInterpolatedChanged;
         std::function<void(bool, Ref<BezierPatch>)> m_OnBezierPatchSelectionChanged;
+        std::function<void(bool, Ref<BSplinePatch>)> m_OnBSplinePatchSelectionChanged;
         std::function<void()> m_OnSelectionCleared;
         Ref<Scene> m_Scene;
 

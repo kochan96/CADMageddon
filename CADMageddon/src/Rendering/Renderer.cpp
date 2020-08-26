@@ -32,6 +32,7 @@ namespace CADMageddon
     static RenderLineData s_RenderLineData;
     static RenderBezierCurveData s_RenderBezierCurveData;
     static RenderBezierPatchData s_RenderBezierPatchData;
+    static RenderBSplinePatchData s_RenderBSplinePatchData;
     static RenderSelectionBoxData s_RenderSelectionBoxData;
 
     void Renderer::Init()
@@ -53,6 +54,7 @@ namespace CADMageddon
         s_ShaderLibrary->Load("CubicBezierCurveShader", "assets/shaders/CubicBezierCurveShader.glsl");
         s_ShaderLibrary->Load("QuadraticBezierCurveShader", "assets/shaders/QuadraticBezierCurveShader.glsl");
         s_ShaderLibrary->Load("BezierPatchShader", "assets/shaders/BezierPatchShader.glsl");
+        s_ShaderLibrary->Load("BSplinePatchShader", "assets/shaders/BSplinePatchShader.glsl");
         s_ShaderLibrary->Load("SelectionBoxShader", "assets/shaders/SelectionBoxShader.glsl");
 
         InitTorusRenderData();
@@ -60,6 +62,7 @@ namespace CADMageddon
         InitLineRenderData();
         InitBezierCurveRenderData();
         InitBezierPatchRenderData();
+        InitBSplinePatchRenderData();
         InitSelectionBoxRenderData();
     }
 
@@ -144,6 +147,20 @@ namespace CADMageddon
 
         s_RenderBezierPatchData.BezierPatchShader = s_ShaderLibrary->Get("BezierPatchShader");
 
+    }
+
+    void Renderer::InitBSplinePatchRenderData()
+    {
+        s_RenderBSplinePatchData.BSplinePatchVertexArray = CreateRef<OpenGLVertexArray>();
+
+        s_RenderBSplinePatchData.BSplinePatchVertexBuffer = CreateRef<OpenGLVertexBuffer>(s_RenderBSplinePatchData.PointCount * sizeof(Vertex));
+        s_RenderBSplinePatchData.BSplinePatchVertexBuffer->SetLayout({
+            { ShaderDataType::Float3, "a_Position" },
+            });
+
+        s_RenderBSplinePatchData.BSplinePatchVertexArray->AddVertexBuffer(s_RenderBSplinePatchData.BSplinePatchVertexBuffer);
+
+        s_RenderBSplinePatchData.BSplinePatchShader = s_ShaderLibrary->Get("BSplinePatchShader");
     }
 
     void Renderer::InitSelectionBoxRenderData()
@@ -461,28 +478,165 @@ namespace CADMageddon
         s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_SubdivisionCount", vSubdivisionCount);
         glDrawArrays(GL_PATCHES, 16, 16);
 
-        float t = 1.0f;
-        float invT = 1.0f - t;
-        glm::vec4 basisV(invT * invT * invT,
-            3.0f * t * invT * invT,
-            3.0f * t * t * invT,
-            t * t * t);
+        glm::vec3 pp0 = p3;
+        glm::vec3 pp1 = p7;
+        glm::vec3 pp2 = p11;
+        glm::vec3 pp3 = p15;
+
+        ShaderRenderBezierC0(pp0, pp1, pp2, pp3, color);
+
+        pp0 = p12;
+        pp1 = p13;
+        pp2 = p14;
+        pp3 = p15;
+
+        ShaderRenderBezierC0(pp0, pp1, pp2, pp3, color);
+
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+
+    void Renderer::RenderBSplinePatch(
+        const glm::vec3& p0,
+        const glm::vec3& p1,
+        const glm::vec3& p2,
+        const glm::vec3& p3,
+        const glm::vec3& p4,
+        const glm::vec3& p5,
+        const glm::vec3& p6,
+        const glm::vec3& p7,
+        const glm::vec3& p8,
+        const glm::vec3& p9,
+        const glm::vec3& p10,
+        const glm::vec3& p11,
+        const glm::vec3& p12,
+        const glm::vec3& p13,
+        const glm::vec3& p14,
+        const glm::vec3& p15,
+        float uSubdivisionCount,
+        float vSubdivionCount,
+        const glm::vec4& color)
+    {
+        float vertices[] =
+        {
+            p0.x,p0.y,p0.z,
+            p1.x,p1.y,p1.z,
+            p2.x,p2.y,p2.z,
+            p3.x,p3.y,p3.z,
+            p4.x,p4.y,p4.z,
+            p5.x,p5.y,p5.z,
+            p6.x,p6.y,p6.z,
+            p7.x,p7.y,p7.z,
+            p8.x,p8.y,p8.z,
+            p9.x,p9.y,p9.z,
+            p10.x,p10.y,p10.z,
+            p11.x,p11.y,p11.z,
+            p12.x,p12.y,p12.z,
+            p13.x,p13.y,p13.z,
+            p14.x,p14.y,p14.z,
+            p15.x,p15.y,p15.z,
+
+            p0.x,p0.y,p0.z,
+            p4.x,p4.y,p4.z,
+            p8.x,p8.y,p8.z,
+            p12.x,p12.y,p12.z,
+            p1.x,p1.y,p1.z,
+            p5.x,p5.y,p5.z,
+            p9.x,p9.y,p9.z,
+            p13.x,p13.y,p13.z,
+            p2.x,p2.y,p2.z,
+            p6.x,p6.y,p6.z,
+            p10.x,p10.y,p10.z,
+            p14.x,p14.y,p14.z,
+            p3.x,p3.y,p3.z,
+            p7.x,p7.y,p7.z,
+            p11.x,p11.y,p11.z,
+            p15.x,p15.y,p15.z,
+        };
+
+        s_RenderBSplinePatchData.BSplinePatchVertexArray->Bind();
+        s_RenderBSplinePatchData.BSplinePatchVertexBuffer->SetData(vertices, sizeof(vertices));
+        s_RenderBSplinePatchData.BSplinePatchShader->Bind();
+        s_RenderBSplinePatchData.BSplinePatchShader->SetMat4("u_ViewProjectionMatrix", s_SceneData->ViewProjectionMatrix);
+        s_RenderBSplinePatchData.BSplinePatchShader->SetFloat4("u_Color", color);
+        s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_SubdivisionCount", uSubdivisionCount);
+
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glPatchParameteri(GL_PATCH_VERTICES, 16);
+        glDrawArrays(GL_PATCHES, 0, 16);
+
+        s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_SubdivisionCount", vSubdivionCount);
+        glDrawArrays(GL_PATCHES, 16, 16);
+
+        glm::vec4 basisV = SplineBasis(1.0f);
 
         glm::vec3 pp0 = (basisV.x * p0 + basisV.y * p1 + basisV.z * p2 + basisV.w * p3);
         glm::vec3 pp1 = (basisV.x * p4 + basisV.y * p5 + basisV.z * p6 + basisV.w * p7);
         glm::vec3 pp2 = (basisV.x * p8 + basisV.y * p9 + basisV.z * p10 + basisV.w * p11);
         glm::vec3 pp3 = (basisV.x * p12 + basisV.y * p13 + basisV.z * p14 + basisV.w * p15);
 
-        ShaderRenderBezierC0(pp0, pp1, pp2, pp3, color);
+        RenderBSpline(pp0, pp1, pp2, pp3, color);
 
         pp0 = (basisV.x * p0 + basisV.y * p4 + basisV.z * p8 + basisV.w * p12);
         pp1 = (basisV.x * p1 + basisV.y * p5 + basisV.z * p9 + basisV.w * p13);
         pp2 = (basisV.x * p2 + basisV.y * p6 + basisV.z * p10 + basisV.w * p14);
         pp3 = (basisV.x * p3 + basisV.y * p7 + basisV.z * p11 + basisV.w * p15);
 
-        ShaderRenderBezierC0(pp0, pp1, pp2, pp3, color);
+        RenderBSpline(pp0, pp1, pp2, pp3, color);
+
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+
+    void Renderer::RenderBSpline(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, const glm::vec4& color)
+    {
+        auto midPoint0 = p0 * 2.0f / 3.0f + p1 * 1.0f / 3.0f;
+        auto midPoint1 = p0 * 1.0f / 3.0f + p1 * 2.0f / 3.0f;
+        auto midPoint2 = p1 * 2.0f / 3.0f + p2 * 1.0f / 3.0f;
+        auto midPoint3 = p1 * 1.0f / 3.0f + p2 * 2.0f / 3.0f;
+        auto midPoint4 = p2 * 2.0f / 3.0f + p3 * 1.0f / 3.0f;
+
+        glm::vec3 pp0 = (midPoint1 + midPoint2) / 2.0f;
+        glm::vec3 pp1 = midPoint2;
+        glm::vec3 pp2 = midPoint3;
+        glm::vec3 pp3 = (midPoint3 + midPoint4) / 2.0f;
+
+        ShaderRenderBezierC0(pp0, pp1, pp2, pp3, color);
+    }
+
+    float CADMageddon::Renderer::Spline(float t, float ti, float interval)
+    {
+        if (ti > t && ti - 1.0f <= t)
+            return 1;
+        else
+            return 0;
+    }
+
+    float CADMageddon::Renderer::Spline1(float t, float ti, float interval)
+    {
+        float val1 = Spline(t, ti) * (t - ti + interval);
+        float val2 = Spline(t, ti + interval) * (ti + interval - t);
+        return (val1 + val2) / interval;
+    }
+
+    float CADMageddon::Renderer::Spline2(float t, float ti, float interval)
+    {
+        float val1 = Spline1(t, ti) * (t - ti + interval);
+        float val2 = Spline1(t, ti + interval) * (ti + 2 * interval - t);
+        return (val1 + val2) / (2 * interval);
+    }
+
+    float CADMageddon::Renderer::Spline3(float t, float ti, float interval)
+    {
+        float val1 = Spline2(t, ti) * (t - ti + interval);
+        float val2 = Spline2(t, ti + interval) * (ti + 3 * interval - t);
+        return (val1 + val2) / (3 * interval);
+    }
+
+    glm::vec4 CADMageddon::Renderer::SplineBasis(float t)
+    {
+        float interval = 1.0f;
+        return glm::vec4(Spline3(t, 1 - 3 * interval), Spline3(t, 1 - 2 * interval),
+            Spline3(t, 1 - interval), Spline3(t, 1));
     }
 
     void Renderer::FlushAndResetPoints()
@@ -529,6 +683,7 @@ namespace CADMageddon
 
         glDrawArrays(GL_LINES, 0, s_RenderLineData.Count);
     }
+
     bool Renderer::IsBezierFlatEnough(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, float tolerance)
     {
         return glm::distance(p0, p1) + glm::distance(p1, p2) < tolerance * glm::distance(p0, p2);

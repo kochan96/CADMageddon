@@ -95,6 +95,18 @@ namespace CADMageddon
             ImGui::TreePop();
         }
 
+        auto bSplinePatches = m_Scene->GetBSplinePatch();
+        if (!bSplinePatches.empty() && ImGui::TreeNode("BSplinePatches"))
+        {
+            int id = 0;
+            for (auto bSplinePatch : bSplinePatches)
+            {
+                RenderBSplinePatchRectNode(bSplinePatch, id);
+            }
+
+            ImGui::TreePop();
+        }
+
         ImGui::End();
     }
 
@@ -552,6 +564,89 @@ namespace CADMageddon
     }
 
     void HierarchyPanel::RenderBezierPatchControlPointNode(Ref<BezierPatch> bezierPatch, Ref<Point> point, int& id)
+    {
+        static ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
+        ImGuiTreeNodeFlags node_flags = base_flags;
+
+        if (point->GetIsSelected())
+        {
+            node_flags |= ImGuiTreeNodeFlags_Selected;
+        }
+
+        node_flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+
+        bool node_open = ImGui::TreeNodeEx((void*)(intptr_t)id, node_flags, point->GetName().c_str());
+        if (ImGui::IsItemClicked())
+        {
+            if (ImGui::GetIO().KeyCtrl)
+            {
+                point->SetIsSelected(!point->GetIsSelected());
+                if (m_OnSelectionPointChanged)
+                    m_OnSelectionPointChanged(point->GetIsSelected(), point);
+            }
+            else
+            {
+                bool oldSelected = point->GetIsSelected();
+                ClearSelection();
+                point->SetIsSelected(!oldSelected);
+                if (m_OnSelectionPointChanged)
+                    m_OnSelectionPointChanged(point->GetIsSelected(), point);
+            }
+        }
+
+        id++;
+    }
+
+    void HierarchyPanel::RenderBSplinePatchRectNode(Ref<BSplinePatch> bSplinePatch, int& id)
+    {
+        static ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
+        ImGuiTreeNodeFlags node_flags = base_flags;
+
+        if (bSplinePatch->GetIsSelected())
+        {
+            node_flags |= ImGuiTreeNodeFlags_Selected;
+        }
+
+        bool isBSplinePatchEmpty = bSplinePatch->GetControlPoints().empty();
+
+        if (isBSplinePatchEmpty)
+        {
+            node_flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+        }
+
+        bool node_open = ImGui::TreeNodeEx((void*)(intptr_t)id, node_flags, bSplinePatch->GetName().c_str());
+        if (ImGui::IsItemClicked())
+        {
+            if (ImGui::GetIO().KeyCtrl)
+            {
+                bSplinePatch->SetIsSelected(!bSplinePatch->GetIsSelected());
+            }
+            else
+            {
+                bool oldSelected = bSplinePatch->GetIsSelected();
+                ClearSelection();
+                bSplinePatch->SetIsSelected(!oldSelected);
+            }
+
+            if (m_OnBSplinePatchSelectionChanged)
+                m_OnBSplinePatchSelectionChanged(bSplinePatch->GetIsSelected(), bSplinePatch);
+        }
+
+        if (node_open && !isBSplinePatchEmpty)
+        {
+            auto points = bSplinePatch->GetControlPoints();
+            for (auto point : points)
+            {
+                RenderBSplinePatchControlPointNode(bSplinePatch, point, id);
+            }
+
+            ImGui::TreePop();
+        }
+
+        id++;
+    }
+
+    void HierarchyPanel::RenderBSplinePatchControlPointNode(Ref<BSplinePatch> bSplinePatch, Ref<Point> point, int& id)
     {
         static ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
         ImGuiTreeNodeFlags node_flags = base_flags;

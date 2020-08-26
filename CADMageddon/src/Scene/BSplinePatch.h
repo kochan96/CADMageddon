@@ -5,10 +5,10 @@
 
 namespace CADMageddon
 {
-    class BezierPatch
+    class BSplinePatch
     {
     public:
-        BezierPatch(std::string name, int patchCountX, int patchCountY, int uDivisionCount = 4, int vDivisionCount = 4);
+        BSplinePatch(std::string name, int patchCountX, int patchCountY, int uDivisionCount = 4, int vDivisionCount = 4);
 
         std::vector<Ref<Point>> GetControlPoints() const { return m_ControlPoints; }
         std::vector<uint32_t> GetRenderingIndices() const { return m_Indices; }
@@ -32,7 +32,7 @@ namespace CADMageddon
         int GetPatchCountX() const { return m_PatchCountX; }
         int GetPatchCountY() const { return m_PatchCountY; }
 
-        static Ref<BezierPatch> CreateRectPatch(
+        static Ref<BSplinePatch> CreateRectPatch(
             std::string name,
             glm::vec3 startPosition,
             int PatchCountx,
@@ -42,7 +42,7 @@ namespace CADMageddon
             int uDivisionCount = 4,
             int vDivisionCount = 4);
 
-        static Ref<BezierPatch> CreateCyliderPatch(
+        static Ref<BSplinePatch> CreateCyliderPatch(
             std::string name,
             glm::vec3 center,
             int PatchCountx,
@@ -55,6 +55,7 @@ namespace CADMageddon
     private:
         void GenerateRectControlPoints(glm::vec3 startPosition, int PatchCountx, int PatchCounty, float width, float height);
         void GenerateCylinderControlPoints(glm::vec3 center, int PatchCountx, int PatchCounty, float radius, float height);
+
 
     private:
         int m_PatchCountX;

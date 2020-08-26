@@ -5,7 +5,8 @@ namespace CADMageddon
 {
     Scene::Scene()
     {
-
+        m_SelectionColor = Renderer::SELECTED_COLOR;
+        m_DefaultColor = Renderer::DEFAULT_COLOR;
     }
 
     Ref<Point> Scene::CreatePoint(glm::vec3 position, std::string name)
@@ -50,7 +51,7 @@ namespace CADMageddon
         return interpolated;
     }
 
-    Ref<BezierPatch> Scene::CreateBezierPatchRect(std::string name, const BezierPatchRectCreationParameters& parameters)
+    Ref<BezierPatch> Scene::CreateBezierPatchRect(std::string name, const PatchRectCreationParameters& parameters)
     {
         auto bezier = BezierPatch::CreateRectPatch(name, parameters.Position, parameters.PatchCountX, parameters.PatchCountY, parameters.Width, parameters.Height);
         for (auto controlPoints : bezier->GetControlPoints())
@@ -63,7 +64,7 @@ namespace CADMageddon
         return bezier;
     }
 
-    Ref<BezierPatch> Scene::CreateBezierPatchCylinder(std::string name, const BezierPatchCylinderCreationParameters& parameters)
+    Ref<BezierPatch> Scene::CreateBezierPatchCylinder(std::string name, const PatchCylinderCreationParameters& parameters)
     {
         auto bezier = BezierPatch::CreateCyliderPatch(name, parameters.Center, parameters.PatchCountX, parameters.PatchCountY, parameters.Radius, parameters.Height);
         for (auto controlPoints : bezier->GetControlPoints())
@@ -76,6 +77,32 @@ namespace CADMageddon
         return bezier;
     }
 
+    Ref<BSplinePatch> Scene::CreateBSplinePatchRect(std::string name, const PatchRectCreationParameters& parameters)
+    {
+        auto bSpline = BSplinePatch::CreateRectPatch(name, parameters.Position, parameters.PatchCountX, parameters.PatchCountY, parameters.Width, parameters.Height);
+        for (auto controlPoints : bSpline->GetControlPoints())
+        {
+            m_Points.push_back(controlPoints);
+        }
+
+        m_BSplinePatch.push_back(bSpline);
+
+        return bSpline;
+    }
+
+    Ref<BSplinePatch> Scene::CreateBSplinePatchCylinder(std::string name, const PatchCylinderCreationParameters& parameters)
+    {
+        auto bSpline = BSplinePatch::CreateCyliderPatch(name, parameters.Center, parameters.PatchCountX, parameters.PatchCountY, parameters.Radius, parameters.Height);
+        for (auto controlPoints : bSpline->GetControlPoints())
+        {
+            m_Points.push_back(controlPoints);
+        }
+
+        m_BSplinePatch.push_back(bSpline);
+
+        return bSpline;
+    }
+
     void Scene::Update()
     {
         for (auto torus : m_Torus)
@@ -86,7 +113,7 @@ namespace CADMageddon
                 vertices.push_back(point->GetTransform()->Translation);
             }
 
-            auto color = torus->GetIsSelected() ? Renderer::SELECTED_COLOR : Renderer::DEFAULT_COLOR;
+            auto color = torus->GetIsSelected() ? m_SelectionColor : m_DefaultColor;
             Renderer::RenderTorus(vertices, torus->GetIndices(), torus->GetTransform()->GetMatrix(), color);
         }
 
@@ -110,9 +137,14 @@ namespace CADMageddon
             RenderBezierPatch(bezierPatch);
         }
 
+        for (auto bSplinePatch : m_BSplinePatch)
+        {
+            RenderBSplinePatch(bSplinePatch);
+        }
+
         for (auto point : m_FreePoints)
         {
-            auto color = point->GetIsSelected() ? Renderer::SELECTED_COLOR : Renderer::DEFAULT_COLOR;
+            auto color = point->GetIsSelected() ? m_SelectionColor : m_DefaultColor;
             glm::vec3 position = point->GetTransform()->GetMatrix() * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
             Renderer::RenderPoint(position, color);
         }
@@ -131,6 +163,7 @@ namespace CADMageddon
         auto splines = m_BSpline;
         auto interpolatedCurves = m_InterpolatedCurve;
         auto bezierPatches = m_BezierPatch;
+        auto bSplinePatches = m_BSplinePatch;
 
         for (auto point : points)
         {
@@ -166,6 +199,12 @@ namespace CADMageddon
         {
             if (bezierPatch->GetIsSelected())
                 DeleteBezierPatch(bezierPatch);
+        }
+
+        for (auto bSplinePatch : m_BSplinePatch)
+        {
+            if (bSplinePatch->GetIsSelected())
+                DeleteBSplinePatch(bSplinePatch);
         }
     }
 
@@ -291,7 +330,7 @@ namespace CADMageddon
         for (int i = 0; i < controlPoints.size(); i++)
         {
             auto point = controlPoints[i];
-            auto color = point->GetIsSelected() ? Renderer::SELECTED_COLOR : Renderer::DEFAULT_COLOR;
+            auto color = point->GetIsSelected() ? m_SelectionColor : m_DefaultColor;
             glm::vec3 position = point->GetTransform()->GetMatrix() * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
             Renderer::RenderPoint(position, color);
 
@@ -309,7 +348,7 @@ namespace CADMageddon
             }
         }
 
-        auto bezierColor = bezierC0->GetIsSelected() ? Renderer::SELECTED_COLOR : Renderer::DEFAULT_COLOR;
+        auto bezierColor = bezierC0->GetIsSelected() ? m_SelectionColor : m_DefaultColor;
 
         for (int i = 0; i < controlPointsPositions.size(); i += 3)
         {
@@ -344,7 +383,7 @@ namespace CADMageddon
         {
             for (auto controlPoint : controlPoints)
             {
-                auto color = controlPoint->GetIsSelected() ? Renderer::SELECTED_COLOR : Renderer::DEFAULT_COLOR;
+                auto color = controlPoint->GetIsSelected() ? m_SelectionColor : m_DefaultColor;
                 Renderer::RenderPoint(controlPoint->GetPosition(), color);
             }
 
@@ -352,7 +391,7 @@ namespace CADMageddon
         }
 
         auto bezierPoints = bSpline->GetBezierControlPoints();
-        auto bSplineColor = bSpline->GetIsSelected() ? Renderer::SELECTED_COLOR : Renderer::DEFAULT_COLOR;
+        auto bSplineColor = bSpline->GetIsSelected() ? m_SelectionColor : m_DefaultColor;
 
         for (int i = 0; i < bezierPoints.size(); i += 3)
         {
@@ -381,7 +420,7 @@ namespace CADMageddon
 
         for (auto controlPoint : controlPoints)
         {
-            auto color = controlPoint->GetIsSelected() ? Renderer::SELECTED_COLOR : Renderer::DEFAULT_COLOR;
+            auto color = controlPoint->GetIsSelected() ? m_SelectionColor : m_DefaultColor;
             Renderer::RenderPoint(controlPoint->GetPosition(), color);
         }
 
@@ -416,7 +455,7 @@ namespace CADMageddon
     {
         auto controlPoints = interPolatedCurve->GetControlPoints();
         auto bezierPoints = interPolatedCurve->GetBezierControlPoints();
-        auto bSplineColor = interPolatedCurve->GetIsSelected() ? Renderer::SELECTED_COLOR : Renderer::DEFAULT_COLOR;
+        auto bSplineColor = interPolatedCurve->GetIsSelected() ? m_SelectionColor : m_DefaultColor;
 
         for (int i = 0; i < bezierPoints.size(); i += 3)
         {
@@ -445,7 +484,7 @@ namespace CADMageddon
 
         for (auto controlPoint : controlPoints)
         {
-            auto color = controlPoint->GetIsSelected() ? Renderer::SELECTED_COLOR : Renderer::DEFAULT_COLOR;
+            auto color = controlPoint->GetIsSelected() ? m_SelectionColor : m_DefaultColor;
             Renderer::RenderPoint(controlPoint->GetPosition(), color);
         }
 
@@ -461,45 +500,95 @@ namespace CADMageddon
 
     void Scene::RenderBezierPatch(Ref<BezierPatch> bezierPatch)
     {
-        auto renderControlPoints = bezierPatch->GetRenderingControlPoints();
-        std::vector<glm::vec3> controlPointsPositions;
-        std::transform(renderControlPoints.begin(), renderControlPoints.end(), std::back_inserter(controlPointsPositions), [](Ref<Point> point) {return point->GetPosition(); });
+        auto indices = bezierPatch->GetRenderingIndices();
+        auto controlPoints = bezierPatch->GetControlPoints();
 
-        auto color = bezierPatch->GetIsSelected() ? Renderer::SELECTED_COLOR : Renderer::DEFAULT_COLOR;
-        for (int i = 0; i < controlPointsPositions.size(); i += 16)
+        auto color = bezierPatch->GetIsSelected() ? m_SelectionColor : m_DefaultColor;
+        for (int i = 0; i < indices.size(); i += 16)
         {
             Renderer::RenderBezierPatch(
-                controlPointsPositions[i],
-                controlPointsPositions[i + 1],
-                controlPointsPositions[i + 2],
-                controlPointsPositions[i + 3],
-                controlPointsPositions[i + 4],
-                controlPointsPositions[i + 5],
-                controlPointsPositions[i + 6],
-                controlPointsPositions[i + 7],
-                controlPointsPositions[i + 8],
-                controlPointsPositions[i + 9],
-                controlPointsPositions[i + 10],
-                controlPointsPositions[i + 11],
-                controlPointsPositions[i + 12],
-                controlPointsPositions[i + 13],
-                controlPointsPositions[i + 14],
-                controlPointsPositions[i + 15],
+                controlPoints[indices[i]]->GetPosition(),
+                controlPoints[indices[i + 1]]->GetPosition(),
+                controlPoints[indices[i + 2]]->GetPosition(),
+                controlPoints[indices[i + 3]]->GetPosition(),
+                controlPoints[indices[i + 4]]->GetPosition(),
+                controlPoints[indices[i + 5]]->GetPosition(),
+                controlPoints[indices[i + 6]]->GetPosition(),
+                controlPoints[indices[i + 7]]->GetPosition(),
+                controlPoints[indices[i + 8]]->GetPosition(),
+                controlPoints[indices[i + 9]]->GetPosition(),
+                controlPoints[indices[i + 10]]->GetPosition(),
+                controlPoints[indices[i + 11]]->GetPosition(),
+                controlPoints[indices[i + 12]]->GetPosition(),
+                controlPoints[indices[i + 13]]->GetPosition(),
+                controlPoints[indices[i + 14]]->GetPosition(),
+                controlPoints[indices[i + 15]]->GetPosition(),
                 bezierPatch->GetUDivisionCount(),
                 bezierPatch->GetVDivisionCount(),
                 color);
         }
 
-        auto controlPoints = bezierPatch->GetControlPoints();
         for (auto controlPoint : controlPoints)
         {
-            auto color = controlPoint->GetIsSelected() ? Renderer::SELECTED_COLOR : Renderer::DEFAULT_COLOR;
+            auto color = controlPoint->GetIsSelected() ? m_SelectionColor : m_DefaultColor;
             Renderer::RenderPoint(controlPoint->GetPosition(), color);
         }
 
         if (bezierPatch->GetShowPolygon())
         {
+            auto gridIndices = bezierPatch->GetGridIndices();
+            for (int i = 0; i < gridIndices.size() - 1; i+=2)
+            {
+                auto color = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+                Renderer::RenderLine(controlPoints[gridIndices[i]]->GetPosition(), controlPoints[gridIndices[i + 1]]->GetPosition(), color);
+            }
+        }
+    }
 
+    void Scene::RenderBSplinePatch(Ref<BSplinePatch> bSplinePatch)
+    {
+        auto indices = bSplinePatch->GetRenderingIndices();
+        auto controlPoints = bSplinePatch->GetControlPoints();
+
+        auto color = bSplinePatch->GetIsSelected() ? m_SelectionColor : m_DefaultColor;
+        for (int i = 0; i < indices.size(); i += 16)
+        {
+            Renderer::RenderBSplinePatch(
+                controlPoints[indices[i]]->GetPosition(),
+                controlPoints[indices[i + 1]]->GetPosition(),
+                controlPoints[indices[i + 2]]->GetPosition(),
+                controlPoints[indices[i + 3]]->GetPosition(),
+                controlPoints[indices[i + 4]]->GetPosition(),
+                controlPoints[indices[i + 5]]->GetPosition(),
+                controlPoints[indices[i + 6]]->GetPosition(),
+                controlPoints[indices[i + 7]]->GetPosition(),
+                controlPoints[indices[i + 8]]->GetPosition(),
+                controlPoints[indices[i + 9]]->GetPosition(),
+                controlPoints[indices[i + 10]]->GetPosition(),
+                controlPoints[indices[i + 11]]->GetPosition(),
+                controlPoints[indices[i + 12]]->GetPosition(),
+                controlPoints[indices[i + 13]]->GetPosition(),
+                controlPoints[indices[i + 14]]->GetPosition(),
+                controlPoints[indices[i + 15]]->GetPosition(),
+                bSplinePatch->GetUDivisionCount(),
+                bSplinePatch->GetVDivisionCount(),
+                color);
+        }
+
+        for (auto controlPoint : controlPoints)
+        {
+            auto color = controlPoint->GetIsSelected() ? m_SelectionColor : m_DefaultColor;
+            Renderer::RenderPoint(controlPoint->GetPosition(), color);
+        }
+
+        if (bSplinePatch->GetShowPolygon())
+        {
+            auto gridIndices = bSplinePatch->GetGridIndices();
+            for (int i = 0; i < gridIndices.size() - 1; i += 2)
+            {
+                auto color = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+                Renderer::RenderLine(controlPoints[gridIndices[i]]->GetPosition(), controlPoints[gridIndices[i + 1]]->GetPosition(), color);
+            }
         }
     }
 
@@ -583,6 +672,20 @@ namespace CADMageddon
             }
 
             m_BezierPatch.erase(it);
+        }
+    }
+
+    void Scene::DeleteBSplinePatch(Ref<BSplinePatch> bSplinePatch)
+    {
+        auto it = std::find(m_BSplinePatch.begin(), m_BSplinePatch.end(), bSplinePatch);
+        if (it != m_BSplinePatch.end())
+        {
+            for (auto point : bSplinePatch->GetControlPoints())
+            {
+                m_FreePoints.push_back(point);
+            }
+
+            m_BSplinePatch.erase(it);
         }
     }
 }
