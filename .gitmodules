@@ -11,3 +11,6 @@
 [submodule "CADMageddon/vendor/glm"]
 	path = CADMageddon/vendor/glm
 	url = https://github.com/g-truc/glm.git
+[submodule "CADMageddon/vendor/tinyxml2"]
+	path = CADMageddon/vendor/tinyxml2
+	url = https://github.com/kochan96/tinyxml2.git
