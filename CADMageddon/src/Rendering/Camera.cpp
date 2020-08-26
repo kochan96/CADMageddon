@@ -58,28 +58,29 @@ namespace CADMageddon
     void FPSCamera::RecalculateStereoProjectionMatrix()
     {
         float eyeDistance = m_EyeDistance / 2.0f;
+        float projectionPlaneDistance = -m_ProjectionPlaneDistance;
 
         float top = m_nearClipPlane * std::tanf(glm::radians(m_fov) / 2);
         float bottom = -top;
-        float a = m_aspectRatio * std::tanf(glm::radians(m_fov) / 2) * m_ProjectionPlaneDistance;
+        float a = m_aspectRatio * std::tanf(glm::radians(m_fov) / 2) * projectionPlaneDistance;
 
         float b = a - eyeDistance;
         float c = a + eyeDistance;
 
-        float left = -b * m_nearClipPlane / m_ProjectionPlaneDistance;
-        float right = c * m_nearClipPlane / m_ProjectionPlaneDistance;
+        float left = -b * m_nearClipPlane / projectionPlaneDistance;
+        float right = c * m_nearClipPlane / projectionPlaneDistance;
 
         m_LeftEyeProjectionMatrix = glm::frustum(left, right, bottom, top, m_nearClipPlane, m_farClipPlane);
 
         top = m_nearClipPlane * std::tanf(glm::radians(m_fov) / 2);
         bottom = -top;
-        a = m_aspectRatio * std::tanf(glm::radians(m_fov) / 2) * m_ProjectionPlaneDistance;
+        a = m_aspectRatio * std::tanf(glm::radians(m_fov) / 2) * projectionPlaneDistance;
 
         b = a - eyeDistance;
         c = a + eyeDistance;
 
-        left = -c * m_nearClipPlane / m_ProjectionPlaneDistance;
-        right = b * m_nearClipPlane / m_ProjectionPlaneDistance;
+        left = -c * m_nearClipPlane / projectionPlaneDistance;
+        right = b * m_nearClipPlane / projectionPlaneDistance;
         m_RightEyeProjectionMatrix = glm::frustum(left, right, bottom, top, m_nearClipPlane, m_farClipPlane);
     }
 }
