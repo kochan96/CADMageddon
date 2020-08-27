@@ -14,4 +14,12 @@ namespace CADMageddon
             m_ControlPoints.erase(it);
     }
 
+    void BezierC0::SetShowPoints(bool setShowPoints)
+    {
+        m_ShowPoints = setShowPoints;
+        for (auto point : m_ControlPoints)
+        {
+            point->SetIsVisible(setShowPoints);
+        }
+    }
 }

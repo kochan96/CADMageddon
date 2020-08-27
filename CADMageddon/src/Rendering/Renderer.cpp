@@ -6,6 +6,10 @@
 
 namespace CADMageddon
 {
+
+    float Renderer::PointSize = 10.0f;
+    bool Renderer::ShowPoints = true;
+
     void OpenGLMessageCallback(
         unsigned source,
         unsigned type,
@@ -97,7 +101,7 @@ namespace CADMageddon
 
         s_RenderPointData.PointVertexBufferBase = new VertexC[s_RenderPointData.MaxPoints];
 
-        glPointSize(10.0f);
+        glPointSize(PointSize);
     }
 
     void Renderer::InitLineRenderData()
@@ -260,6 +264,9 @@ namespace CADMageddon
 
     void Renderer::RenderPoint(const glm::vec3& position, const glm::vec4& color)
     {
+        if (!ShowPoints)
+            return;
+
         if (s_RenderPointData.Count >= s_RenderPointData.MaxPoints)
             FlushAndResetPoints();
 
@@ -375,6 +382,34 @@ namespace CADMageddon
 
             Renderer::RenderBezierC0(p0, p01, p0112, p01121223, color, tolerance);
             Renderer::RenderBezierC0(p01121223, p1223, p23, p3, color, tolerance);
+        }
+    }
+
+    void Renderer::ShaderRenderBezierC0(const std::vector<glm::vec3>& controlPoints, const glm::vec4& color)
+    {
+        for (int i = 0; i < controlPoints.size(); i += 3)
+        {
+            if (i + 3 < controlPoints.size())
+            {
+                Renderer::ShaderRenderBezierC0(
+                    controlPoints[i],
+                    controlPoints[i + 1],
+                    controlPoints[i + 2],
+                    controlPoints[i + 3],
+                    color);
+            }
+            else if (i + 2 < controlPoints.size())
+            {
+                Renderer::ShaderRenderBezierC0(
+                    controlPoints[i],
+                    controlPoints[i + 1],
+                    controlPoints[i + 2],
+                    color);
+            }
+            else if (i + 1 < controlPoints.size())
+            {
+                Renderer::RenderLine(controlPoints[i], controlPoints[i + 1], color);
+            }
         }
     }
 

@@ -71,5 +71,14 @@ namespace CADMageddon
         if (it != m_ControlPoints.end())
             m_ControlPoints.erase(it);
     }
+
+    void InterpolatedCurve::SetShowPoints(bool setShowPoints)
+    {
+        m_ShowPoints = setShowPoints;
+        for (auto point : m_ControlPoints)
+        {
+            point->SetIsVisible(setShowPoints);
+        }
+    }
 }
 

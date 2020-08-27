@@ -8,6 +8,10 @@ namespace CADMageddon
     class Renderer
     {
     public:
+
+        static float PointSize;
+        static bool ShowPoints;
+
         static constexpr glm::vec4 DEFAULT_COLOR = glm::vec4(0.0f, 0.8f, 0.0f, 1.0f);
         static constexpr glm::vec4 SELECTED_COLOR = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f);
 
@@ -46,6 +50,10 @@ namespace CADMageddon
             const glm::vec4& color = DEFAULT_COLOR,
             float tolerance = 1.0005f
         );
+
+        static void ShaderRenderBezierC0(
+            const std::vector<glm::vec3>& controlPoints,
+            const glm::vec4& color = DEFAULT_COLOR);
 
         static void ShaderRenderBezierC0(
             const glm::vec3& p0,

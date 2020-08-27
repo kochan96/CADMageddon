@@ -34,6 +34,9 @@ namespace CADMageddon
 
         bool GetIsCylinder() const { return m_IsCylinder; }
 
+        bool GetShowPoints() const { return m_ShowPoints; }
+        void SetShowPoints(bool setShowPoints);
+
         static Ref<BSplinePatch> CreateRectPatch(
             std::string name,
             glm::vec3 startPosition,
@@ -74,6 +77,7 @@ namespace CADMageddon
 
     private:
         bool m_IsCylinder = false;
+        bool m_ShowPoints = true;
         int m_PatchCountX;
         int m_PatchCountY;
         int m_UDivisionCount;

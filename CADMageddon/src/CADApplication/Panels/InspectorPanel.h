@@ -1,12 +1,16 @@
 #pragma once
 #include "cadpch.h"
 #include "Scene\Scene.h"
+#include "CADApplication\Systems\TransformationSystem.h"
 
 namespace CADMageddon
 {
     class InspectorPanel
     {
     public:
+        InspectorPanel(Ref<TransformationSystem> transformationSystem)
+            :m_transformationSystem(transformationSystem) {};
+
         void Render();
 
         void AddPoint(Ref<Point> point);
@@ -34,6 +38,10 @@ namespace CADMageddon
         void Clear();
 
     private:
+        void RenderTransformMenu();
+
+    private:
+        Ref<TransformationSystem> m_transformationSystem;
         std::vector<Ref<Point>> m_Points;
         std::vector<Ref<Torus>> m_Torus;
         std::vector<Ref<BezierC0>> m_Bezier;

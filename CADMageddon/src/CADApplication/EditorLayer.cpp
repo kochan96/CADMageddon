@@ -42,7 +42,7 @@ namespace CADMageddon
         m_HierarchyPanel->SetOnBSplinePatchSelectionChanged(std::bind(&EditorLayer::OnSelectionChangedBSplinePatch, this, std::placeholders::_1, std::placeholders::_2));
         m_HierarchyPanel->SetOnSelectionClearedCallback(std::bind(&EditorLayer::OnSelectionCleared, this));
 
-        m_InspectorPanel = CreateRef<InspectorPanel>();
+        m_InspectorPanel = CreateRef<InspectorPanel>(m_TransformationSystem);
 
         m_PickingSystem->SetOnPointSelectionChanged(std::bind(&EditorLayer::OnSelectionChangedPoint, this, std::placeholders::_1, std::placeholders::_2));
         m_PickingSystem->SetOnTorusSelectionChanged(std::bind(&EditorLayer::OnSelectionChangedTorus, this, std::placeholders::_1, std::placeholders::_2));
@@ -385,10 +385,15 @@ namespace CADMageddon
             Renderer::BeginScene(m_CameraController.GetCamera().GetViewProjectionMatrix());
 
             m_Scene->Update();
-
-            Renderer::RenderGrid(m_GridVertexArray, glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)), glm::vec4(1.0f));
+            if (m_ShowGrid)
+                Renderer::RenderGrid(m_GridVertexArray, glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)), glm::vec4(1.0f));
             const float cursorSize = 1.0f;
             RenderCursor(m_CursorController.getCursor()->getPosition(), cursorSize);
+
+            if (m_TransformationSystem->GetCount() > 1)
+            {
+                Renderer::RenderPoint(m_TransformationSystem->GetTransformationCenter(), glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
+            }
 
             if (IsEditMode())
             {
@@ -419,8 +424,9 @@ namespace CADMageddon
             m_Scene->SetDefaultColor(m_LeftEyeColor);
             m_Scene->SetSelectionColor(m_LeftEyeColor);
             m_Scene->Update();
+            if (m_ShowGrid)
+                Renderer::RenderGrid(m_GridVertexArray, glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)), m_LeftEyeColor);
 
-            Renderer::RenderGrid(m_GridVertexArray, glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)), m_LeftEyeColor);
             const float cursorSize = 1.0f;
             RenderCursor(m_CursorController.getCursor()->getPosition(), cursorSize, m_LeftEyeColor);
 
@@ -449,7 +455,9 @@ namespace CADMageddon
             m_Scene->SetSelectionColor(m_RightEyeColor);
             m_Scene->Update();
 
-            Renderer::RenderGrid(m_GridVertexArray, glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)), m_RightEyeColor);
+            if (m_ShowGrid)
+                Renderer::RenderGrid(m_GridVertexArray, glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)), m_RightEyeColor);
+
             RenderCursor(m_CursorController.getCursor()->getPosition(), cursorSize, m_RightEyeColor);
 
             if (IsEditMode())
@@ -865,6 +873,13 @@ namespace CADMageddon
     void EditorLayer::RenderOptions()
     {
         ImGui::Begin("Options");
+
+        ImGui::BeginGroup();
+
+        ImGui::Checkbox("ShowPoints", &Renderer::ShowPoints);
+        ImGui::Checkbox("showGrid", &m_ShowGrid);
+
+        ImGui::EndGroup();
 
         ImGui::BeginGroup();
 

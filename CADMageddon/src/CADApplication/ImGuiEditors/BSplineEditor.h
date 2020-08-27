@@ -16,6 +16,12 @@ namespace CADMageddon
             bSpline->SetName(name);
         }
 
+        auto visible = bSpline->GetShowPoints();
+        if (ImGui::Checkbox("ShowPoints", &visible))
+        {
+            bSpline->SetShowPoints(visible);
+        }
+
         bool showBSplinePolygon = bSpline->GetShowBSplinePolygon();
         if (ImGui::Checkbox("ShowBSplinePolygon", &showBSplinePolygon))
         {

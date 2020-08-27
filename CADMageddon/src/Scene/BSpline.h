@@ -31,9 +31,12 @@ namespace CADMageddon
         bool GetIsBezierBasis() const { return m_IsBezierBasis; }
         void SetIsBezierBasis(bool isBezierBasis) { m_IsBezierBasis = isBezierBasis; }
 
+        bool GetShowPoints() const { return m_ShowPoints; }
+        void SetShowPoints(bool setShowPoints);
 
     private:
         std::string m_Name;
+        bool m_ShowPoints = true;
         bool m_IsSelected = false;
         bool m_ShowBSplinePolygon = false;
         bool m_ShowBezierPolygon = false;

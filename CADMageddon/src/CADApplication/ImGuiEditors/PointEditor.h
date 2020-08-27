@@ -16,11 +16,19 @@ namespace CADMageddon
             point->SetName(name);
         }
 
+        auto visible = point->GetIsVisible();
+        if(ImGui::Checkbox("IsVisible",&visible))
+        {
+            point->SetIsVisible(visible);
+        }
+
         auto position = point->GetTransform()->Translation;
         if (ImGui::DragFloat3("Position", &position.x, 0.1f))
         {
             point->GetTransform()->Translation = position;
         }
+
+        
 
         ImGui::EndGroup();
     }

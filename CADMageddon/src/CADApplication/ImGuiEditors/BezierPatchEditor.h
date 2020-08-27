@@ -16,6 +16,12 @@ namespace CADMageddon
             bezierPatch->SetName(name);
         }
 
+        auto visible = bezierPatch->GetShowPoints();
+        if (ImGui::Checkbox("ShowPoints", &visible))
+        {
+            bezierPatch->SetShowPoints(visible);
+        }
+
         bool showPolygon = bezierPatch->GetShowPolygon();
         if (ImGui::Checkbox("ShowPolygon", &showPolygon))
         {
@@ -36,6 +42,9 @@ namespace CADMageddon
             bezierPatch->SetVDivisionCount(vDivision);
         }
 
+        ImGui::Text("PatchCountX %d", bezierPatch->GetPatchCountX());
+        ImGui::Text("PatchCountY %d", bezierPatch->GetPatchCountY());
+        ImGui::Text("Cylinder: %s", bezierPatch->GetIsCylinder() ? "Yes" : "No");
 
         ImGui::EndGroup();
     }

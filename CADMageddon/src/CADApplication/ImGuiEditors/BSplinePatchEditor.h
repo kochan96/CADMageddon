@@ -16,6 +16,12 @@ namespace CADMageddon
             bSplinePatch->SetName(name);
         }
 
+        auto visible = bSplinePatch->GetShowPoints();
+        if (ImGui::Checkbox("ShowPoints", &visible))
+        {
+            bSplinePatch->SetShowPoints(visible);
+        }
+
         bool showPolygon = bSplinePatch->GetShowPolygon();
         if (ImGui::Checkbox("ShowPolygon", &showPolygon))
         {
@@ -35,6 +41,10 @@ namespace CADMageddon
         {
             bSplinePatch->SetVDivisionCount(vDivision);
         }
+
+        ImGui::Text("PatchCountX %d", bSplinePatch->GetPatchCountX());
+        ImGui::Text("PatchCountY %d", bSplinePatch->GetPatchCountY());
+        ImGui::Text("Cylinder: %s", bSplinePatch->GetIsCylinder() ? "Yes" : "No");
 
 
         ImGui::EndGroup();

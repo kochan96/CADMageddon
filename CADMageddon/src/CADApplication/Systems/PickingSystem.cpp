@@ -33,12 +33,15 @@ namespace CADMageddon
             multiSelectEnd = mousePosition;
         }
 
-        const float pointSize = 5.0f;
+        const float pointSize = Renderer::PointSize;
 
         auto points = m_Scene.GetPoints();
 
         for (auto point : points)
         {
+            if (!point->GetIsVisible())
+                continue;
+
             glm::vec4 worldPosition = point->GetTransform()->GetMatrix() * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
             auto frustumPosition = camera.GetViewProjectionMatrix() * worldPosition;
             if (!IsInsideFrustum(frustumPosition))
@@ -115,6 +118,9 @@ namespace CADMageddon
 
         for (auto point : points)
         {
+            if (!point->GetIsVisible())
+                continue;
+
             glm::vec4 worldPosition = point->GetTransform()->GetMatrix() * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
             auto frustumPosition = camera.GetViewProjectionMatrix() * worldPosition;
             if (!IsInsideFrustum(frustumPosition))

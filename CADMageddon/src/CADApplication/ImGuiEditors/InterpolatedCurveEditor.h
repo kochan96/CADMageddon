@@ -16,6 +16,12 @@ namespace CADMageddon
             interpolated->SetName(name);
         }
 
+        auto visible = interpolated->GetShowPoints();
+        if (ImGui::Checkbox("ShowPoints", &visible))
+        {
+            interpolated->SetShowPoints(visible);
+        }
+
         bool showPolygon = interpolated->GetShowPolygon();
         if (ImGui::Checkbox("ShowPolygon", &showPolygon))
         {

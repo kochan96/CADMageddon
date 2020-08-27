@@ -7,6 +7,15 @@ namespace CADMageddon
     {
     }
 
+    void BSplinePatch::SetShowPoints(bool setShowPoints)
+    {
+        m_ShowPoints = setShowPoints;
+        for (auto point : m_ControlPoints)
+        {
+            point->SetIsVisible(setShowPoints);
+        }
+    }
+
     Ref<BSplinePatch> BSplinePatch::CreateBSplinePatch(
         std::string name,
         std::vector<Ref<Point>> controlPoints,

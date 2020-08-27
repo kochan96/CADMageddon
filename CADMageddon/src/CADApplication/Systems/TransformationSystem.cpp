@@ -4,6 +4,7 @@
 #include <glm\gtx\matrix_decompose.hpp>
 #include "Gizmos\Gizmo.h"
 #include "Cursor3D.h"
+#include "imgui.h"
 
 namespace CADMageddon
 {
@@ -43,6 +44,33 @@ namespace CADMageddon
         if (m_TransformationOrigin == TransformationOrigin::Cursor && m_TransformationMode == TransformationMode::Translation)
         {
             RecalculateParentAndChildrenTransform();
+        }
+    }
+
+    void TransformationSystem::RenderImGui()
+    {
+        auto& transform = GetTransformToModify();
+
+        auto position = transform.Translation;
+        if (ImGui::DragFloat3("Position", &position.x, 0.1f))
+        {
+            transform.Translation = position;
+            if (m_TransformationOrigin == TransformationOrigin::Cursor)
+            {
+                RecalculateParentAndChildrenTransform();
+            }
+        }
+
+        auto rotation = transform.Rotation;
+        if (ImGui::DragFloat3("Rotation", &rotation.x))
+        {
+            transform.Rotation = rotation;
+        }
+
+        auto scale = transform.Scale;
+        if (ImGui::DragFloat3("Scale", &scale.x, 0.1f))
+        {
+            transform.Scale = scale;
         }
     }
 

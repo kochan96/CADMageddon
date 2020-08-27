@@ -100,6 +100,7 @@ namespace CADMageddon
         glm::vec4 m_LeftEyeColor = glm::vec4(1, 0, 0, 1.0f);
         glm::vec4 m_RightEyeColor = glm::vec4(0, 0, 1, 1.0f);
 
+        bool m_ShowGrid = true;
 
         Ref<Scene> m_Scene;
         EditorMode m_EditorMode = EditorMode::MoveCursor;

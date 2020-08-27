@@ -7,6 +7,15 @@ namespace CADMageddon
     {
     }
 
+    void BezierPatch::SetShowPoints(bool setShowPoints)
+    {
+        m_ShowPoints = setShowPoints;
+        for (auto point : m_ControlPoints)
+        {
+            point->SetIsVisible(setShowPoints);
+        }
+    }
+
     Ref<BezierPatch> BezierPatch::CreateRectPatch(std::string name, glm::vec3 startPosition, int PatchCountx, int PatchCounty, float width, float height, int uDivisionCount, int vDivisionCount)
     {
         auto bezierPatch = CreateRef<BezierPatch>(name, PatchCountx, PatchCounty, uDivisionCount, vDivisionCount);

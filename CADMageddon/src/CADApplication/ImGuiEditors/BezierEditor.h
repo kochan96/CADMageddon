@@ -16,6 +16,12 @@ namespace CADMageddon
             bezier->SetName(name);
         }
 
+        auto visible = bezier->GetShowPoints();
+        if (ImGui::Checkbox("ShowPoints", &visible))
+        {
+            bezier->SetShowPoints(visible);
+        }
+
         bool showPolygon = bezier->GetShowPolygon();
         if (ImGui::Checkbox("ShowPolygon", &showPolygon))
         {

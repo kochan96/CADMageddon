@@ -109,6 +109,16 @@ namespace CADMageddon
         m_BSplinePatch.clear();
     }
 
+    void InspectorPanel::RenderTransformMenu()
+    {
+        ImGui::BeginGroup();
+        ImGui::Text("Transform");
+
+        m_transformationSystem->RenderImGui();
+
+        ImGui::EndGroup();
+    }
+
     void InspectorPanel::Render()
     {
         ImGui::Begin("Inspector");
@@ -122,8 +132,17 @@ namespace CADMageddon
             m_BezierPatch.size() +
             m_BSplinePatch.size();
 
-        if (size != 1)
+        ImGui::Text("Selected %d items", size);
+
+        if (size == 0)
         {
+            ImGui::End();
+            return;
+        }
+
+        if (size > 1)
+        {
+            RenderTransformMenu();
             ImGui::End();
             return;
         }
@@ -156,6 +175,8 @@ namespace CADMageddon
         {
             BSplinePatchEditor(m_BSplinePatch[0]);
         }
+
+
 
         ImGui::End();
     }

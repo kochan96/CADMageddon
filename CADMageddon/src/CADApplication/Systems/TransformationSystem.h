@@ -27,9 +27,14 @@ namespace CADMageddon
         TransformationSystem(Ref<Cursor3D> cursor);
         void Update(Ref<Scene> scene, FPSCamera& camera, glm::vec2 ndcMousePosition);
 
+        void RenderImGui();
+
         void AddToSelected(Ref<Transform> transform);
         void RemoveFromSelected(Ref<Transform> transform);
         void ClearSelection();
+
+        glm::vec3 GetTransformationCenter() const { return m_TransformationParent->Translation; }
+        unsigned int GetCount() const { return m_SelectedEntities.size(); }
 
         TransformationMode GetTransformationMode() const { return m_TransformationMode; }
         void SetTransformationMode(TransformationMode mode) { m_TransformationMode = mode; RecalculateParentAndChildrenTransform(); }

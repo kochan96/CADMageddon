@@ -34,6 +34,9 @@ namespace CADMageddon
 
         bool GetIsCylinder() const { return m_IsCylinder; }
 
+        bool GetShowPoints() const { return m_ShowPoints; }
+        void SetShowPoints(bool setShowPoints);
+
         static Ref<BezierPatch> CreateRectPatch(
             std::string name,
             glm::vec3 startPosition,
@@ -78,6 +81,8 @@ namespace CADMageddon
         int m_VDivisionCount;
 
         std::string m_Name;
+        bool m_ShowPoints = true;
+
         bool m_IsCylinder = false;
         bool m_IsSelected = false;
         bool m_ShowPolygon = false;

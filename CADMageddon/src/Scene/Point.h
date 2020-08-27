@@ -40,11 +40,15 @@ namespace CADMageddon
 
         glm::vec3 GetPosition() { return m_Transform->GetMatrix() * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f); }
 
+        bool GetIsVisible() const { return m_IsVisible; }
+        void SetIsVisible(bool visible) { m_IsVisible = visible; }
+
     private:
         Ref<Transform> m_Transform;
         std::string m_Name;
         glm::vec3 m_Position = { 0.0f,0.0f,0.0f };
         bool m_IsSelected = false;
+        bool m_IsVisible = true;
     };
 }
 

@@ -2,6 +2,15 @@
 
 namespace CADMageddon
 {
+    void BSpline::SetShowPoints(bool setShowPoints)
+    {
+        m_ShowPoints = setShowPoints;
+        for (auto point : m_ControlPoints)
+        {
+            point->SetIsVisible(setShowPoints);
+        }
+    }
+
     std::vector<glm::vec3> BSpline::GetBezierControlPoints() const
     {
         std::vector<glm::vec3> deBoors;

@@ -53,10 +53,10 @@ namespace CADMageddon
         Ref<BezierC0> CreateBezierC0(std::string name);
         Ref<BSpline> CreateBSpline(std::string name);
         Ref<InterpolatedCurve> CreateInterpolated(std::string name);
-        
+
         Ref<BezierPatch> CreateBezierPatchRect(std::string name, const PatchRectCreationParameters& parameters);
         Ref<BezierPatch> CreateBezierPatchCylinder(std::string name, const PatchCylinderCreationParameters& parameters);
-        
+
         Ref<BSplinePatch> CreateBSplinePatchRect(std::string name, const PatchRectCreationParameters& parameters);
         Ref<BSplinePatch> CreateBSplinePatchCylinder(std::string name, const PatchCylinderCreationParameters& parameters);
 
@@ -70,6 +70,13 @@ namespace CADMageddon
         std::vector<Ref<BSplinePatch>> GetBSplinePatch() const { return m_BSplinePatch; }
 
     private:
+        void RenderControlPoints(const std::vector<Ref<Point>>& points);
+        void RenderControlPoints(const std::vector<glm::vec3>& points, const glm::vec4& color = glm::vec4(1.0f, 0.0f, 0.0, 1.0f));
+        void RenderControlPolygon(const std::vector<Ref<Point>>& points, const glm::vec4& color = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+        void RenderControlPolygon(const std::vector<glm::vec3>& points, const glm::vec4& color = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+
+        void RenderControlGrid(const std::vector<Ref<Point>>& points, const std::vector<uint32_t>& gridIndices, const glm::vec4& color = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+
         void RenderBezier(Ref<BezierC0> bezierC0);
         void RenderBSpline(Ref<BSpline> bSpline);
         void RenderInterpolatedCurve(Ref<InterpolatedCurve> interPolatedCurve);
@@ -102,7 +109,7 @@ namespace CADMageddon
         glm::vec4 m_SelectionColor;
         glm::vec4 m_DefaultColor;
 
-        
+
         friend class SceneSerializer;
 
     };
