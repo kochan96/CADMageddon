@@ -709,7 +709,7 @@ namespace CADMageddon
                 if (m_ShowBezierPatchCylinderCreationPopup || m_ShowBSplinePatchCylinderCreationPopup)
                 {
                     m_PatchCylinderCreationParameters.Center = m_CursorController.getCursor()->getPosition();
-                    m_PatchCylinderCreationParameters.PatchCountX = 1;
+                    m_PatchCylinderCreationParameters.PatchCountX = m_ShowBSplinePatchCylinderCreationPopup ? 4 : 1;
                     m_PatchCylinderCreationParameters.PatchCountY = 1;
                     m_PatchCylinderCreationParameters.Radius = 4.0f;
                     m_PatchCylinderCreationParameters.Height = 4.0f;
@@ -823,8 +823,9 @@ namespace CADMageddon
         if (ImGui::BeginPopupModal("BSplinePatch Cylinder Creation", &m_ShowBSplinePatchCylinderCreationPopup))
         {
             int patchX = m_PatchCylinderCreationParameters.PatchCountX;
-            if (ImGui::DragInt("PatchCountX", &patchX, 1.0f, 1))
+            if (ImGui::DragInt("PatchCountX", &patchX, 1.0f, 3))
             {
+                patchX = std::max(patchX, 3);
                 m_PatchCylinderCreationParameters.PatchCountX = patchX;
             }
             ImGui::DragInt("PatchCountY", &m_PatchCylinderCreationParameters.PatchCountY, 1.0f, 1);
