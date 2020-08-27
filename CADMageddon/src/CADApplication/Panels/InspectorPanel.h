@@ -30,6 +30,7 @@ namespace CADMageddon
         void AddBSplinePatch(Ref<BSplinePatch> bSplinePatch);
         void RemoveBSplinePatch(Ref<BSplinePatch> bSplinePatch);
 
+        void ClearPointsAndToruses();
         void Clear();
 
     private:

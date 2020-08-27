@@ -9,6 +9,8 @@ namespace CADMageddon
 {
     class TransformationSystem;
     class Scene;
+    class Point;
+    class Torus;
 
     //TODO selection box
 
@@ -30,10 +32,30 @@ namespace CADMageddon
             const FPSCamera& camera);
 
 
+        void SetOnPointSelectionChanged(std::function<void(bool, Ref<Point>)> pointSelectionCallback)
+        {
+            m_OnPointSelectionChanged = pointSelectionCallback;
+        }
+
+        void SetOnTorusSelectionChanged(std::function<void(bool, Ref<Torus>)> torusSelectionCallback)
+        {
+            m_OnTorusSelectionChanged = torusSelectionCallback;
+        }
+
+        void SetOnSelectionCleared(std::function<void()> selectionClearedCallback)
+        {
+            m_OnSelectionCleared = selectionClearedCallback;
+        }
+
     private:
         void RenderPickingBox(const glm::vec2& viewPortSize);
 
     private:
+        std::function<void(bool, Ref<Point>)> m_OnPointSelectionChanged;
+        std::function<void(bool, Ref<Torus>)> m_OnTorusSelectionChanged;
+        std::function<void()> m_OnSelectionCleared;
+
+
         glm::vec2 multiSelectStart;
         glm::vec2 multiSelectEnd;
         bool m_IsMultiSelect = false;

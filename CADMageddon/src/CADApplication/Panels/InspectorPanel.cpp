@@ -92,6 +92,12 @@ namespace CADMageddon
             m_BSplinePatch.erase(it);
     }
 
+    void InspectorPanel::ClearPointsAndToruses()
+    {
+        m_Points.clear();
+        m_Torus.clear();
+    }
+
     void InspectorPanel::Clear()
     {
         m_Points.clear();

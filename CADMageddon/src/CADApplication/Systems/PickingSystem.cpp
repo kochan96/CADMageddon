@@ -58,14 +58,8 @@ namespace CADMageddon
             }
 
             point->SetIsSelected(!point->GetIsSelected());
-            if (point->GetIsSelected())
-            {
-                m_TransformationSystem->AddToSelected(point->GetTransform());
-            }
-            else
-            {
-                m_TransformationSystem->RemoveFromSelected(point->GetTransform());
-            }
+            if (m_OnPointSelectionChanged)
+                m_OnPointSelectionChanged(point->GetIsSelected(), point);
         }
 
         for (auto torus : m_Scene.GetTorus())
@@ -89,14 +83,8 @@ namespace CADMageddon
             }
 
             torus->SetIsSelected(!torus->GetIsSelected());
-            if (torus->GetIsSelected())
-            {
-                m_TransformationSystem->AddToSelected(torus->GetTransform());
-            }
-            else
-            {
-                m_TransformationSystem->RemoveFromSelected(torus->GetTransform());
-            }
+            if (m_OnTorusSelectionChanged)
+                m_OnTorusSelectionChanged(torus->GetIsSelected(), torus);
         }
     }
 
@@ -146,7 +134,8 @@ namespace CADMageddon
             }
 
             point->SetIsSelected(true);
-            m_TransformationSystem->AddToSelected(point->GetTransform());
+            if (m_OnPointSelectionChanged)
+                m_OnPointSelectionChanged(true, point);
         }
 
         for (auto torus : m_Scene.GetTorus())
@@ -170,7 +159,8 @@ namespace CADMageddon
             }
 
             torus->SetIsSelected(true);
-            m_TransformationSystem->AddToSelected(torus->GetTransform());
+            if (m_OnTorusSelectionChanged)
+                m_OnTorusSelectionChanged(true, torus);
         }
     }
 
@@ -198,7 +188,7 @@ namespace CADMageddon
             torus->SetIsSelected(false);
         }
 
-        m_TransformationSystem->ClearSelection();
+        m_OnSelectionCleared();
     }
 
     bool PickingSystem::IsInsideFrustum(const glm::vec4& position)

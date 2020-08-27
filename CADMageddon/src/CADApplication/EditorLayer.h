@@ -47,6 +47,7 @@ namespace CADMageddon
         void OnSelectionInterpolatedChanged(bool selected, Ref<InterpolatedCurve> interpolated);
         void OnSelectionChangedBezierPatch(bool selected, Ref<BezierPatch> bezierPatch);
         void OnSelectionChangedBSplinePatch(bool selected, Ref<BSplinePatch> bezierPatch);
+        void OnPickingSelectionCleared();
         void OnSelectionCleared();
 
         bool IsEditMode() const;

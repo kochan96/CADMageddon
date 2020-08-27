@@ -133,6 +133,21 @@ namespace CADMageddon
             bSpline->SetIsSelected(false);
         }
 
+        for (auto interpolated : m_Scene->GetInterpolated())
+        {
+            interpolated->SetIsSelected(false);
+        }
+
+        for (auto bezierPatch : m_Scene->GetBezierPatch())
+        {
+            bezierPatch->SetIsSelected(false);
+        }
+
+        for (auto bSplinePatch : m_Scene->GetBSplinePatch())
+        {
+            bSplinePatch->SetIsSelected(false);
+        }
+
         if (m_OnSelectionCleared)
             m_OnSelectionCleared();
     }

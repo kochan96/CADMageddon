@@ -43,6 +43,10 @@ namespace CADMageddon
         m_HierarchyPanel->SetOnSelectionClearedCallback(std::bind(&EditorLayer::OnSelectionCleared, this));
 
         m_InspectorPanel = CreateRef<InspectorPanel>();
+
+        m_PickingSystem->SetOnPointSelectionChanged(std::bind(&EditorLayer::OnSelectionChangedPoint, this, std::placeholders::_1, std::placeholders::_2));
+        m_PickingSystem->SetOnTorusSelectionChanged(std::bind(&EditorLayer::OnSelectionChangedTorus, this, std::placeholders::_1, std::placeholders::_2));
+        m_PickingSystem->SetOnSelectionCleared(std::bind(&EditorLayer::OnPickingSelectionCleared, this));
     }
 
     void EditorLayer::OnAttach()
@@ -194,6 +198,12 @@ namespace CADMageddon
         {
             m_InspectorPanel->RemoveBSplinePatch(bezierPatch);
         }
+    }
+
+    void EditorLayer::OnPickingSelectionCleared()
+    {
+        m_TransformationSystem->ClearSelection();
+        m_InspectorPanel->ClearPointsAndToruses();
     }
 
     void EditorLayer::OnSelectionCleared()
