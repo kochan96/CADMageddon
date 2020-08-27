@@ -41,6 +41,8 @@ namespace CADMageddon
 
     private:
         void RenderMultiSelectInspector();
+        bool CheckIfFillHolePossible(Ref<BezierPatch> b1, Ref<BezierPatch> b2, Ref<BezierPatch> b3);
+
 
     private:
         Ref<Scene> m_Scene;

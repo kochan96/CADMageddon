@@ -127,10 +127,22 @@ namespace CADMageddon
                 m_Scene->MergePoints(m_Points[0], m_Points[1]);
             }
             ImGui::EndGroup();
+        }
 
-            ImGui::Text("Dupa");
+        if (m_BezierPatch.size() == 3 && CheckIfFillHolePossible(m_BezierPatch[0], m_BezierPatch[1], m_BezierPatch[2]))
+        {
+            if (ImGui::Button("Fill hole"))
+            {
+
+            }
         }
     }
+
+    bool InspectorPanel::CheckIfFillHolePossible(Ref<BezierPatch> b1, Ref<BezierPatch> b2, Ref<BezierPatch> b3)
+    {
+        return false;
+    }
+
 
     void InspectorPanel::Render()
     {

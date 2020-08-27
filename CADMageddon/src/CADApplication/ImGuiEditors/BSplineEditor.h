@@ -22,6 +22,12 @@ namespace CADMageddon
             bSpline->SetShowPoints(visible);
         }
 
+        bool snapToEnd = bSpline->GetSnapToEnd();
+        if (ImGui::Checkbox("SnapToEnd", &snapToEnd))
+        {
+            bSpline->SetSnapToEnd(snapToEnd);
+        }
+
         bool showBSplinePolygon = bSpline->GetShowBSplinePolygon();
         if (ImGui::Checkbox("ShowBSplinePolygon", &showBSplinePolygon))
         {

@@ -30,6 +30,9 @@ namespace CADMageddon
         bool GetShowPoints() const { return m_ShowPoints; }
         void SetShowPoints(bool setShowPoints);
 
+        bool GetSnapToEnd() const { return m_SnapToEnd; }
+        void SetSnapToEnd(bool snap) { m_SnapToEnd = snap; }
+
     private:
         std::string m_Name;
         bool m_ShowPoints = true;
@@ -37,5 +40,7 @@ namespace CADMageddon
         bool m_ShowBSplinePolygon = false;
         bool m_ShowBezierPolygon = false;
         bool m_IsBezierBasis = false;
+
+        bool m_SnapToEnd = false;
     };
 }

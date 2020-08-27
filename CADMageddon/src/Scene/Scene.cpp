@@ -53,8 +53,10 @@ namespace CADMageddon
         it = std::find(m_Points.begin(), m_Points.end(), p2);
         m_Points.erase(it);
         newPoint->SetReferencedCount(referenced);
-    }
 
+        if (m_onPointMerged)
+            m_onPointMerged(p1, p2, newPoint);
+    }
 
     Ref<Point> Scene::CreatePoint(glm::vec3 position, std::string name)
     {
@@ -404,9 +406,9 @@ namespace CADMageddon
         if (points.empty())
             return;
 
-        for (int i = 0; i < points.size(); i++)
+        for (int i = 1; i < points.size(); i++)
         {
-            auto start = points[i]->GetPosition();
+            auto start = points[i - 1]->GetPosition();
             auto end = points[i]->GetPosition();
             Renderer::RenderLine(start, end, color);
         }
@@ -417,9 +419,9 @@ namespace CADMageddon
         if (points.empty())
             return;
 
-        for (int i = 0; i < points.size(); i++)
+        for (int i = 1; i < points.size(); i++)
         {
-            auto start = points[i];
+            auto start = points[i - 1];
             auto end = points[i];
             Renderer::RenderLine(start, end, color);
         }
@@ -457,13 +459,13 @@ namespace CADMageddon
     void Scene::RenderBSpline(Ref<BSpline> bSpline)
     {
         auto controlPoints = bSpline->GetControlPoints();
-        if (controlPoints.size() < 4)
+        auto bezierPoints = bSpline->GetBezierControlPoints();
+        if (bezierPoints.empty())
         {
             RenderControlPoints(controlPoints);
             return;
         }
 
-        auto bezierPoints = bSpline->GetBezierControlPoints();
         auto bSplineColor = bSpline->GetIsSelected() ? m_SelectionColor : m_DefaultColor;
 
         RenderControlPoints(controlPoints);

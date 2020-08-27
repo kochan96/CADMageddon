@@ -96,6 +96,7 @@ namespace CADMageddon
 
         void DeleteFreePoint(Ref<Point> point);
         void DeleteTorus(Ref<Torus> torus);
+
         void DeleteBezierC0(Ref<BezierC0> bezierC0);
         void DeleteBSpline(Ref<BSpline> bSpline);
         void DeleteInterpolatedCurve(Ref<InterpolatedCurve> interpolatedCurve);

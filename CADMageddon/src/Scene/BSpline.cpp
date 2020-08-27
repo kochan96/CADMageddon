@@ -13,8 +13,30 @@ namespace CADMageddon
 
     std::vector<glm::vec3> BSpline::GetBezierControlPoints() const
     {
+     
+        if (m_SnapToEnd && m_ControlPoints.empty())
+        {
+            return std::vector<glm::vec3>();
+        }
+        else if (!m_SnapToEnd && m_ControlPoints.size() < 4)
+        {
+            return std::vector<glm::vec3>();
+        }
+
         std::vector<glm::vec3> deBoors;
+        if (m_SnapToEnd)
+        {
+            deBoors.push_back(m_ControlPoints.front()->GetPosition());
+            deBoors.push_back(m_ControlPoints.front()->GetPosition());
+        }
+
         std::transform(m_ControlPoints.begin(), m_ControlPoints.end(), std::back_inserter(deBoors), [](Ref<Point> x) {return x->GetPosition(); });
+
+        if (m_SnapToEnd)
+        {
+            deBoors.push_back(m_ControlPoints.back()->GetPosition());
+            deBoors.push_back(m_ControlPoints.back()->GetPosition());
+        }
 
         std::vector<glm::vec3> bezierCoords;
         std::vector<glm::vec3> midPoints;

@@ -716,7 +716,10 @@ namespace CADMageddon
         s_RenderLineData.Shader->Bind();
         s_RenderLineData.Shader->SetMat4("u_ViewProjectionMatrix", s_SceneData->ViewProjectionMatrix);
 
+
+        glDisable(GL_DEPTH_TEST);
         glDrawArrays(GL_LINES, 0, s_RenderLineData.Count);
+        glEnable(GL_DEPTH_TEST);
     }
 
     bool Renderer::IsBezierFlatEnough(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, float tolerance)

@@ -47,6 +47,8 @@ namespace CADMageddon
         m_PickingSystem->SetOnPointSelectionChanged(std::bind(&EditorLayer::OnSelectionChangedPoint, this, std::placeholders::_1, std::placeholders::_2));
         m_PickingSystem->SetOnTorusSelectionChanged(std::bind(&EditorLayer::OnSelectionChangedTorus, this, std::placeholders::_1, std::placeholders::_2));
         m_PickingSystem->SetOnSelectionCleared(std::bind(&EditorLayer::OnPickingSelectionCleared, this));
+
+        m_Scene->SetOnPointMerged(std::bind(&EditorLayer::OnPointsMergedCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
     }
 
     void EditorLayer::OnAttach()
@@ -198,6 +200,15 @@ namespace CADMageddon
         {
             m_InspectorPanel->RemoveBSplinePatch(bezierPatch);
         }
+    }
+
+    void EditorLayer::OnPointsMergedCallback(Ref<Point> p1, Ref<Point> p2, Ref<Point> newPoint)
+    {
+        m_InspectorPanel->RemovePoint(p1);
+        m_InspectorPanel->RemovePoint(p2);
+
+        m_TransformationSystem->RemoveFromSelected(p1->GetTransform());
+        m_TransformationSystem->RemoveFromSelected(p2->GetTransform());
     }
 
     void EditorLayer::OnPickingSelectionCleared()
@@ -879,7 +890,7 @@ namespace CADMageddon
         ImGui::BeginGroup();
 
         ImGui::Checkbox("ShowPoints", &Renderer::ShowPoints);
-        ImGui::Checkbox("showGrid", &m_ShowGrid);
+        ImGui::Checkbox("ShowGrid", &m_ShowGrid);
         if (ImGui::DragInt("PointSize", &Renderer::PointSize, 1.0f, 1.0f, 10.0f))
         {
             Renderer::PointSize = std::clamp(Renderer::PointSize, 1, 10);
