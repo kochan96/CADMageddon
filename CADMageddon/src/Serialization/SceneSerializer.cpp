@@ -110,7 +110,7 @@ namespace CADMageddon
             bezierPatchElement->SetAttribute("ShowControlPolygon", bezierPatch->GetShowPolygon());
             bezierPatchElement->SetAttribute("RowSlices", bezierPatch->GetUDivisionCount());
             bezierPatchElement->SetAttribute("ColumnSlices", bezierPatch->GetVDivisionCount());
-            bezierPatchElement->SetAttribute("WrapDirection", bezierPatch->GetIsCylinder() ? "Row" : "None");
+            bezierPatchElement->SetAttribute("WrapDirection", bezierPatch->GetIsCylinder() ? "Column" : "None");
             auto pointRefsElement = bezierPatchElement->InsertNewChildElement("Points");
 
             int verticesCountX = 0;
@@ -205,6 +205,7 @@ namespace CADMageddon
         }
 
         m_NotAssignedPoints.clear();
+        m_Points.clear();
 
         return scene;
     }
@@ -300,8 +301,6 @@ namespace CADMageddon
         int vDivisionCount = bezierPatchElement->IntAttribute("ColumnSlices") + 1;
 
         std::vector<Ref<Point>> controlPoints;
-        std::vector<uint32_t> indices;
-        std::vector<uint32_t> gridIndices;
 
         auto pointRefsElement = bezierPatchElement->FirstChildElement();
         int rowCount = 0;
@@ -314,9 +313,6 @@ namespace CADMageddon
 
         rowCount++;
         columnCount++;
-
-        int PatchCountx = columnCount / 3;
-        int PatchCounty = rowCount / 3;
 
         controlPoints.resize(rowCount * columnCount);
 
@@ -331,104 +327,11 @@ namespace CADMageddon
                 controlPoints[Row * columnCount + Column] = point;
         }
 
-        if (!isCylinder)
-        {
-            for (int j = 0; j < PatchCounty; j++)
-            {
-                int startRow = j * 3 * columnCount;
-                for (int i = 0; i < PatchCountx; i++)
-                {
-                    int start = startRow + i * 3;
-                    for (int k = 0; k < 4; k++)
-                    {
-                        for (int l = 0; l < 4; l++)
-                        {
-                            int index = start + k * columnCount + l;
-                            indices.push_back(index);
-                        }
-                    }
-                }
-            }
-
-            for (int i = 0; i < rowCount; i++)
-            {
-                for (int j = 0; j < columnCount; j++)
-                {
-                    int row = i * columnCount;
-                    int index = row + j;
-                    if (index < row + columnCount - 1)
-                    {
-                        gridIndices.push_back(index);
-                        gridIndices.push_back(index + 1);
-                    }
-
-                    if (i < rowCount - 1)
-                    {
-                        gridIndices.push_back(index);
-                        gridIndices.push_back(index + columnCount);
-                    }
-                }
-            }
-        }
-        else
-        {
-            for (int j = 0; j < PatchCounty; j++)
-            {
-                int startRow = (j * 3 * columnCount);
-                for (int i = 0; i < PatchCountx; i++)
-                {
-                    int start = startRow + i * 3;
-                    for (int k = 0; k < 4; k++)
-                    {
-                        for (int l = 0; l < 4; l++)
-                        {
-                            int index = start + k * columnCount + l;
-                            if (i == (PatchCountx - 1) && l == 3)
-                            {
-                                index = startRow + k * columnCount;
-                            }
-
-                            indices.push_back(index);
-                        }
-                    }
-                }
-            }
-
-
-            for (int i = 0; i < rowCount; i++)
-            {
-                for (int j = 0; j < columnCount; j++)
-                {
-                    int row = i * columnCount;
-                    int index = row + j;
-                    if (index < row + columnCount - 1)
-                    {
-                        gridIndices.push_back(index);
-                        gridIndices.push_back(index + 1);
-                    }
-                    else
-                    {
-                        gridIndices.push_back(index);
-                        gridIndices.push_back(row);
-                    }
-
-                    if (i < rowCount - 1)
-                    {
-                        gridIndices.push_back(index);
-                        gridIndices.push_back(index + columnCount);
-                    }
-                }
-            }
-        }
-
-
         auto bezierPatch = BezierPatch::CreateBezierPatch(
             name,
             controlPoints,
-            indices,
-            gridIndices,
-            PatchCountx,
-            PatchCounty,
+            rowCount,
+            columnCount,
             uDivisionCount,
             vDivisionCount,
             isCylinder,
@@ -447,9 +350,6 @@ namespace CADMageddon
         int vDivisionCount = bSplinePatchElement->IntAttribute("ColumnSlices") + 1;
 
         std::vector<Ref<Point>> controlPoints;
-        std::vector<uint32_t> indices;
-        std::vector<uint32_t> gridIndices;
-
         auto pointRefsElement = bSplinePatchElement->FirstChildElement();
         int rowCount = 0;
         int columnCount = 0;
@@ -461,10 +361,6 @@ namespace CADMageddon
 
         rowCount++;
         columnCount++;
-
-        int PatchCountx = isCylinder ? columnCount : columnCount - 3;
-        int PatchCounty = rowCount - 3;
-
         controlPoints.resize(rowCount * columnCount);
 
         for (auto elem = pointRefsElement->FirstChildElement(); elem != nullptr; elem = elem->NextSiblingElement())
@@ -478,93 +374,11 @@ namespace CADMageddon
                 controlPoints[Row * columnCount + Column] = point;
         }
 
-        if (!isCylinder)
-        {
-            for (int j = 0; j < PatchCounty; j++)
-            {
-                int startRow = j * columnCount;
-                for (int i = 0; i < PatchCountx; i++)
-                {
-                    int start = startRow + i;
-                    for (int k = 0; k < 4; k++)
-                    {
-                        for (int l = 0; l < 4; l++)
-                        {
-                            int index = start + k * columnCount + l;
-                            indices.push_back(index);
-                        }
-                    }
-                }
-            }
-
-            for (int i = 0; i < rowCount; i++)
-            {
-                for (int j = 0; j < columnCount; j++)
-                {
-                    int row = i * columnCount;
-                    int index = row + j;
-                    if (index < row + columnCount - 1)
-                    {
-                        gridIndices.push_back(index);
-                        gridIndices.push_back(index + 1);
-                    }
-
-                    if (i < rowCount - 1)
-                    {
-                        gridIndices.push_back(index);
-                        gridIndices.push_back(index + columnCount);
-                    }
-                }
-            }
-        }
-        else
-        {
-            for (int j = 0; j < PatchCounty; j++)
-            {
-                int startRow = j * columnCount;
-                for (int i = 0; i < PatchCountx; i++)
-                {
-                    int start = startRow + i;
-                    for (int k = 0; k < 4; k++)
-                    {
-                        for (int l = 0; l < 4; l++)
-                        {
-                            int index = (k + j) * columnCount + (l + i) % columnCount;
-                            indices.push_back(index);
-                        }
-                    }
-                }
-            }
-
-            for (int i = 0; i < rowCount; i++)
-            {
-                for (int j = 0; j < columnCount; j++)
-                {
-                    int row = i * columnCount;
-                    int index = row + j;
-                    if (index < row + columnCount - 1)
-                    {
-                        gridIndices.push_back(index);
-                        gridIndices.push_back(index + 1);
-                    }
-
-                    if (i < rowCount - 1)
-                    {
-                        gridIndices.push_back(index);
-                        gridIndices.push_back(index + columnCount);
-                    }
-                }
-            }
-        }
-
-
         auto bSplinePatch = BSplinePatch::CreateBSplinePatch(
             name,
             controlPoints,
-            indices,
-            gridIndices,
-            PatchCountx,
-            PatchCounty,
+            rowCount,
+            columnCount,
             uDivisionCount,
             vDivisionCount,
             isCylinder,

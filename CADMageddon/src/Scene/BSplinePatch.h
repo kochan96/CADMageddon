@@ -61,10 +61,8 @@ namespace CADMageddon
         static Ref<BSplinePatch> CreateBSplinePatch(
             std::string name,
             std::vector<Ref<Point>> controlPoints,
-            std::vector<uint32_t> indices,
-            std::vector<uint32_t> gridIndices,
-            int PatchCountx,
-            int PatchCounty,
+            int rowCount,
+            int columnCount,
             int uDivisionCount,
             int vDivisionCount,
             bool isCylinder,
@@ -73,6 +71,11 @@ namespace CADMageddon
     private:
         void GenerateRectControlPoints(glm::vec3 startPosition, int PatchCountx, int PatchCounty, float width, float height);
         void GenerateCylinderControlPoints(glm::vec3 center, int PatchCountx, int PatchCounty, float radius, float height);
+
+        void GenerateRectIndices(int PatchCountx, int PatchCounty);
+        void GenerateCylinderIndices(int PatchCountx, int PatchCounty);
+
+        void GenerateGridIndices(int rowCount, int columnCount);
 
 
     private:

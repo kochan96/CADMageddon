@@ -16,11 +16,41 @@ namespace CADMageddon
         }
     }
 
+    Ref<BezierPatch> BezierPatch::CreateBezierPatch(
+        std::string name,
+        std::vector<Ref<Point>> controlPoints,
+        int rowCount,
+        int columnCount,
+        int uDivisionCount,
+        int vDivisionCount,
+        bool isCylinder,
+        bool showPolygon)
+    {
+        int PatchCountx = columnCount / 3;
+        int PatchCounty = rowCount / 3;
+
+        auto bezierPatch = CreateRef<BezierPatch>(name, PatchCountx, PatchCounty, uDivisionCount, vDivisionCount);
+        bezierPatch->m_IsCylinder = isCylinder;
+        bezierPatch->m_ShowPolygon = showPolygon;
+        bezierPatch->m_ControlPoints = controlPoints;
+
+        if (isCylinder)
+            bezierPatch->GenerateCylinderIndices(PatchCountx, PatchCounty);
+        else
+            bezierPatch->GenerateRectIndices(PatchCountx, PatchCounty);
+
+        bezierPatch->GenerateGridIndices(rowCount, columnCount);
+
+        return bezierPatch;
+    }
+
     Ref<BezierPatch> BezierPatch::CreateRectPatch(std::string name, glm::vec3 startPosition, int PatchCountx, int PatchCounty, float width, float height, int uDivisionCount, int vDivisionCount)
     {
         auto bezierPatch = CreateRef<BezierPatch>(name, PatchCountx, PatchCounty, uDivisionCount, vDivisionCount);
-        bezierPatch->GenerateRectControlPoints(startPosition, PatchCountx, PatchCounty, width, height);
         bezierPatch->m_IsCylinder = false;
+        bezierPatch->GenerateRectControlPoints(startPosition, PatchCountx, PatchCounty, width, height);
+        bezierPatch->GenerateRectIndices(PatchCountx, PatchCounty);
+        bezierPatch->GenerateGridIndices(PatchCounty * 3 + 1, PatchCountx * 3 + 1);
         return bezierPatch;
     }
 
@@ -45,7 +75,11 @@ namespace CADMageddon
                 m_ControlPoints.push_back(CreateRef<Point>(position, m_Name + "Point_" + std::to_string(pointCount++)));
             }
         }
+    }
 
+    void BezierPatch::GenerateRectIndices(int PatchCountx, int PatchCounty)
+    {
+        int verticesCountX = PatchCountx * 3 + 1;
 
         for (int j = 0; j < PatchCounty; j++)
         {
@@ -63,55 +97,15 @@ namespace CADMageddon
                 }
             }
         }
-
-        for (int i = 0; i < verticesCountY; i++)
-        {
-            for (int j = 0; j < verticesCountX; j++)
-            {
-                int row = i * verticesCountX;
-                int index = row + j;
-                if (index < row + verticesCountX - 1)
-                {
-                    m_GridIndices.push_back(index);
-                    m_GridIndices.push_back(index + 1);
-                }
-
-                if (i < verticesCountY - 1)
-                {
-                    m_GridIndices.push_back(index);
-                    m_GridIndices.push_back(index + verticesCountX);
-                }
-            }
-        }
     }
 
     Ref<BezierPatch> BezierPatch::CreateCyliderPatch(std::string name, glm::vec3 center, int PatchCountx, int PatchCounty, float radius, float height, int uDivisionCount, int vDivisionCount)
     {
         auto bezierPatch = CreateRef<BezierPatch>(name, PatchCountx, PatchCounty, uDivisionCount, vDivisionCount);
-        bezierPatch->GenerateCylinderControlPoints(center, PatchCountx, PatchCounty, radius, height);
         bezierPatch->m_IsCylinder = true;
-        return bezierPatch;
-    }
-
-    Ref<BezierPatch> BezierPatch::CreateBezierPatch(
-        std::string name,
-        std::vector<Ref<Point>> controlPoints, 
-        std::vector<uint32_t> indices, 
-        std::vector<uint32_t> gridIndices, 
-        int PatchCountx, 
-        int PatchCounty,
-        int uDivisionCount, 
-        int vDivisionCount, 
-        bool isCylinder,
-        bool showPolygon)
-    {
-        auto bezierPatch = CreateRef<BezierPatch>(name, PatchCountx, PatchCounty, uDivisionCount, vDivisionCount);
-        bezierPatch->m_ControlPoints = controlPoints;
-        bezierPatch->m_Indices = indices;
-        bezierPatch->m_GridIndices = gridIndices;
-        bezierPatch->m_IsCylinder = isCylinder;
-        bezierPatch->m_ShowPolygon = showPolygon;
-
+        bezierPatch->GenerateCylinderControlPoints(center, PatchCountx, PatchCounty, radius, height);
+        bezierPatch->GenerateCylinderIndices(PatchCountx, PatchCounty);
+        bezierPatch->GenerateGridIndices(PatchCounty * 3 + 1, PatchCountx * 3);
         return bezierPatch;
     }
 
@@ -140,7 +134,12 @@ namespace CADMageddon
                 m_ControlPoints.push_back(CreateRef<Point>(position, m_Name + "Point_" + std::to_string(pointCount++)));
             }
         }
+    }
 
+
+    void BezierPatch::GenerateCylinderIndices(int PatchCountx, int PatchCounty)
+    {
+        int verticesCountX = PatchCountx * 3;
 
         for (int j = 0; j < PatchCounty; j++)
         {
@@ -163,29 +162,31 @@ namespace CADMageddon
                 }
             }
         }
+    }
 
-
-        for (int i = 0; i < verticesCountY; i++)
+    void BezierPatch::GenerateGridIndices(int rowCount, int columnCount)
+    {
+        for (int i = 0; i < rowCount; i++)
         {
-            for (int j = 0; j < verticesCountX; j++)
+            for (int j = 0; j < columnCount; j++)
             {
-                int row = i * verticesCountX;
+                int row = i * columnCount;
                 int index = row + j;
-                if (index < row + verticesCountX - 1)
+                if (index < row + columnCount - 1)
                 {
                     m_GridIndices.push_back(index);
                     m_GridIndices.push_back(index + 1);
                 }
-                else
+                else if (m_IsCylinder)
                 {
                     m_GridIndices.push_back(index);
                     m_GridIndices.push_back(row);
                 }
 
-                if (i < verticesCountY - 1)
+                if (i < rowCount - 1)
                 {
                     m_GridIndices.push_back(index);
-                    m_GridIndices.push_back(index + verticesCountX);
+                    m_GridIndices.push_back(index + columnCount);
                 }
             }
         }
