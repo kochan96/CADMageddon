@@ -46,6 +46,8 @@ namespace CADMageddon
         void SetDefaultColor(const glm::vec4& color) { m_DefaultColor = color; }
         void SetSelectionColor(const glm::vec4& color) { m_SelectionColor = color; }
 
+        void MergePoints(Ref<Point> p1, Ref<Point> p2);
+
 
         Ref<Point> CreatePoint(glm::vec3 position, std::string name);
         Ref<Torus> CreateTorus(glm::vec3 position, std::string name);
@@ -68,6 +70,11 @@ namespace CADMageddon
         std::vector<Ref<InterpolatedCurve>> GetInterpolated() const { return m_InterpolatedCurve; }
         std::vector<Ref<BezierPatch>> GetBezierPatch() const { return m_BezierPatch; }
         std::vector<Ref<BSplinePatch>> GetBSplinePatch() const { return m_BSplinePatch; }
+
+        void SetOnPointMerged(std::function<void(Ref<Point> p1, Ref<Point> p2, Ref<Point> p3)> onPointMergedCallback)
+        {
+            m_onPointMerged = onPointMergedCallback;
+        }
 
     private:
         void RenderControlPoints(const std::vector<Ref<Point>>& points);
@@ -96,8 +103,11 @@ namespace CADMageddon
         void DeleteBSplinePatch(Ref<BSplinePatch> bSplinePatch);
 
     private:
+        std::unordered_set<Ref<BaseObject>> m_BaseObjects;
+        std::vector<Ref<Point>> m_Points; //consider change to unordered set
+
+
         std::vector<Ref<Point>> m_FreePoints;
-        std::vector<Ref<Point>> m_Points;
         std::vector<Ref<Torus>> m_Torus;
         std::vector<Ref<BezierC0>> m_BezierC0;
         std::vector<Ref<BSpline>> m_BSpline;
@@ -108,6 +118,8 @@ namespace CADMageddon
 
         glm::vec4 m_SelectionColor;
         glm::vec4 m_DefaultColor;
+
+        std::function<void(Ref<Point> p1, Ref<Point> p2, Ref<Point> p3)> m_onPointMerged;
 
 
         friend class SceneSerializer;

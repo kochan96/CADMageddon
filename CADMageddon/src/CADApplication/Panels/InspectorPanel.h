@@ -8,8 +8,10 @@ namespace CADMageddon
     class InspectorPanel
     {
     public:
-        InspectorPanel(Ref<TransformationSystem> transformationSystem)
-            :m_transformationSystem(transformationSystem) {};
+        InspectorPanel(Ref<Scene> scene, Ref<TransformationSystem> transformationSystem)
+            :m_transformationSystem(transformationSystem), m_Scene(scene) {};
+
+        void SetScene(Ref<Scene> scene) { m_Scene = scene; }
 
         void Render();
 
@@ -38,9 +40,10 @@ namespace CADMageddon
         void Clear();
 
     private:
-        void RenderTransformMenu();
+        void RenderMultiSelectInspector();
 
     private:
+        Ref<Scene> m_Scene;
         Ref<TransformationSystem> m_transformationSystem;
         std::vector<Ref<Point>> m_Points;
         std::vector<Ref<Torus>> m_Torus;

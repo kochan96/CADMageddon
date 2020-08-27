@@ -109,14 +109,27 @@ namespace CADMageddon
         m_BSplinePatch.clear();
     }
 
-    void InspectorPanel::RenderTransformMenu()
+    void InspectorPanel::RenderMultiSelectInspector()
     {
-        ImGui::BeginGroup();
-        ImGui::Text("Transform");
+        if (m_transformationSystem->GetCount() > 1)
+        {
+            ImGui::BeginGroup();
+            ImGui::Text("Transform");
+            m_transformationSystem->RenderImGui();
+            ImGui::EndGroup();
+        }
 
-        m_transformationSystem->RenderImGui();
+        if (m_Points.size() == 2)
+        {
+            ImGui::BeginGroup();
+            if (ImGui::Button("MergePoints"))
+            {
+                m_Scene->MergePoints(m_Points[0], m_Points[1]);
+            }
+            ImGui::EndGroup();
 
-        ImGui::EndGroup();
+            ImGui::Text("Dupa");
+        }
     }
 
     void InspectorPanel::Render()
@@ -142,7 +155,7 @@ namespace CADMageddon
 
         if (size > 1)
         {
-            RenderTransformMenu();
+            RenderMultiSelectInspector();
             ImGui::End();
             return;
         }

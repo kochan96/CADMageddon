@@ -2,15 +2,15 @@
 #include "cadpch.h"
 #include "Point.h"
 #include <glm/glm.hpp>
+#include "BaseObject.h"
 
 namespace CADMageddon
 {
-    class BSplinePatch
+    class BSplinePatch : public BaseObject
     {
     public:
         BSplinePatch(std::string name, int patchCountX, int patchCountY, int uDivisionCount = 4, int vDivisionCount = 4);
 
-        std::vector<Ref<Point>> GetControlPoints() const { return m_ControlPoints; }
         std::vector<uint32_t> GetRenderingIndices() const { return m_Indices; }
         std::vector<uint32_t> GetGridIndices() const { return m_GridIndices; }
 
@@ -89,7 +89,6 @@ namespace CADMageddon
         std::string m_Name;
         bool m_IsSelected = false;
         bool m_ShowPolygon = false;
-        std::vector<Ref<Point>> m_ControlPoints;
         std::vector<uint32_t> m_Indices;
         std::vector<uint32_t> m_GridIndices;
     };

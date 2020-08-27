@@ -42,7 +42,7 @@ namespace CADMageddon
         m_HierarchyPanel->SetOnBSplinePatchSelectionChanged(std::bind(&EditorLayer::OnSelectionChangedBSplinePatch, this, std::placeholders::_1, std::placeholders::_2));
         m_HierarchyPanel->SetOnSelectionClearedCallback(std::bind(&EditorLayer::OnSelectionCleared, this));
 
-        m_InspectorPanel = CreateRef<InspectorPanel>(m_TransformationSystem);
+        m_InspectorPanel = CreateRef<InspectorPanel>(m_Scene, m_TransformationSystem);
 
         m_PickingSystem->SetOnPointSelectionChanged(std::bind(&EditorLayer::OnSelectionChangedPoint, this, std::placeholders::_1, std::placeholders::_2));
         m_PickingSystem->SetOnTorusSelectionChanged(std::bind(&EditorLayer::OnSelectionChangedTorus, this, std::placeholders::_1, std::placeholders::_2));
@@ -604,6 +604,7 @@ namespace CADMageddon
                 {
                     m_Scene.reset(new Scene());
                     m_HierarchyPanel->SetScene(m_Scene);
+                    m_InspectorPanel->SetScene(m_Scene);
                     m_TransformationSystem->ClearSelection();
                     m_InspectorPanel->Clear();
                 }
@@ -633,6 +634,7 @@ namespace CADMageddon
                     if (lTheOpenFileName) {
                         m_Scene = SceneSerializer::LoadScene(lTheOpenFileName);
                         m_HierarchyPanel->SetScene(m_Scene);
+                        m_InspectorPanel->SetScene(m_Scene);
                         m_TransformationSystem->ClearSelection();
                         m_InspectorPanel->Clear();
                     }

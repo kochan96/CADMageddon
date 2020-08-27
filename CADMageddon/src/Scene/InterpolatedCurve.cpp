@@ -59,19 +59,6 @@ namespace CADMageddon
         return bezierPoints;
     }
 
-
-    void InterpolatedCurve::AddControlPoint(Ref<Point> point)
-    {
-        m_ControlPoints.push_back(point);
-    }
-
-    void InterpolatedCurve::RemoveControlPoint(Ref<Point> point)
-    {
-        auto it = std::find(m_ControlPoints.begin(), m_ControlPoints.end(), point);
-        if (it != m_ControlPoints.end())
-            m_ControlPoints.erase(it);
-    }
-
     void InterpolatedCurve::SetShowPoints(bool setShowPoints)
     {
         m_ShowPoints = setShowPoints;

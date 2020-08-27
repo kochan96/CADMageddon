@@ -11,6 +11,51 @@ namespace CADMageddon
 
     static int pointCount = 0;
 
+    void Scene::MergePoints(Ref<Point> p1, Ref<Point> p2)
+    {
+        if (std::find_if(m_FreePoints.begin(), m_FreePoints.end(), [p1, p2](Ref<Point> p) {return p == p1 || p == p2; }) != m_FreePoints.end())
+            return;
+
+        static int mergedCount = 0;
+        auto newName = "MergedPoint_" + std::to_string(mergedCount++);
+        auto newPosition = (p1->GetPosition() + p2->GetPosition()) / 2.0f;
+
+        auto newPoint = CreateRef<Point>(newPosition, newName);
+        int referenced = 0;
+
+        for (auto baseObject : m_BaseObjects)
+        {
+            auto& points = baseObject->GetControlPoints();
+            auto it = std::find(points.begin(), points.end(), p1);
+            auto it2 = std::find(points.begin(), points.end(), p2);
+            int  referencedIncrement = 0;
+
+            while (it != points.end() || it2 != points.end())
+            {
+                referencedIncrement = 1;
+
+                if (it != points.end())
+                {
+                    *it = newPoint;
+                    it = std::find(it + 1, points.end(), p1);
+                }
+                if (it2 != points.end())
+                {
+                    *it2 = newPoint;
+                    it2 = std::find(it2 + 1, points.end(), p2);
+                }
+            }
+            referenced += referencedIncrement;
+        }
+
+        auto it = std::find(m_Points.begin(), m_Points.end(), p1);
+        *it = newPoint;
+        it = std::find(m_Points.begin(), m_Points.end(), p2);
+        m_Points.erase(it);
+        newPoint->SetReferencedCount(referenced);
+    }
+
+
     Ref<Point> Scene::CreatePoint(glm::vec3 position, std::string name)
     {
         auto point = CreateRef<Point>(position, name + std::to_string(pointCount++));
@@ -40,6 +85,7 @@ namespace CADMageddon
         static int bezierC0Count = 0;
         auto bezierC0 = CreateRef<BezierC0>(name + std::to_string(bezierC0Count++));
         m_BezierC0.push_back(bezierC0);
+        m_BaseObjects.insert(bezierC0);
         return bezierC0;
     }
 
@@ -48,6 +94,7 @@ namespace CADMageddon
         static int bSplineCount = 0;
         auto bSpline = CreateRef<BSpline>(name + std::to_string(bSplineCount++));
         m_BSpline.push_back(bSpline);
+        m_BaseObjects.insert(bSpline);
         return bSpline;
     }
 
@@ -56,6 +103,7 @@ namespace CADMageddon
         static int interpolatedCount = 0;
         auto interpolated = CreateRef<InterpolatedCurve>(name + std::to_string(interpolatedCount++));
         m_InterpolatedCurve.push_back(interpolated);
+        m_BaseObjects.insert(interpolated);
         return interpolated;
     }
 
@@ -70,6 +118,7 @@ namespace CADMageddon
         }
 
         m_BezierPatch.push_back(bezier);
+        m_BaseObjects.insert(bezier);
 
         return bezier;
     }
@@ -83,6 +132,7 @@ namespace CADMageddon
         }
 
         m_BezierPatch.push_back(bezier);
+        m_BaseObjects.insert(bezier);
 
         return bezier;
     }
@@ -98,6 +148,8 @@ namespace CADMageddon
         }
 
         m_BSplinePatch.push_back(bSpline);
+        m_BaseObjects.insert(bSpline);
+
 
         return bSpline;
     }
@@ -111,6 +163,7 @@ namespace CADMageddon
         }
 
         m_BSplinePatch.push_back(bSpline);
+        m_BaseObjects.insert(bSpline);
 
         return bSpline;
     }
@@ -208,7 +261,7 @@ namespace CADMageddon
                 DeleteBezierPatch(bezierPatch);
         }
 
-        for (auto bSplinePatch : m_BSplinePatch)
+        for (auto bSplinePatch : bSplinePatches)
         {
             if (bSplinePatch->GetIsSelected())
                 DeleteBSplinePatch(bSplinePatch);
@@ -259,20 +312,23 @@ namespace CADMageddon
 
     void Scene::RemovePointFromBezier(Ref<BezierC0> bezier, Ref<Point> point)
     {
-        m_FreePoints.push_back(point);
         bezier->RemoveControlPoint(point);
+        if (point->GetReferencedCount() == 0)
+            m_FreePoints.push_back(point);
     }
 
     void Scene::RemovePointFromBSpline(Ref<BSpline> bSpline, Ref<Point> point)
     {
-        m_FreePoints.push_back(point);
         bSpline->RemoveControlPoint(point);
+        if (point->GetReferencedCount() == 0)
+            m_FreePoints.push_back(point);
     }
 
     void Scene::RemovePointFromInterpolated(Ref<InterpolatedCurve> interpolatedCurve, Ref<Point> point)
     {
-        m_FreePoints.push_back(point);
         interpolatedCurve->RemoveControlPoint(point);
+        if (point->GetReferencedCount() == 0)
+            m_FreePoints.push_back(point);
     }
 
     bool Scene::AddNewPointToBezier(Ref<Point> point)
@@ -377,7 +433,6 @@ namespace CADMageddon
             Renderer::RenderLine(points[gridIndices[i]]->GetPosition(), points[gridIndices[i + 1]]->GetPosition(), color);
         }
     }
-
 
     void Scene::RenderBezier(Ref<BezierC0> bezierC0)
     {
@@ -555,11 +610,17 @@ namespace CADMageddon
         {
             for (auto point : bezierC0->GetControlPoints())
             {
-                m_FreePoints.push_back(point);
+                int pointReferenceCount = point->GetReferencedCount();
+                point->SetReferencedCount(pointReferenceCount - 1);
+
+                if (pointReferenceCount == 1)
+                    m_FreePoints.push_back(point);
             }
 
             m_BezierC0.erase(it);
         }
+
+        m_BaseObjects.erase(bezierC0);
     }
 
     void Scene::DeleteBSpline(Ref<BSpline> bSpline)
@@ -569,11 +630,18 @@ namespace CADMageddon
         {
             for (auto point : bSpline->GetControlPoints())
             {
-                m_FreePoints.push_back(point);
+                int pointReferenceCount = point->GetReferencedCount();
+                point->SetReferencedCount(pointReferenceCount - 1);
+
+                if (pointReferenceCount == 1)
+                    m_FreePoints.push_back(point);
             }
 
             m_BSpline.erase(it);
         }
+
+        m_BaseObjects.erase(bSpline);
+
     }
 
     void Scene::DeleteInterpolatedCurve(Ref<InterpolatedCurve> interpolatedCurve)
@@ -583,11 +651,18 @@ namespace CADMageddon
         {
             for (auto point : interpolatedCurve->GetControlPoints())
             {
-                m_FreePoints.push_back(point);
+                int pointReferenceCount = point->GetReferencedCount();
+                point->SetReferencedCount(pointReferenceCount - 1);
+
+                if (pointReferenceCount == 1)
+                    m_FreePoints.push_back(point);
             }
 
             m_InterpolatedCurve.erase(it);
         }
+
+        m_BaseObjects.erase(interpolatedCurve);
+
     }
 
     void Scene::DeleteBezierPatch(Ref<BezierPatch> bezierPatch)
@@ -597,11 +672,18 @@ namespace CADMageddon
         {
             for (auto point : bezierPatch->GetControlPoints())
             {
-                m_FreePoints.push_back(point);
+                int pointReferenceCount = point->GetReferencedCount();
+                point->SetReferencedCount(pointReferenceCount - 1);
+
+                if (pointReferenceCount == 1)
+                    m_FreePoints.push_back(point);
             }
 
             m_BezierPatch.erase(it);
         }
+
+        m_BaseObjects.erase(bezierPatch);
+
     }
 
     void Scene::DeleteBSplinePatch(Ref<BSplinePatch> bSplinePatch)
@@ -611,10 +693,16 @@ namespace CADMageddon
         {
             for (auto point : bSplinePatch->GetControlPoints())
             {
-                m_FreePoints.push_back(point);
+                int pointReferenceCount = point->GetReferencedCount();
+                point->SetReferencedCount(pointReferenceCount - 1);
+
+                if (pointReferenceCount == 1)
+                    m_FreePoints.push_back(point);
             }
 
             m_BSplinePatch.erase(it);
         }
+
+        m_BaseObjects.erase(bSplinePatch);
     }
 }

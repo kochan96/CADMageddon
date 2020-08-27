@@ -321,6 +321,7 @@ namespace CADMageddon
             int Row = elem->IntAttribute("Row");
             int Column = elem->IntAttribute("Column");
             auto point = FindPointByName(elem->Attribute("Name"));
+            point->SetReferencedCount(1);
             if (isRowWrapDirection)
                 controlPoints[Column * rowCount + Row] = point;
             else
@@ -368,6 +369,7 @@ namespace CADMageddon
             int Row = elem->IntAttribute("Row");
             int Column = elem->IntAttribute("Column");
             auto point = FindPointByName(elem->Attribute("Name"));
+            point->SetReferencedCount(1);
             if (isRowWrapDirection)
                 controlPoints[Column * rowCount + Row] = point;
             else

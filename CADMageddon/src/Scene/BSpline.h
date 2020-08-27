@@ -1,20 +1,16 @@
 #pragma once
 #include "cadpch.h"
 #include "Point.h"
+#include "Curve.h"
 
 namespace CADMageddon
 {
-    class BSpline
+    class BSpline : public Curve
     {
     public:
         BSpline(std::string name) :m_Name(name) {}
 
-        std::vector<Ref<Point>> GetControlPoints() const { return m_ControlPoints; }
-
         std::vector<glm::vec3> GetBezierControlPoints() const;
-
-        void AddControlPoint(Ref<Point> point);
-        void RemoveControlPoint(Ref<Point> point);
 
         bool GetShowBSplinePolygon() const { return m_ShowBSplinePolygon; }
         void SetShowBSplinePolygon(bool showPolygon) { m_ShowBSplinePolygon = showPolygon; }
@@ -41,6 +37,5 @@ namespace CADMageddon
         bool m_ShowBSplinePolygon = false;
         bool m_ShowBezierPolygon = false;
         bool m_IsBezierBasis = false;
-        std::vector<Ref<Point>> m_ControlPoints;
     };
 }

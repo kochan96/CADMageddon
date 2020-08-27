@@ -79,7 +79,9 @@ namespace CADMageddon
                 float v = i * deltaHeight;
 
                 glm::vec3 position = startPosition + glm::vec3(u, 0.0f, 0.0f) + glm::vec3(0.0f, v, 0.0f);
-                m_ControlPoints.push_back(CreateRef<Point>(position, m_Name + "Point_" + std::to_string(pointCount++)));
+                auto point = CreateRef<Point>(position, m_Name + "Point_" + std::to_string(pointCount++));
+                point->SetReferencedCount(1);
+                m_ControlPoints.push_back(point);
             }
         }
     }
@@ -138,7 +140,9 @@ namespace CADMageddon
                 position.x += radius * cos(u);
                 position.z += radius * sin(u);
                 position.y += v;
-                m_ControlPoints.push_back(CreateRef<Point>(position, m_Name + "Point_" + std::to_string(pointCount++)));
+                auto point = CreateRef<Point>(position, m_Name + "Point_" + std::to_string(pointCount++));
+                point->SetReferencedCount(1);
+                m_ControlPoints.push_back(point);
             }
         }
     }

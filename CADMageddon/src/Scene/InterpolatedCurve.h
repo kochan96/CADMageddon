@@ -1,18 +1,15 @@
 #pragma once
 #include "cadpch.h"
 #include "Point.h"
+#include "Curve.h"
 
 namespace CADMageddon
 {
-    class InterpolatedCurve
+    class InterpolatedCurve : public Curve
     {
     public:
         InterpolatedCurve(std::string name) :m_Name(name) {}
-
-        std::vector<Ref<Point>> GetControlPoints() const { return m_ControlPoints; }
         std::vector<glm::vec3> GetBezierControlPoints() const;
-        void AddControlPoint(Ref<Point> point);
-        void RemoveControlPoint(Ref<Point> point);
 
         bool GetShowPolygon() const { return m_ShowPolygon; }
         void SetShowPolygon(bool showPolygon) { m_ShowPolygon = showPolygon; }
@@ -31,7 +28,5 @@ namespace CADMageddon
         bool m_ShowPoints = true;
         bool m_IsSelected = false;
         bool m_ShowPolygon = false;
-        std::vector<Ref<Point>> m_ControlPoints;
-
     };
 }
