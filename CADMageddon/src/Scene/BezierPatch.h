@@ -32,6 +32,8 @@ namespace CADMageddon
         int GetPatchCountX() const { return m_PatchCountX; }
         int GetPatchCountY() const { return m_PatchCountY; }
 
+        bool GetIsCylinder() const { return m_IsCylinder; }
+
         static Ref<BezierPatch> CreateRectPatch(
             std::string name,
             glm::vec3 startPosition,
@@ -52,6 +54,19 @@ namespace CADMageddon
             int uDivisionCount = 4,
             int vDivisionCount = 4);
 
+        //used for deserialization
+        static Ref<BezierPatch> CreateBezierPatch(
+            std::string name,
+            std::vector<Ref<Point>> controlPoints,
+            std::vector<uint32_t> indices,
+            std::vector<uint32_t> gridIndices,
+            int PatchCountx,
+            int PatchCounty,
+            int uDivisionCount,
+            int vDivisionCount,
+            bool isCylinder = false,
+            bool showPolygon = false);
+
     private:
         void GenerateRectControlPoints(glm::vec3 startPosition, int PatchCountx, int PatchCounty, float width, float height);
         void GenerateCylinderControlPoints(glm::vec3 center, int PatchCountx, int PatchCounty, float radius, float height);
@@ -63,6 +78,7 @@ namespace CADMageddon
         int m_VDivisionCount;
 
         std::string m_Name;
+        bool m_IsCylinder = false;
         bool m_IsSelected = false;
         bool m_ShowPolygon = false;
         std::vector<Ref<Point>> m_ControlPoints;

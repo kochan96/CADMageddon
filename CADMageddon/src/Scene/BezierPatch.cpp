@@ -9,8 +9,9 @@ namespace CADMageddon
 
     Ref<BezierPatch> BezierPatch::CreateRectPatch(std::string name, glm::vec3 startPosition, int PatchCountx, int PatchCounty, float width, float height, int uDivisionCount, int vDivisionCount)
     {
-        auto bezierPatch = CreateRef<BezierPatch>(name, uDivisionCount, vDivisionCount);
+        auto bezierPatch = CreateRef<BezierPatch>(name, PatchCountx, PatchCounty, uDivisionCount, vDivisionCount);
         bezierPatch->GenerateRectControlPoints(startPosition, PatchCountx, PatchCounty, width, height);
+        bezierPatch->m_IsCylinder = false;
         return bezierPatch;
     }
 
@@ -22,6 +23,8 @@ namespace CADMageddon
         float deltaWidth = width / (verticesCountX - 1);
         float deltaHeight = height / (verticesCountY - 1);
 
+        int pointCount = 0;
+
         for (int i = 0; i < verticesCountY; i++)
         {
             for (int j = 0; j < verticesCountX; j++)
@@ -30,7 +33,7 @@ namespace CADMageddon
                 float v = i * deltaHeight;
 
                 glm::vec3 position = startPosition + glm::vec3(u, 0.0f, 0.0f) + glm::vec3(0.0f, v, 0.0f);
-                m_ControlPoints.push_back(CreateRef<Point>(position));
+                m_ControlPoints.push_back(CreateRef<Point>(position, m_Name + "Point_" + std::to_string(pointCount++)));
             }
         }
 
@@ -51,7 +54,6 @@ namespace CADMageddon
                 }
             }
         }
-
 
         for (int i = 0; i < verticesCountY; i++)
         {
@@ -78,6 +80,29 @@ namespace CADMageddon
     {
         auto bezierPatch = CreateRef<BezierPatch>(name, PatchCountx, PatchCounty, uDivisionCount, vDivisionCount);
         bezierPatch->GenerateCylinderControlPoints(center, PatchCountx, PatchCounty, radius, height);
+        bezierPatch->m_IsCylinder = true;
+        return bezierPatch;
+    }
+
+    Ref<BezierPatch> BezierPatch::CreateBezierPatch(
+        std::string name,
+        std::vector<Ref<Point>> controlPoints, 
+        std::vector<uint32_t> indices, 
+        std::vector<uint32_t> gridIndices, 
+        int PatchCountx, 
+        int PatchCounty,
+        int uDivisionCount, 
+        int vDivisionCount, 
+        bool isCylinder,
+        bool showPolygon)
+    {
+        auto bezierPatch = CreateRef<BezierPatch>(name, PatchCountx, PatchCounty, uDivisionCount, vDivisionCount);
+        bezierPatch->m_ControlPoints = controlPoints;
+        bezierPatch->m_Indices = indices;
+        bezierPatch->m_GridIndices = gridIndices;
+        bezierPatch->m_IsCylinder = isCylinder;
+        bezierPatch->m_ShowPolygon = showPolygon;
+
         return bezierPatch;
     }
 
@@ -90,6 +115,7 @@ namespace CADMageddon
         float deltaHeight = height / (verticesCountY - 1);
 
         verticesCountX--;
+        int pointCount = 0;
 
         for (int i = 0; i < verticesCountY; i++)
         {
@@ -102,7 +128,7 @@ namespace CADMageddon
                 position.x += radius * cos(u);
                 position.z += radius * sin(u);
                 position.y += v;
-                m_ControlPoints.push_back(CreateRef<Point>(position));
+                m_ControlPoints.push_back(CreateRef<Point>(position, m_Name + "Point_" + std::to_string(pointCount++)));
             }
         }
 

@@ -18,6 +18,10 @@
 
 #include "Gizmos\Gizmo.h"
 
+#include "Serialization/tinyfiledialogs.h"
+#include "Serialization\SceneSerializer.h"
+
+
 namespace CADMageddon
 {
     EditorLayer::EditorLayer(const std::string& debugName) :
@@ -571,6 +575,9 @@ namespace CADMageddon
 
     void EditorLayer::RenderMainMenuBar()
     {
+        char const* lTheSaveFileName, * lTheOpenFileName;
+        char const* lFilterPatterns[] = { "*.xml" };
+
         if (ImGui::BeginMainMenuBar())
         {
             if (ImGui::BeginMenu("File"))
@@ -585,12 +592,32 @@ namespace CADMageddon
 
                 if (ImGui::MenuItem("Save"))
                 {
-                    //TODO
+                    auto lTheSaveFileName = tinyfd_saveFileDialog(
+                        "Save your scene as",
+                        "rybcia.xml",
+                        1,
+                        lFilterPatterns,
+                        NULL);
+                    if (lTheSaveFileName) {
+                        SceneSerializer::SerializeScene(*m_Scene, lTheSaveFileName);
+                    }
                 }
 
                 if (ImGui::MenuItem("Open"))
                 {
-                    //TODO
+                    lTheOpenFileName = tinyfd_openFileDialog(
+                        "Choose an XML file to read",
+                        "",
+                        1,
+                        lFilterPatterns,
+                        NULL,
+                        0);
+                    if (lTheOpenFileName) {
+                        m_Scene = SceneSerializer::LoadScene(lTheOpenFileName);
+                        m_HierarchyPanel->SetScene(m_Scene);
+                        m_TransformationSystem->ClearSelection();
+                        m_InspectorPanel->Clear();
+                    }
                 }
 
                 if (ImGui::MenuItem("Close"))

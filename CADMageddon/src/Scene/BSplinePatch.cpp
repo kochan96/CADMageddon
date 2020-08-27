@@ -7,10 +7,41 @@ namespace CADMageddon
     {
     }
 
-    Ref<BSplinePatch> BSplinePatch::CreateRectPatch(std::string name, glm::vec3 startPosition, int PatchCountx, int PatchCounty, float width, float height, int uDivisionCount, int vDivisionCount)
+    Ref<BSplinePatch> BSplinePatch::CreateBSplinePatch(
+        std::string name,
+        std::vector<Ref<Point>> controlPoints,
+        std::vector<uint32_t> indices,
+        std::vector<uint32_t> gridIndices,
+        int PatchCountx,
+        int PatchCounty,
+        int uDivisionCount,
+        int vDivisionCount,
+        bool isCylinder,
+        bool showPolygon)
     {
-        auto bSplinePatch = CreateRef<BSplinePatch>(name, uDivisionCount, vDivisionCount);
+        auto bSplinePatch = CreateRef<BSplinePatch>(name, PatchCountx, PatchCounty, uDivisionCount, vDivisionCount);
+        bSplinePatch->m_ControlPoints = controlPoints;
+        bSplinePatch->m_Indices = indices;
+        bSplinePatch->m_GridIndices = gridIndices;
+        bSplinePatch->m_IsCylinder = isCylinder;
+        bSplinePatch->m_ShowPolygon = showPolygon;
+
+        return bSplinePatch;
+    }
+
+    Ref<BSplinePatch> BSplinePatch::CreateRectPatch(
+        std::string name,
+        glm::vec3 startPosition,
+        int PatchCountx,
+        int PatchCounty,
+        float width,
+        float height,
+        int uDivisionCount,
+        int vDivisionCount)
+    {
+        auto bSplinePatch = CreateRef<BSplinePatch>(name, PatchCountx, PatchCounty, uDivisionCount, vDivisionCount);
         bSplinePatch->GenerateRectControlPoints(startPosition, PatchCountx, PatchCounty, width, height);
+        bSplinePatch->m_IsCylinder = false;
         return bSplinePatch;
     }
 
@@ -21,6 +52,7 @@ namespace CADMageddon
 
         float deltaWidth = width / (verticesCountX - 1);
         float deltaHeight = height / (verticesCountY - 1);
+        int pointCount = 0;
 
         for (int i = 0; i < verticesCountY; i++)
         {
@@ -30,7 +62,7 @@ namespace CADMageddon
                 float v = i * deltaHeight;
 
                 glm::vec3 position = startPosition + glm::vec3(u, 0.0f, 0.0f) + glm::vec3(0.0f, v, 0.0f);
-                m_ControlPoints.push_back(CreateRef<Point>(position));
+                m_ControlPoints.push_back(CreateRef<Point>(position, m_Name + "Point_" + std::to_string(pointCount++)));
             }
         }
 
@@ -77,6 +109,7 @@ namespace CADMageddon
     {
         auto bSplinePatch = CreateRef<BSplinePatch>(name, PatchCountx, PatchCounty, uDivisionCount, vDivisionCount);
         bSplinePatch->GenerateCylinderControlPoints(center, PatchCountx, PatchCounty, radius, height);
+        bSplinePatch->m_IsCylinder = true;
         return bSplinePatch;
     }
 
@@ -85,8 +118,11 @@ namespace CADMageddon
         int verticesCountX = PatchCountx;
         int verticesCountY = PatchCounty + 3;
 
-        float deltaAngle = glm::two_pi<float>() / (verticesCountX - 1);
+        float deltaAngle = glm::two_pi<float>() / verticesCountX;
+
         float deltaHeight = height / (verticesCountY - 1);
+
+        int pointCount = 0;
 
         for (int i = 0; i < verticesCountY; i++)
         {
@@ -99,31 +135,50 @@ namespace CADMageddon
                 position.x += radius * cos(u);
                 position.z += radius * sin(u);
                 position.y += v;
-                m_ControlPoints.push_back(CreateRef<Point>(position));
+                m_ControlPoints.push_back(CreateRef<Point>(position, m_Name + "Point_" + std::to_string(pointCount++)));
             }
         }
 
-
-        /*for (int j = 0; j < PatchCounty; j++)
+        for (int j = 0; j < PatchCounty; j++)
         {
-            int startRow = (j * 3 * verticesCountX);
+            int startRow = j * verticesCountX;
             for (int i = 0; i < PatchCountx; i++)
             {
-                int start = startRow + i * 3;
+                int start = startRow + i;
                 for (int k = 0; k < 4; k++)
                 {
                     for (int l = 0; l < 4; l++)
                     {
-                        int index = start + k * verticesCountX + l;
-                        if (i == (PatchCountx - 1) && l == 3)
-                        {
-                            index = startRow + k * verticesCountX;
-                        }
-
+                        int index = (k + j) * verticesCountX + (l + i) % verticesCountX;
                         m_Indices.push_back(index);
                     }
                 }
             }
-        }*/
+        }
+
+        for (int i = 0; i < verticesCountY; i++)
+        {
+            for (int j = 0; j < verticesCountX; j++)
+            {
+                int row = i * verticesCountX;
+                int index = row + j;
+                if (index < row + verticesCountX - 1)
+                {
+                    m_GridIndices.push_back(index);
+                    m_GridIndices.push_back(index + 1);
+                }
+                else
+                {
+                    m_GridIndices.push_back(index);
+                    m_GridIndices.push_back(row);
+                }
+
+                if (i < verticesCountY - 1)
+                {
+                    m_GridIndices.push_back(index);
+                    m_GridIndices.push_back(index + verticesCountX);
+                }
+            }
+        }
     }
 }

@@ -32,6 +32,8 @@ namespace CADMageddon
         int GetPatchCountX() const { return m_PatchCountX; }
         int GetPatchCountY() const { return m_PatchCountY; }
 
+        bool GetIsCylinder() const { return m_IsCylinder; }
+
         static Ref<BSplinePatch> CreateRectPatch(
             std::string name,
             glm::vec3 startPosition,
@@ -52,12 +54,26 @@ namespace CADMageddon
             int uDivisionCount = 4,
             int vDivisionCount = 4);
 
+        //Used for deserialization
+        static Ref<BSplinePatch> CreateBSplinePatch(
+            std::string name,
+            std::vector<Ref<Point>> controlPoints,
+            std::vector<uint32_t> indices,
+            std::vector<uint32_t> gridIndices,
+            int PatchCountx,
+            int PatchCounty,
+            int uDivisionCount,
+            int vDivisionCount,
+            bool isCylinder,
+            bool showPolygon = false);
+
     private:
         void GenerateRectControlPoints(glm::vec3 startPosition, int PatchCountx, int PatchCounty, float width, float height);
         void GenerateCylinderControlPoints(glm::vec3 center, int PatchCountx, int PatchCounty, float radius, float height);
 
 
     private:
+        bool m_IsCylinder = false;
         int m_PatchCountX;
         int m_PatchCountY;
         int m_UDivisionCount;

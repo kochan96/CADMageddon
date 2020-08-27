@@ -9,13 +9,17 @@ namespace CADMageddon
         m_DefaultColor = Renderer::DEFAULT_COLOR;
     }
 
+    static int pointCount = 0;
+
     Ref<Point> Scene::CreatePoint(glm::vec3 position, std::string name)
     {
-        auto point = CreateRef<Point>(position, name);
+        auto point = CreateRef<Point>(position, name + std::to_string(pointCount++));
         m_Points.push_back(point);
         auto added = AddNewPointToBezier(point);
-        added |= AddNewPointToBSpline(point);
-        added |= AddNewPointToInterpolated(point);
+        if (!added)
+            added = AddNewPointToBSpline(point);
+        if (!added)
+            added = AddNewPointToInterpolated(point);
 
         if (!added)
             m_FreePoints.push_back(point);
@@ -25,35 +29,41 @@ namespace CADMageddon
 
     Ref<Torus> Scene::CreateTorus(glm::vec3 position, std::string name)
     {
-        auto torus = CreateRef<Torus>(position, name);
+        static int torusCount = 0;
+        auto torus = CreateRef<Torus>(position, name + std::to_string(torusCount++));
         m_Torus.push_back(torus);
         return torus;
     }
 
     Ref<BezierC0> Scene::CreateBezierC0(std::string name)
     {
-        auto bezierC0 = CreateRef<BezierC0>(name);
+        static int bezierC0Count = 0;
+        auto bezierC0 = CreateRef<BezierC0>(name + std::to_string(bezierC0Count++));
         m_BezierC0.push_back(bezierC0);
         return bezierC0;
     }
 
     Ref<BSpline> Scene::CreateBSpline(std::string name)
     {
-        auto bSpline = CreateRef<BSpline>(name);
+        static int bSplineCount = 0;
+        auto bSpline = CreateRef<BSpline>(name + std::to_string(bSplineCount++));
         m_BSpline.push_back(bSpline);
         return bSpline;
     }
 
     Ref<InterpolatedCurve> Scene::CreateInterpolated(std::string name)
     {
-        auto interpolated = CreateRef<InterpolatedCurve>(name);
+        static int interpolatedCount = 0;
+        auto interpolated = CreateRef<InterpolatedCurve>(name + std::to_string(interpolatedCount++));
         m_InterpolatedCurve.push_back(interpolated);
         return interpolated;
     }
 
+    static int bezierPatchCount = 0;
+
     Ref<BezierPatch> Scene::CreateBezierPatchRect(std::string name, const PatchRectCreationParameters& parameters)
     {
-        auto bezier = BezierPatch::CreateRectPatch(name, parameters.Position, parameters.PatchCountX, parameters.PatchCountY, parameters.Width, parameters.Height);
+        auto bezier = BezierPatch::CreateRectPatch(name + std::to_string(bezierPatchCount++), parameters.Position, parameters.PatchCountX, parameters.PatchCountY, parameters.Width, parameters.Height);
         for (auto controlPoints : bezier->GetControlPoints())
         {
             m_Points.push_back(controlPoints);
@@ -66,7 +76,7 @@ namespace CADMageddon
 
     Ref<BezierPatch> Scene::CreateBezierPatchCylinder(std::string name, const PatchCylinderCreationParameters& parameters)
     {
-        auto bezier = BezierPatch::CreateCyliderPatch(name, parameters.Center, parameters.PatchCountX, parameters.PatchCountY, parameters.Radius, parameters.Height);
+        auto bezier = BezierPatch::CreateCyliderPatch(name + std::to_string(bezierPatchCount++), parameters.Center, parameters.PatchCountX, parameters.PatchCountY, parameters.Radius, parameters.Height);
         for (auto controlPoints : bezier->GetControlPoints())
         {
             m_Points.push_back(controlPoints);
@@ -77,9 +87,11 @@ namespace CADMageddon
         return bezier;
     }
 
+    static int bSplinePatchCount = 0;
+
     Ref<BSplinePatch> Scene::CreateBSplinePatchRect(std::string name, const PatchRectCreationParameters& parameters)
     {
-        auto bSpline = BSplinePatch::CreateRectPatch(name, parameters.Position, parameters.PatchCountX, parameters.PatchCountY, parameters.Width, parameters.Height);
+        auto bSpline = BSplinePatch::CreateRectPatch(name + std::to_string(bSplinePatchCount++), parameters.Position, parameters.PatchCountX, parameters.PatchCountY, parameters.Width, parameters.Height);
         for (auto controlPoints : bSpline->GetControlPoints())
         {
             m_Points.push_back(controlPoints);
@@ -92,7 +104,7 @@ namespace CADMageddon
 
     Ref<BSplinePatch> Scene::CreateBSplinePatchCylinder(std::string name, const PatchCylinderCreationParameters& parameters)
     {
-        auto bSpline = BSplinePatch::CreateCyliderPatch(name, parameters.Center, parameters.PatchCountX, parameters.PatchCountY, parameters.Radius, parameters.Height);
+        auto bSpline = BSplinePatch::CreateCyliderPatch(name + std::to_string(bSplinePatchCount++), parameters.Center, parameters.PatchCountX, parameters.PatchCountY, parameters.Radius, parameters.Height);
         for (auto controlPoints : bSpline->GetControlPoints())
         {
             m_Points.push_back(controlPoints);
@@ -277,8 +289,7 @@ namespace CADMageddon
             {
                 added = true;
                 bezier->AddControlPoint(point);
-
-                point = CreateRef<Point>(point->GetPosition(), point->GetName());
+                return true;
             }
         }
 
@@ -295,7 +306,7 @@ namespace CADMageddon
             {
                 added = true;
                 bSpline->AddControlPoint(point);
-                point = CreateRef<Point>(point->GetPosition(), point->GetName());
+                return true;
             }
         }
 
@@ -312,7 +323,7 @@ namespace CADMageddon
             {
                 added = true;
                 interpolated->AddControlPoint(point);
-                point = CreateRef<Point>(point->GetPosition(), point->GetName());
+                return true;
             }
         }
 
@@ -537,7 +548,7 @@ namespace CADMageddon
         if (bezierPatch->GetShowPolygon())
         {
             auto gridIndices = bezierPatch->GetGridIndices();
-            for (int i = 0; i < gridIndices.size() - 1; i+=2)
+            for (int i = 0; i < gridIndices.size() - 1; i += 2)
             {
                 auto color = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
                 Renderer::RenderLine(controlPoints[gridIndices[i]]->GetPosition(), controlPoints[gridIndices[i + 1]]->GetPosition(), color);

@@ -27,6 +27,8 @@ namespace CADMageddon
         int PatchCountY;
     };
 
+    class SceneSerializer;
+
     class Scene
     {
     public:
@@ -99,6 +101,9 @@ namespace CADMageddon
 
         glm::vec4 m_SelectionColor;
         glm::vec4 m_DefaultColor;
+
+        
+        friend class SceneSerializer;
 
     };
 }
