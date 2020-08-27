@@ -412,7 +412,7 @@ namespace CADMageddon
         auto bSplineColor = bSpline->GetIsSelected() ? m_SelectionColor : m_DefaultColor;
 
         RenderControlPoints(controlPoints);
-        Renderer::ShaderRenderBezierC0(bezierPoints);
+        Renderer::ShaderRenderBezierC0(bezierPoints, bSplineColor);
 
         if (bSpline->GetShowBSplinePolygon())
         {
@@ -434,10 +434,10 @@ namespace CADMageddon
     {
         auto controlPoints = interPolatedCurve->GetControlPoints();
         auto bezierPoints = interPolatedCurve->GetBezierControlPoints();
-        auto bSplineColor = interPolatedCurve->GetIsSelected() ? m_SelectionColor : m_DefaultColor;
+        auto interpolatedColor = interPolatedCurve->GetIsSelected() ? m_SelectionColor : m_DefaultColor;
 
         RenderControlPoints(controlPoints);
-        Renderer::ShaderRenderBezierC0(bezierPoints);
+        Renderer::ShaderRenderBezierC0(bezierPoints, interpolatedColor);
 
         if (interPolatedCurve->GetShowPolygon())
         {

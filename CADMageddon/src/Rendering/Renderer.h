@@ -9,7 +9,7 @@ namespace CADMageddon
     {
     public:
 
-        static float PointSize;
+        static int PointSize;
         static bool ShowPoints;
 
         static constexpr glm::vec4 DEFAULT_COLOR = glm::vec4(0.0f, 0.8f, 0.0f, 1.0f);

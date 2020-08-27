@@ -33,7 +33,7 @@ namespace CADMageddon
             multiSelectEnd = mousePosition;
         }
 
-        const float pointSize = Renderer::PointSize;
+        const int pointSize = Renderer::PointSize;
 
         auto points = m_Scene.GetPoints();
 

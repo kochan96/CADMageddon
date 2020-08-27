@@ -878,6 +878,11 @@ namespace CADMageddon
 
         ImGui::Checkbox("ShowPoints", &Renderer::ShowPoints);
         ImGui::Checkbox("showGrid", &m_ShowGrid);
+        if (ImGui::DragInt("PointSize", &Renderer::PointSize, 1.0f, 1.0f, 10.0f))
+        {
+            Renderer::PointSize = std::clamp(Renderer::PointSize, 1, 10);
+            glPointSize(Renderer::PointSize);
+        }
 
         ImGui::EndGroup();
 

@@ -7,7 +7,7 @@
 namespace CADMageddon
 {
 
-    float Renderer::PointSize = 10.0f;
+    int Renderer::PointSize = 5;
     bool Renderer::ShowPoints = true;
 
     void OpenGLMessageCallback(
