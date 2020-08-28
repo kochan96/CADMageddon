@@ -8,7 +8,7 @@ namespace CADMageddon
     class BSpline : public Curve
     {
     public:
-        BSpline(std::string name) :m_Name(name) {}
+        BSpline(std::string name) :Curve(name) {}
 
         std::vector<glm::vec3> GetBezierControlPoints() const;
 
@@ -17,12 +17,6 @@ namespace CADMageddon
 
         bool GetShowBezierPolygon() const { return m_ShowBezierPolygon; }
         void SetShowBezierPolygon(bool showPolygon) { m_ShowBezierPolygon = showPolygon; }
-
-        bool GetIsSelected() const { return m_IsSelected; }
-        void SetIsSelected(bool isSelected) { m_IsSelected = isSelected; }
-
-        std::string GetName() const { return m_Name; }
-        void SetName(std::string name) { m_Name = name; }
 
         bool GetIsBezierBasis() const { return m_IsBezierBasis; }
         void SetIsBezierBasis(bool isBezierBasis) { m_IsBezierBasis = isBezierBasis; }
@@ -34,9 +28,7 @@ namespace CADMageddon
         void SetSnapToEnd(bool snap) { m_SnapToEnd = snap; }
 
     private:
-        std::string m_Name;
         bool m_ShowPoints = true;
-        bool m_IsSelected = false;
         bool m_ShowBSplinePolygon = false;
         bool m_ShowBezierPolygon = false;
         bool m_IsBezierBasis = false;

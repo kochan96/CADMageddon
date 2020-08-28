@@ -107,6 +107,18 @@ namespace CADMageddon
             ImGui::TreePop();
         }
 
+        auto gregoryPatch = m_Scene->GetGregoryPatch();
+        if (!gregoryPatch.empty() && ImGui::TreeNode("GregoryPatches"))
+        {
+            int id = 0;
+            for (auto gregory : gregoryPatch)
+            {
+                RenderGregoryNode(gregory, id);
+            }
+
+            ImGui::TreePop();
+        }
+
         ImGui::End();
     }
 
@@ -146,6 +158,11 @@ namespace CADMageddon
         for (auto bSplinePatch : m_Scene->GetBSplinePatch())
         {
             bSplinePatch->SetIsSelected(false);
+        }
+
+        for (auto gregory : m_Scene->GetGregoryPatch())
+        {
+            gregory->SetIsSelected(false);
         }
 
         if (m_OnSelectionCleared)
@@ -690,6 +707,85 @@ namespace CADMageddon
                 if (m_OnSelectionPointChanged)
                     m_OnSelectionPointChanged(point->GetIsSelected(), point);
             }
+        }
+
+        id++;
+    }
+
+    void HierarchyPanel::RenderGregoryNode(Ref<GregoryPatch> gregoryPatch, int& id)
+    {
+        static ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
+        ImGuiTreeNodeFlags node_flags = base_flags;
+
+        if (gregoryPatch->GetIsSelected())
+        {
+            node_flags |= ImGuiTreeNodeFlags_Selected;
+        }
+
+        /*bool toBeDeleted = gregoryPatch->GetToBeDeleted();
+
+        if (toBeDeleted)
+        {
+            node_flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+        }*/
+
+        bool node_open = ImGui::TreeNodeEx((void*)(intptr_t)id, node_flags, gregoryPatch->GetName().c_str());
+        if (ImGui::IsItemClicked())
+        {
+            if (ImGui::GetIO().KeyCtrl)
+            {
+                gregoryPatch->SetIsSelected(!gregoryPatch->GetIsSelected());
+            }
+            else
+            {
+                bool oldSelected = gregoryPatch->GetIsSelected();
+                ClearSelection();
+                gregoryPatch->SetIsSelected(!oldSelected);
+            }
+
+            if (m_OnGregorySelectionChanged)
+                m_OnGregorySelectionChanged(gregoryPatch->GetIsSelected(), gregoryPatch);
+        }
+
+        if (node_open)
+        {
+            RenderGregoryBezierPatchNode(gregoryPatch->GetB1(), id);
+            RenderGregoryBezierPatchNode(gregoryPatch->GetB2(), id);
+            RenderGregoryBezierPatchNode(gregoryPatch->GetB3(), id);
+
+            ImGui::TreePop();
+        }
+
+        id++;
+    }
+
+    void HierarchyPanel::RenderGregoryBezierPatchNode(Ref<BezierPatch> bezierPatch, int& id)
+    {
+        static ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
+        ImGuiTreeNodeFlags node_flags = base_flags;
+
+        if (bezierPatch->GetIsSelected())
+        {
+            node_flags |= ImGuiTreeNodeFlags_Selected;
+        }
+
+        node_flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+        bool node_open = ImGui::TreeNodeEx((void*)(intptr_t)id, node_flags, bezierPatch->GetName().c_str());
+        if (ImGui::IsItemClicked())
+        {
+            if (ImGui::GetIO().KeyCtrl)
+            {
+                bezierPatch->SetIsSelected(!bezierPatch->GetIsSelected());
+            }
+            else
+            {
+                bool oldSelected = bezierPatch->GetIsSelected();
+                ClearSelection();
+                bezierPatch->SetIsSelected(!oldSelected);
+            }
+
+            if (m_OnBezierPatchSelectionChanged)
+                m_OnBezierPatchSelectionChanged(bezierPatch->GetIsSelected(), bezierPatch);
         }
 
         id++;

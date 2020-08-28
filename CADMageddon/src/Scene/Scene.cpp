@@ -139,6 +139,13 @@ namespace CADMageddon
         return bezier;
     }
 
+    Ref<GregoryPatch> Scene::CreateGregoryPatch(Ref<BezierPatch> b1, Ref<BezierPatch> b2, Ref<BezierPatch> b3, Ref<Point> commonPoints[3])
+    {
+        auto gregory = GregoryPatch::Create(b1, b2, b3, commonPoints);
+        m_GregoryPatch.push_back(gregory);
+        return gregory;
+    }
+
     static int bSplinePatchCount = 0;
 
     Ref<BSplinePatch> Scene::CreateBSplinePatchRect(std::string name, const PatchRectCreationParameters& parameters)
@@ -685,7 +692,27 @@ namespace CADMageddon
         }
 
         m_BaseObjects.erase(bezierPatch);
+        auto gregoryPatches = m_GregoryPatch;
 
+        for (auto gregory : gregoryPatches)
+        {
+            if (gregory->GetB1() == bezierPatch || gregory->GetB2() == bezierPatch || gregory->GetB3() == bezierPatch)
+            {
+                auto it = std::find(m_GregoryPatch.begin(), m_GregoryPatch.end(), gregory);
+                if (it != m_GregoryPatch.end())
+                    m_GregoryPatch.erase(it);
+                if (m_OnGregoryPatchDeleted)
+                    m_OnGregoryPatchDeleted(gregory);
+            }
+        }
+
+    }
+
+    void Scene::DeleteGregoryPatch(Ref<GregoryPatch> gregoryPatch)
+    {
+        auto it = std::find(m_GregoryPatch.begin(), m_GregoryPatch.end(), gregoryPatch);
+        if (it != m_GregoryPatch.end())
+            m_GregoryPatch.erase(it);
     }
 
     void Scene::DeleteBSplinePatch(Ref<BSplinePatch> bSplinePatch)

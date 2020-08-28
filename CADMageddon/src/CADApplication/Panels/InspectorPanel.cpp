@@ -92,6 +92,18 @@ namespace CADMageddon
             m_BSplinePatch.erase(it);
     }
 
+    void InspectorPanel::AddGregoryPatch(Ref<GregoryPatch> gregoryPatch)
+    {
+        m_GregoryPatch.push_back(gregoryPatch);
+    }
+
+    void InspectorPanel::RemoveGregoryPatch(Ref<GregoryPatch> gregoryPatch)
+    {
+        auto it = std::find(m_GregoryPatch.begin(), m_GregoryPatch.end(), gregoryPatch);
+        if (it != m_GregoryPatch.end())
+            m_GregoryPatch.erase(it);
+    }
+
     void InspectorPanel::ClearPointsAndToruses()
     {
         m_Points.clear();
@@ -107,6 +119,7 @@ namespace CADMageddon
         m_InterPolatedCurve.clear();
         m_BezierPatch.clear();
         m_BSplinePatch.clear();
+        m_GregoryPatch.clear();
     }
 
     void InspectorPanel::RenderMultiSelectInspector()
@@ -129,20 +142,95 @@ namespace CADMageddon
             ImGui::EndGroup();
         }
 
-        if (m_BezierPatch.size() == 3 && CheckIfFillHolePossible(m_BezierPatch[0], m_BezierPatch[1], m_BezierPatch[2]))
+        if (m_BezierPatch.size() == 3)
         {
-            if (ImGui::Button("Fill hole"))
-            {
-
-            }
+            RenderFillHoleInspector();
         }
     }
 
-    bool InspectorPanel::CheckIfFillHolePossible(Ref<BezierPatch> b1, Ref<BezierPatch> b2, Ref<BezierPatch> b3)
+    void InspectorPanel::RenderFillHoleInspector()
     {
-        return false;
+        auto b1 = m_BezierPatch[0];
+        auto b2 = m_BezierPatch[1];
+        auto b3 = m_BezierPatch[2];
+
+        bool areAllSinglePatch = b1->GetPatchCountX() == 1 && b1->GetPatchCountY() == 1
+            && b2->GetPatchCountX() == 1 && b2->GetPatchCountY() == 1
+            && b3->GetPatchCountX() == 1 && b3->GetPatchCountY() == 1;
+
+        if (!areAllSinglePatch)
+            return;
+
+        Ref<Point> commonPoints[3];
+        if (!GetCommonPoint(b1, b2, commonPoints[0]))
+            return;
+        if (!GetCommonPoint(b2, b3, commonPoints[1]))
+            return;
+        if (!GetCommonPoint(b3, b1, commonPoints[2]))
+            return;
+
+        if (!CheckIfCorner(b1, commonPoints[0]))
+            return;
+        if (!CheckIfCorner(b2, commonPoints[0]))
+            return;
+        if (!CheckIfCorner(b2, commonPoints[1]))
+            return;
+        if (!CheckIfCorner(b3, commonPoints[1]))
+            return;
+        if (!CheckIfCorner(b3, commonPoints[2]))
+            return;
+        if (!CheckIfCorner(b1, commonPoints[2]))
+            return;
+
+        if (ImGui::Button("Fill hole"))
+        {
+            m_Scene->CreateGregoryPatch(m_BezierPatch[0], m_BezierPatch[1], m_BezierPatch[2], commonPoints);
+        }
     }
 
+    bool InspectorPanel::GetCommonPoint(Ref<BezierPatch> b1, Ref<BezierPatch> b2, Ref<Point>& commonPoint)
+    {
+        auto b1ControlPoints = b1->GetControlPoints();
+        auto b2ControloPoints = b2->GetControlPoints();
+
+        std::vector<Ref<Point>> commonPoints;
+        for (int i = 0; i < b1ControlPoints.size(); i++)
+        {
+            for (int j = 0; j < b2ControloPoints.size(); j++)
+            {
+                if (b1ControlPoints[i] == b2ControloPoints[j])
+                {
+                    commonPoints.push_back(b1ControlPoints[i]);
+                    if (commonPoints.size() > 1)
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        if (commonPoints.empty())
+            return false;
+
+        commonPoint = commonPoints[0];
+
+        return true;
+    }
+
+    bool InspectorPanel::CheckIfCorner(Ref<BezierPatch> b, Ref<Point> commonPoint)
+    {
+        const int cornersSize = 4;
+        int corners[] = { 0,3,12,15 };
+        auto controlPoints = b->GetControlPoints();
+
+        for (int i = 0; i < cornersSize; i++)
+        {
+            if (commonPoint == controlPoints[corners[i]])
+                return true;
+        }
+
+        return false;
+    }
 
     void InspectorPanel::Render()
     {
@@ -155,7 +243,8 @@ namespace CADMageddon
             m_BSpline.size() +
             m_InterPolatedCurve.size() +
             m_BezierPatch.size() +
-            m_BSplinePatch.size();
+            m_BSplinePatch.size()
+            + m_GregoryPatch.size();
 
         ImGui::Text("Selected %d items", size);
 
@@ -200,7 +289,7 @@ namespace CADMageddon
         {
             BSplinePatchEditor(m_BSplinePatch[0]);
         }
-
+        //TODO gregory inspector
 
 
         ImGui::End();

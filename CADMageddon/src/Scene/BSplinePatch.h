@@ -17,12 +17,6 @@ namespace CADMageddon
         bool GetShowPolygon() const { return m_ShowPolygon; }
         void SetShowPolygon(bool showPolygon) { m_ShowPolygon = showPolygon; }
 
-        bool GetIsSelected() const { return m_IsSelected; }
-        void SetIsSelected(bool isSelected) { m_IsSelected = isSelected; }
-
-        std::string GetName() const { return m_Name; }
-        void SetName(std::string name) { m_Name = name; }
-
         int GetUDivisionCount() const { return m_UDivisionCount; }
         void SetUDivisionCount(int uDivisionCount) { m_UDivisionCount = uDivisionCount; }
 
@@ -86,8 +80,6 @@ namespace CADMageddon
         int m_UDivisionCount;
         int m_VDivisionCount;
 
-        std::string m_Name;
-        bool m_IsSelected = false;
         bool m_ShowPolygon = false;
         std::vector<uint32_t> m_Indices;
         std::vector<uint32_t> m_GridIndices;

@@ -47,7 +47,11 @@ namespace CADMageddon
         void OnSelectionInterpolatedChanged(bool selected, Ref<InterpolatedCurve> interpolated);
         void OnSelectionChangedBezierPatch(bool selected, Ref<BezierPatch> bezierPatch);
         void OnSelectionChangedBSplinePatch(bool selected, Ref<BSplinePatch> bezierPatch);
+        void OnSelectionChangedGregoryPatch(bool selected, Ref<GregoryPatch> gregoryPatch);
+        
         void OnPointsMergedCallback(Ref<Point> p1, Ref<Point> p2, Ref<Point> newPoint);
+        void OnGregoryDeletedCallback(Ref<GregoryPatch> gregory);
+
         void OnPickingSelectionCleared();
         void OnSelectionCleared();
 

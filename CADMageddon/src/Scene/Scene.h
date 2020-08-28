@@ -1,4 +1,5 @@
 #pragma once
+#pragma once
 #include "Point.h"
 #include "Torus.h"
 #include "BezierC0.h"
@@ -6,6 +7,7 @@
 #include "InterpolatedCurve.h"
 #include "BezierPatch.h"
 #include "BSplinePatch.h"
+#include "GregoryPatch.h"
 
 namespace CADMageddon
 {
@@ -49,6 +51,7 @@ namespace CADMageddon
         void MergePoints(Ref<Point> p1, Ref<Point> p2);
 
 
+
         Ref<Point> CreatePoint(glm::vec3 position, std::string name);
         Ref<Torus> CreateTorus(glm::vec3 position, std::string name);
 
@@ -58,6 +61,7 @@ namespace CADMageddon
 
         Ref<BezierPatch> CreateBezierPatchRect(std::string name, const PatchRectCreationParameters& parameters);
         Ref<BezierPatch> CreateBezierPatchCylinder(std::string name, const PatchCylinderCreationParameters& parameters);
+        Ref<GregoryPatch> CreateGregoryPatch(Ref<BezierPatch> b1, Ref<BezierPatch> b2, Ref<BezierPatch> b3,Ref<Point> commontPoinst[3]);
 
         Ref<BSplinePatch> CreateBSplinePatchRect(std::string name, const PatchRectCreationParameters& parameters);
         Ref<BSplinePatch> CreateBSplinePatchCylinder(std::string name, const PatchCylinderCreationParameters& parameters);
@@ -70,10 +74,16 @@ namespace CADMageddon
         std::vector<Ref<InterpolatedCurve>> GetInterpolated() const { return m_InterpolatedCurve; }
         std::vector<Ref<BezierPatch>> GetBezierPatch() const { return m_BezierPatch; }
         std::vector<Ref<BSplinePatch>> GetBSplinePatch() const { return m_BSplinePatch; }
+        std::vector<Ref<GregoryPatch>> GetGregoryPatch() const { return m_GregoryPatch; }
 
         void SetOnPointMerged(std::function<void(Ref<Point> p1, Ref<Point> p2, Ref<Point> p3)> onPointMergedCallback)
         {
             m_onPointMerged = onPointMergedCallback;
+        }
+
+        void SetOnGregoryPatchDeleted(std::function<void(Ref<GregoryPatch>)> gregoryPatchDeletedCallback)
+        {
+            m_OnGregoryPatchDeleted = gregoryPatchDeletedCallback;
         }
 
     private:
@@ -101,6 +111,7 @@ namespace CADMageddon
         void DeleteBSpline(Ref<BSpline> bSpline);
         void DeleteInterpolatedCurve(Ref<InterpolatedCurve> interpolatedCurve);
         void DeleteBezierPatch(Ref<BezierPatch> bezierPatch);
+        void DeleteGregoryPatch(Ref<GregoryPatch> gregoryPatch);
         void DeleteBSplinePatch(Ref<BSplinePatch> bSplinePatch);
 
     private:
@@ -114,6 +125,7 @@ namespace CADMageddon
         std::vector<Ref<BSpline>> m_BSpline;
         std::vector < Ref<InterpolatedCurve>> m_InterpolatedCurve;
         std::vector<Ref<BezierPatch>> m_BezierPatch;
+        std::vector<Ref<GregoryPatch>> m_GregoryPatch;
         std::vector<Ref<BSplinePatch>> m_BSplinePatch;
 
 
@@ -121,6 +133,7 @@ namespace CADMageddon
         glm::vec4 m_DefaultColor;
 
         std::function<void(Ref<Point> p1, Ref<Point> p2, Ref<Point> p3)> m_onPointMerged;
+        std::function<void(Ref<GregoryPatch>)> m_OnGregoryPatchDeleted;
 
 
         friend class SceneSerializer;

@@ -36,12 +36,17 @@ namespace CADMageddon
         void AddBSplinePatch(Ref<BSplinePatch> bSplinePatch);
         void RemoveBSplinePatch(Ref<BSplinePatch> bSplinePatch);
 
+        void AddGregoryPatch(Ref<GregoryPatch> gregoryPatch);
+        void RemoveGregoryPatch(Ref<GregoryPatch> gregoryPatch);
+
         void ClearPointsAndToruses();
         void Clear();
 
     private:
         void RenderMultiSelectInspector();
-        bool CheckIfFillHolePossible(Ref<BezierPatch> b1, Ref<BezierPatch> b2, Ref<BezierPatch> b3);
+        void RenderFillHoleInspector();
+        bool GetCommonPoint(Ref<BezierPatch> b1, Ref<BezierPatch> b2, Ref<Point>& commonPoint);
+        bool CheckIfCorner(Ref<BezierPatch> b, Ref<Point> commonPoint);
 
 
     private:
@@ -54,5 +59,6 @@ namespace CADMageddon
         std::vector<Ref<InterpolatedCurve>> m_InterPolatedCurve;
         std::vector<Ref<BezierPatch>> m_BezierPatch;
         std::vector<Ref<BSplinePatch>> m_BSplinePatch;
+        std::vector<Ref<GregoryPatch>> m_GregoryPatch;
     };
 }

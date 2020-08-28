@@ -40,6 +40,7 @@ namespace CADMageddon
         m_HierarchyPanel->SetOnInterpolatedSelectionChangedCallback(std::bind(&EditorLayer::OnSelectionInterpolatedChanged, this, std::placeholders::_1, std::placeholders::_2));
         m_HierarchyPanel->SetOnBezierPatchSelectionChanged(std::bind(&EditorLayer::OnSelectionChangedBezierPatch, this, std::placeholders::_1, std::placeholders::_2));
         m_HierarchyPanel->SetOnBSplinePatchSelectionChanged(std::bind(&EditorLayer::OnSelectionChangedBSplinePatch, this, std::placeholders::_1, std::placeholders::_2));
+        m_HierarchyPanel->SetOnGregoryPatchSelectionChanged(std::bind(&EditorLayer::OnSelectionChangedGregoryPatch, this, std::placeholders::_1, std::placeholders::_2));
         m_HierarchyPanel->SetOnSelectionClearedCallback(std::bind(&EditorLayer::OnSelectionCleared, this));
 
         m_InspectorPanel = CreateRef<InspectorPanel>(m_Scene, m_TransformationSystem);
@@ -49,6 +50,7 @@ namespace CADMageddon
         m_PickingSystem->SetOnSelectionCleared(std::bind(&EditorLayer::OnPickingSelectionCleared, this));
 
         m_Scene->SetOnPointMerged(std::bind(&EditorLayer::OnPointsMergedCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+        m_Scene->SetOnGregoryPatchDeleted(std::bind(&EditorLayer::OnGregoryDeletedCallback, this, std::placeholders::_1));
     }
 
     void EditorLayer::OnAttach()
@@ -202,6 +204,18 @@ namespace CADMageddon
         }
     }
 
+    void EditorLayer::OnSelectionChangedGregoryPatch(bool selected, Ref<GregoryPatch> gregoryPatch)
+    {
+        if (selected)
+        {
+            m_InspectorPanel->AddGregoryPatch(gregoryPatch);
+        }
+        else
+        {
+            m_InspectorPanel->RemoveGregoryPatch(gregoryPatch);
+        }
+    }
+
     void EditorLayer::OnPointsMergedCallback(Ref<Point> p1, Ref<Point> p2, Ref<Point> newPoint)
     {
         m_InspectorPanel->RemovePoint(p1);
@@ -209,6 +223,11 @@ namespace CADMageddon
 
         m_TransformationSystem->RemoveFromSelected(p1->GetTransform());
         m_TransformationSystem->RemoveFromSelected(p2->GetTransform());
+    }
+
+    void EditorLayer::OnGregoryDeletedCallback(Ref<GregoryPatch> gregory)
+    {
+        m_InspectorPanel->RemoveGregoryPatch(gregory);
     }
 
     void EditorLayer::OnPickingSelectionCleared()
