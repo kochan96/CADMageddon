@@ -143,6 +143,7 @@ namespace CADMageddon
     {
         auto gregory = GregoryPatch::Create(b1, b2, b3, commonPoints);
         m_GregoryPatch.push_back(gregory);
+
         return gregory;
     }
 
@@ -216,6 +217,11 @@ namespace CADMageddon
             RenderBSplinePatch(bSplinePatch);
         }
 
+        for (auto gregoryPatch : m_GregoryPatch)
+        {
+            RenderGregoryPatch(gregoryPatch);
+        }
+
         RenderControlPoints(m_FreePoints);
     }
 
@@ -233,6 +239,7 @@ namespace CADMageddon
         auto interpolatedCurves = m_InterpolatedCurve;
         auto bezierPatches = m_BezierPatch;
         auto bSplinePatches = m_BSplinePatch;
+        auto gregoryPatches = m_GregoryPatch;
 
         for (auto point : points)
         {
@@ -274,6 +281,12 @@ namespace CADMageddon
         {
             if (bSplinePatch->GetIsSelected())
                 DeleteBSplinePatch(bSplinePatch);
+        }
+
+        for (auto gregoryPatch : gregoryPatches)
+        {
+            if (gregoryPatch->GetIsSelected())
+                DeleteGregoryPatch(gregoryPatch);
         }
     }
 
@@ -583,6 +596,100 @@ namespace CADMageddon
         {
             RenderControlGrid(controlPoints, bSplinePatch->GetGridIndices());
         }
+    }
+
+    void Scene::RenderGregoryPatch(Ref<GregoryPatch> gregoryPatch)
+    {
+        auto color = gregoryPatch->GetIsSelected() ? m_SelectionColor : m_DefaultColor;
+        int uDivisionCount = gregoryPatch->GetUDivisionCount();
+        int vDivisionCount = gregoryPatch->GetVDivisionCount();
+
+        if (gregoryPatch->GetShowFirst())
+        {
+            auto fillingData = gregoryPatch->GetFillingData(Fill::B12);
+            RenderGregoryPatch(fillingData, uDivisionCount, vDivisionCount, color);
+        }
+        if (gregoryPatch->GetShowSecond())
+        {
+            auto fillingData = gregoryPatch->GetFillingData(Fill::B23);
+
+            RenderGregoryPatch(fillingData, uDivisionCount, vDivisionCount, color);
+        }
+        if (gregoryPatch->GetShowThird())
+        {
+            auto fillingData = gregoryPatch->GetFillingData(Fill::B31);
+            RenderGregoryPatch(fillingData, uDivisionCount, vDivisionCount, color);
+        }
+
+
+        //Renderer::RenderLine(points.e0_m, points.f0_m, blue);
+        //Renderer::RenderLine(points.e0_p, points.f0_p, blue);
+        //Renderer::RenderLine(points.e1_m, points.f1_m, blue);
+        //Renderer::RenderLine(points.e1_p, points.f1_p, blue);
+        //Renderer::RenderLine(points.e2_m, points.f2_m, blue);
+        //Renderer::RenderLine(points.e2_p, points.f2_p, blue);
+        //Renderer::RenderLine(points.e3_m, points.f3_m, blue);
+        //Renderer::RenderLine(points.e3_p, points.f3_p, blue);
+    }
+
+    void Scene::RenderGregoryPatch(FillingData fillingData, int uDivisionCount, int vDivisionCount, const glm::vec4& color)
+    {
+         Renderer::RenderGregoryPatch(
+             fillingData.gregoryPoints.p0,
+             fillingData.gregoryPoints.e0_m,
+             fillingData.gregoryPoints.e0_p,
+             fillingData.gregoryPoints.f0_m,
+             fillingData.gregoryPoints.f0_p,
+             fillingData.gregoryPoints.p1,
+             fillingData.gregoryPoints.e1_m,
+             fillingData.gregoryPoints.e1_p,
+             fillingData.gregoryPoints.f1_m,
+             fillingData.gregoryPoints.f1_p,
+             fillingData.gregoryPoints.p2,
+             fillingData.gregoryPoints.e2_m,
+             fillingData.gregoryPoints.e2_p,
+             fillingData.gregoryPoints.f2_m,
+             fillingData.gregoryPoints.f2_p,
+             fillingData.gregoryPoints.p3,
+             fillingData.gregoryPoints.e3_m,
+             fillingData.gregoryPoints.e3_p,
+             fillingData.gregoryPoints.f3_m,
+             fillingData.gregoryPoints.f3_p,
+             uDivisionCount,
+             vDivisionCount,
+             color);
+
+        //Renderer::RenderLine(fillingData.cFieldVectorsLeft.C0, fillingData.cFieldVectorsLeft.C0 + fillingData.gFieldVectorsLeft.g0, red);
+        //Renderer::RenderLine(fillingData.cFieldVectorsLeft.C05, fillingData.cFieldVectorsLeft.C05 + fillingData.gFieldVectorsLeft.g1, red);
+        //Renderer::RenderLine(fillingData.cFieldVectorsLeft.C1, fillingData.cFieldVectorsLeft.C1 + fillingData.gFieldVectorsLeft.g2, blue);
+
+        //Renderer::RenderLine(fillingData.gregoryPoints.e0_m, fillingData.gregoryPoints.f0_m, red);
+        //Renderer::RenderLine(fillingData.gregoryPoints.e0_p, fillingData.gregoryPoints.f0_p, blue);
+      // Renderer::RenderLine(fillingData.gregoryPoints.e1_m, fillingData.gregoryPoints.f1_m, red);
+      // Renderer::RenderLine(fillingData.gregoryPoints.e1_p, fillingData.gregoryPoints.f1_p, blue);
+        //Renderer::RenderLine(fillingData.gregoryPoints.e2_m, fillingData.gregoryPoints.f2_m, red);
+        //Renderer::RenderLine(fillingData.gregoryPoints.e2_p, fillingData.gregoryPoints.f2_p, blue);
+       // Renderer::RenderLine(fillingData.gregoryPoints.e3_m, fillingData.gregoryPoints.f3_m, red);
+       // Renderer::RenderLine(fillingData.gregoryPoints.e3_p, fillingData.gregoryPoints.f3_p, blue);
+
+        ///* Renderer::RenderLine(fillingData.boundaryCurvesPoints.Bottom, fillingData.boundaryCurvesPoints.Second, blue);
+        // Renderer::RenderLine(fillingData.boundaryCurvesPoints.Second, fillingData.boundaryCurvesPoints.Third, blue);
+        // Renderer::RenderLine(fillingData.boundaryCurvesPoints.Third, fillingData.boundaryCurvesPoints.Fourth, blue);*/
+
+        // Renderer::RenderLine(fillingData.boundaryCurvesPointsLeft.Bottom, fillingData.boundaryCurvesPointsLeft.Second, red);
+        // Renderer::RenderLine(fillingData.boundaryCurvesPointsLeft.Second, fillingData.boundaryCurvesPointsLeft.Third, red);
+        // Renderer::RenderLine(fillingData.boundaryCurvesPointsLeft.Third, fillingData.boundaryCurvesPointsLeft.Fourth, red);
+
+        // // Renderer::RenderLine(fillingData.boundaryCurvesPoints.Bottom, fillingData.boundaryCurvesPoints.Bottom + fillingData.gFieldVectors.b0, blue);
+        // // Renderer::RenderLine(fillingData.boundaryCurvesPoints.Bottom - fillingData.gFieldVectors.a0, fillingData.boundaryCurvesPoints.Bottom, red);
+        // // Renderer::RenderLine(fillingData.boundaryCurvesPoints.Fourth, fillingData.boundaryCurvesPoints.Fourth + fillingData.gFieldVectors.b3, blue);
+        // // Renderer::RenderLine(fillingData.boundaryCurvesPoints.Fourth - fillingData.gFieldVectors.a3, fillingData.boundaryCurvesPoints.Fourth, red);
+
+        //Renderer::RenderLine(fillingData.boundaryCurvesPointsLeft.Bottom, fillingData.boundaryCurvesPointsLeft.Bottom + fillingData.gFieldVectorsLeft.b0, blue);
+        //Renderer::RenderLine(fillingData.boundaryCurvesPointsLeft.Bottom - fillingData.gFieldVectorsLeft.a0, fillingData.boundaryCurvesPointsLeft.Bottom, red);
+        //Renderer::RenderLine(fillingData.boundaryCurvesPointsLeft.Fourth, fillingData.boundaryCurvesPointsLeft.Fourth + fillingData.gFieldVectorsLeft.b3, blue);
+        //Renderer::RenderLine(fillingData.boundaryCurvesPointsLeft.Fourth - fillingData.gFieldVectorsLeft.a3, fillingData.boundaryCurvesPointsLeft.Fourth, red);
+
     }
 
     void Scene::DeleteFreePoint(Ref<Point> point)

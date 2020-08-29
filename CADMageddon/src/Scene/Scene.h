@@ -61,7 +61,7 @@ namespace CADMageddon
 
         Ref<BezierPatch> CreateBezierPatchRect(std::string name, const PatchRectCreationParameters& parameters);
         Ref<BezierPatch> CreateBezierPatchCylinder(std::string name, const PatchCylinderCreationParameters& parameters);
-        Ref<GregoryPatch> CreateGregoryPatch(Ref<BezierPatch> b1, Ref<BezierPatch> b2, Ref<BezierPatch> b3,Ref<Point> commontPoinst[3]);
+        Ref<GregoryPatch> CreateGregoryPatch(Ref<BezierPatch> b1, Ref<BezierPatch> b2, Ref<BezierPatch> b3, Ref<Point> commontPoinst[3]);
 
         Ref<BSplinePatch> CreateBSplinePatchRect(std::string name, const PatchRectCreationParameters& parameters);
         Ref<BSplinePatch> CreateBSplinePatchCylinder(std::string name, const PatchCylinderCreationParameters& parameters);
@@ -99,6 +99,8 @@ namespace CADMageddon
         void RenderInterpolatedCurve(Ref<InterpolatedCurve> interPolatedCurve);
         void RenderBezierPatch(Ref<BezierPatch> bezierPatch);
         void RenderBSplinePatch(Ref<BSplinePatch> bSplinePatch);
+        void RenderGregoryPatch(Ref<GregoryPatch> gregoryPatch);
+        void RenderGregoryPatch(FillingData fillingData, int uDivisionCount, int vDivisionCount, const glm::vec4& color);
 
         bool AddNewPointToBezier(Ref<Point> point);
         bool AddNewPointToBSpline(Ref<Point> point);

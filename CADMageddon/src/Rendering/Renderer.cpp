@@ -38,6 +38,7 @@ namespace CADMageddon
     static RenderBezierPatchData s_RenderBezierPatchData;
     static RenderBSplinePatchData s_RenderBSplinePatchData;
     static RenderSelectionBoxData s_RenderSelectionBoxData;
+    static RenderGregoryPatchData s_RenderGregoryPatch;
 
     void Renderer::Init()
     {
@@ -60,6 +61,7 @@ namespace CADMageddon
         s_ShaderLibrary->Load("BezierPatchShader", "assets/shaders/BezierPatchShader.glsl");
         s_ShaderLibrary->Load("BSplinePatchShader", "assets/shaders/BSplinePatchShader.glsl");
         s_ShaderLibrary->Load("SelectionBoxShader", "assets/shaders/SelectionBoxShader.glsl");
+        s_ShaderLibrary->Load("GregoryPatchShader", "assets/shaders/GregoryPatchShader.glsl");
 
         InitTorusRenderData();
         InitPointRenderData();
@@ -67,6 +69,7 @@ namespace CADMageddon
         InitBezierCurveRenderData();
         InitBezierPatchRenderData();
         InitBSplinePatchRenderData();
+        InitGregoryPatchRenderData();
         InitSelectionBoxRenderData();
     }
 
@@ -188,6 +191,20 @@ namespace CADMageddon
         s_RenderSelectionBoxData.BoxVertexArray->SetIndexBuffer(s_RenderSelectionBoxData.BoxIndexBuffer);
 
         s_RenderSelectionBoxData.BoxShader = s_ShaderLibrary->Get("SelectionBoxShader");
+    }
+
+    void Renderer::InitGregoryPatchRenderData()
+    {
+        s_RenderGregoryPatch.GregoryVertexArray = CreateRef<OpenGLVertexArray>();
+
+        s_RenderGregoryPatch.GregoryVertexBuffer = CreateRef<OpenGLVertexBuffer>(s_RenderGregoryPatch.MaxPoints * sizeof(float));
+        s_RenderGregoryPatch.GregoryVertexBuffer->SetLayout({
+            { ShaderDataType::Float, "a_Position" },
+            });
+
+        s_RenderGregoryPatch.GregoryVertexArray->AddVertexBuffer(s_RenderGregoryPatch.GregoryVertexBuffer);
+
+        s_RenderGregoryPatch.GregoryShader = s_ShaderLibrary->Get("GregoryPatchShader");
     }
 
     void Renderer::ShutDown()
@@ -504,13 +521,13 @@ namespace CADMageddon
         s_RenderBezierPatchData.BezierPatchShader->Bind();
         s_RenderBezierPatchData.BezierPatchShader->SetMat4("u_ViewProjectionMatrix", s_SceneData->ViewProjectionMatrix);
         s_RenderBezierPatchData.BezierPatchShader->SetFloat4("u_Color", color);
-        s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_SubdivisionCount", uSubdivisionCount);
+        s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_SubdivisionCount", uSubdivisionCount - 1);
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glPatchParameteri(GL_PATCH_VERTICES, 16);
         glDrawArrays(GL_PATCHES, 0, 16);
 
-        s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_SubdivisionCount", vSubdivisionCount);
+        s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_SubdivisionCount", vSubdivisionCount - 1);
         glDrawArrays(GL_PATCHES, 16, 16);
 
         glm::vec3 pp0 = p3;
@@ -593,13 +610,13 @@ namespace CADMageddon
         s_RenderBSplinePatchData.BSplinePatchShader->Bind();
         s_RenderBSplinePatchData.BSplinePatchShader->SetMat4("u_ViewProjectionMatrix", s_SceneData->ViewProjectionMatrix);
         s_RenderBSplinePatchData.BSplinePatchShader->SetFloat4("u_Color", color);
-        s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_SubdivisionCount", uSubdivisionCount);
+        s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_SubdivisionCount", uSubdivisionCount - 1);
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glPatchParameteri(GL_PATCH_VERTICES, 16);
         glDrawArrays(GL_PATCHES, 0, 16);
 
-        s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_SubdivisionCount", vSubdivionCount);
+        s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_SubdivisionCount", vSubdivionCount - 1);
         glDrawArrays(GL_PATCHES, 16, 16);
 
         glm::vec4 basisV = SplineBasis(1.0f);
@@ -620,6 +637,110 @@ namespace CADMageddon
 
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+
+    void Renderer::RenderGregoryPatch(
+        const glm::vec3& p0,
+        const glm::vec3& e0_m,
+        const glm::vec3& e0_p,
+        const glm::vec3& f0_m,
+        const glm::vec3& f0_p,
+        const glm::vec3& p1,
+        const glm::vec3& e1_m,
+        const glm::vec3& e1_p,
+        const glm::vec3& f1_m,
+        const glm::vec3& f1_p,
+        const glm::vec3& p2,
+        const glm::vec3& e2_m,
+        const glm::vec3& e2_p,
+        const glm::vec3& f2_m,
+        const glm::vec3& f2_p,
+        const glm::vec3& p3,
+        const glm::vec3& e3_m,
+        const glm::vec3& e3_p,
+        const glm::vec3& f3_m,
+        const glm::vec3& f3_p,
+        int uSubdivisionCount,
+        int vSubdivisionCount,
+        const glm::vec4& color)
+    {
+        std::vector<float> uValues;
+        std::vector<float> vValues;
+
+        for (int i = 0; i < uSubdivisionCount; i++)
+            uValues.push_back(float(i) / float(uSubdivisionCount - 1));
+        for (int j = 0; j < vSubdivisionCount; j++)
+            vValues.push_back(float(j) / float(vSubdivisionCount - 1));
+
+        glm::vec3 controlPoints[20] =
+        {
+            p0,
+            e0_m,
+            e0_p,
+            f0_m,
+            f0_p,
+            p1,
+            e1_m,
+            e1_p,
+            f1_m,
+            f1_p,
+            p2,
+            e2_m,
+            e2_p,
+            f2_m,
+            f2_p,
+            p3,
+            e3_m,
+            e3_p,
+            f3_m,
+            f3_p
+        };
+
+        s_RenderGregoryPatch.GregoryVertexArray->Bind();
+        s_RenderGregoryPatch.GregoryVertexBuffer->SetData(uValues.data(), uValues.size() * sizeof(float));
+        s_RenderGregoryPatch.GregoryShader->Bind();
+        s_RenderGregoryPatch.GregoryShader->SetFloat4("u_Color", color);
+        s_RenderGregoryPatch.GregoryShader->SetMat4("u_ViewProjectionMatrix", s_SceneData->ViewProjectionMatrix);
+        s_RenderGregoryPatch.GregoryShader->SetBool("isForward", true);
+        s_RenderGregoryPatch.GregoryShader->SetFloat3Array("gregoryPoints", controlPoints, 20);
+
+        glDrawArrays(GL_POINTS, 0, uValues.size());
+
+        s_RenderGregoryPatch.GregoryShader->SetBool("isForward", false);
+        s_RenderGregoryPatch.GregoryVertexBuffer->SetData(vValues.data(), vValues.size() * sizeof(float));
+
+        glDrawArrays(GL_POINTS, 0, vValues.size());
+    }
+
+    void Renderer::RenderGregoryPatch(
+        glm::vec3* data,
+        int uSubDivisionCount, 
+        int vSubdivisionCount, 
+        const glm::vec4& color)
+    {
+        std::vector<float> uValues;
+        std::vector<float> vValues;
+
+        for (int i = 0; i < uSubDivisionCount; i++)
+            uValues.push_back(float(i) / float(uSubDivisionCount - 1));
+        for (int j = 0; j < vSubdivisionCount; j++)
+            vValues.push_back(float(j) / float(vSubdivisionCount - 1));
+        
+
+        s_RenderGregoryPatch.GregoryVertexArray->Bind();
+        s_RenderGregoryPatch.GregoryVertexBuffer->SetData(uValues.data(), uValues.size() * sizeof(float));
+        s_RenderGregoryPatch.GregoryShader->Bind();
+        s_RenderGregoryPatch.GregoryShader->SetFloat4("u_Color", color);
+        s_RenderGregoryPatch.GregoryShader->SetMat4("u_ViewProjectionMatrix", s_SceneData->ViewProjectionMatrix);
+        s_RenderGregoryPatch.GregoryShader->SetBool("isForward", true);
+        s_RenderGregoryPatch.GregoryShader->SetFloat3Array("gregoryPoints", &data[0], 20);
+
+        glDrawArrays(GL_POINTS, 0, uValues.size());
+
+        s_RenderGregoryPatch.GregoryShader->SetBool("isForward", false);
+        s_RenderGregoryPatch.GregoryVertexBuffer->SetData(vValues.data(), vValues.size() * sizeof(float));
+
+        glDrawArrays(GL_POINTS, 0, vValues.size());
     }
 
     void Renderer::RenderBSpline(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, const glm::vec4& color)

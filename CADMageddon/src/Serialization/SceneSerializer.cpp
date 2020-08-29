@@ -297,8 +297,8 @@ namespace CADMageddon
         bool isCylinder = bezierPatchElement->Attribute("WrapDirection") != std::string("None");
         bool isRowWrapDirection = bezierPatchElement->Attribute("WrapDirection") == std::string("Row");
         bool showPolygon = bezierPatchElement->BoolAttribute("ShowControlPolygon");
-        int uDivisionCount = bezierPatchElement->IntAttribute("RowSlices") + 1;
-        int vDivisionCount = bezierPatchElement->IntAttribute("ColumnSlices") + 1;
+        int uDivisionCount = bezierPatchElement->IntAttribute("RowSlices");
+        int vDivisionCount = bezierPatchElement->IntAttribute("ColumnSlices");
 
         std::vector<Ref<Point>> controlPoints;
 
@@ -347,8 +347,8 @@ namespace CADMageddon
         bool isCylinder = bSplinePatchElement->Attribute("WrapDirection") != std::string("None");
         bool isRowWrapDirection = bSplinePatchElement->Attribute("WrapDirection") == std::string("Row");
         bool showPolygon = bSplinePatchElement->BoolAttribute("ShowControlPolygon");
-        int uDivisionCount = bSplinePatchElement->IntAttribute("RowSlices") + 1;
-        int vDivisionCount = bSplinePatchElement->IntAttribute("ColumnSlices") + 1;
+        int uDivisionCount = bSplinePatchElement->IntAttribute("RowSlices");
+        int vDivisionCount = bSplinePatchElement->IntAttribute("ColumnSlices");
 
         std::vector<Ref<Point>> controlPoints;
         auto pointRefsElement = bSplinePatchElement->FirstChildElement();

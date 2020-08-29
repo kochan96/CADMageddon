@@ -111,10 +111,10 @@ namespace CADMageddon {
 
         GLuint program = glCreateProgram();
         auto size = shaderSources.size();
-        
+
         std::vector<GLenum> glShaderIDs(size);
         int glShaderIDIndex = 0;
-        
+
         for (auto& kv : shaderSources)
         {
             GLenum type = kv.first;
@@ -213,6 +213,11 @@ namespace CADMageddon {
         UploadUniformFloat3(name, value);
     }
 
+    void OpenGLShader::SetFloat3Array(const std::string& name, glm::vec3* values, uint32_t count)
+    {
+        UploadUniformFloat3Array(name, values, count);
+    }
+
     void OpenGLShader::SetFloat4(const std::string& name, const glm::vec4& value)
     {
         UploadUniformFloat4(name, value);
@@ -221,6 +226,11 @@ namespace CADMageddon {
     void OpenGLShader::SetMat4(const std::string& name, const glm::mat4& value)
     {
         UploadUniformMat4(name, value);
+    }
+
+    void OpenGLShader::SetBool(const std::string& name, bool value)
+    {
+        SetInt(name, value ? 1 : 0);
     }
 
     void OpenGLShader::UploadUniformInt(const std::string& name, int value)
@@ -269,6 +279,12 @@ namespace CADMageddon {
     {
         GLint location = glGetUniformLocation(m_RendererID, name.c_str());
         glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+    }
+
+    void OpenGLShader::UploadUniformFloat3Array(const std::string& name, glm::vec3* values, uint32_t count)
+    {
+        GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+        glUniform3fv(location, count, &values[0].x);
     }
 
     Ref<OpenGLShader> ShaderLibrary::Load(const std::string& name, const std::string& filepath)

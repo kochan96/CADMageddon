@@ -88,4 +88,12 @@ namespace CADMageddon
         Ref<OpenGLIndexBuffer> BoxIndexBuffer;
         Ref<OpenGLShader> BoxShader;
     };
+
+    struct RenderGregoryPatchData
+    {
+        static const int MaxPoints = 200;
+        Ref<OpenGLVertexArray> GregoryVertexArray;
+        Ref<OpenGLVertexBuffer> GregoryVertexBuffer;
+        Ref<OpenGLShader> GregoryShader;
+    };
 }

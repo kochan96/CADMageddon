@@ -32,7 +32,7 @@ namespace CADMageddon
         static void RenderLine(const glm::vec3& start, const glm::vec3& end, const glm::vec4& color = DEFAULT_COLOR);
 
         static void RenderScreenQuad(const glm::vec2& bottomLeft, const glm::vec2& topRight, const glm::vec4& color = DEFAULT_COLOR);
-        static void RenderScreenQuadBorder(const glm::vec2& bottomLeft, const glm::vec2& topRight,const glm::vec4& color = DEFAULT_COLOR);
+        static void RenderScreenQuadBorder(const glm::vec2& bottomLeft, const glm::vec2& topRight, const glm::vec4& color = DEFAULT_COLOR);
 
         static void RenderBezierC0(
             const glm::vec3& p0,
@@ -113,6 +113,39 @@ namespace CADMageddon
             const glm::vec4& color = DEFAULT_COLOR
         );
 
+        static void RenderGregoryPatch(
+            const glm::vec3& p0,
+            const glm::vec3& e0_m,
+            const glm::vec3& e0_p,
+            const glm::vec3& f0_m,
+            const glm::vec3& f0_p,
+            const glm::vec3& p1,
+            const glm::vec3& e1_m,
+            const glm::vec3& e1_p,
+            const glm::vec3& f1_m,
+            const glm::vec3& f1_p,
+            const glm::vec3& p2,
+            const glm::vec3& e2_m,
+            const glm::vec3& e2_p,
+            const glm::vec3& f2_m,
+            const glm::vec3& f2_p,
+            const glm::vec3& p3,
+            const glm::vec3& e3_m,
+            const glm::vec3& e3_p,
+            const glm::vec3& f3_m,
+            const glm::vec3& f3_p,
+            int uSubdivisionCount,
+            int vSubdivisionCount,
+            const glm::vec4& color = DEFAULT_COLOR
+        );
+
+        static void RenderGregoryPatch(
+            glm::vec3* data,
+            int uSubDivisionCount,
+            int vSubdivisionCount,
+            const glm::vec4& color = DEFAULT_COLOR);
+
+
         static void RenderBSpline(
             const glm::vec3& p0,
             const glm::vec3& p1,
@@ -128,6 +161,7 @@ namespace CADMageddon
         static void InitBezierPatchRenderData();
         static void InitBSplinePatchRenderData();
         static void InitSelectionBoxRenderData();
+        static void InitGregoryPatchRenderData();
 
         static void FlushAndResetPoints();
         static void FlushAndResetLines();
