@@ -6,3 +6,4 @@
 #include "InterpolatedCurveEditor.h"
 #include "BezierPatchEditor.h"
 #include "BSplinePatchEditor.h"
+#include "GregoryEditor.h"

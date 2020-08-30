@@ -285,11 +285,14 @@ namespace CADMageddon
         {
             BezierPatchEditor(m_BezierPatch[0]);
         }
-        else if (m_BSplinePatch.size())
+        else if (m_BSplinePatch.size() == 1)
         {
             BSplinePatchEditor(m_BSplinePatch[0]);
         }
-        //TODO gregory inspector
+        else if (m_GregoryPatch.size() == 1)
+        {
+            GregoryEditor(m_GregoryPatch[0]);
+        }
 
 
         ImGui::End();

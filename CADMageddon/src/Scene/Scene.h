@@ -100,7 +100,8 @@ namespace CADMageddon
         void RenderBezierPatch(Ref<BezierPatch> bezierPatch);
         void RenderBSplinePatch(Ref<BSplinePatch> bSplinePatch);
         void RenderGregoryPatch(Ref<GregoryPatch> gregoryPatch);
-        void RenderGregoryPatch(FillingData fillingData, int uDivisionCount, int vDivisionCount, const glm::vec4& color);
+        void RenderGregoryPatch(FillingData fillingData, int uDivisionCount, int vDivisionCount, bool showMesh, const glm::vec4& color);
+        void RenderGregoryPatchMesh(FillingData fillingData, const glm::vec4& color);
 
         bool AddNewPointToBezier(Ref<Point> point);
         bool AddNewPointToBSpline(Ref<Point> point);

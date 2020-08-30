@@ -143,7 +143,7 @@ namespace CADMageddon
         bool GetShowThird() const { return m_ShowThird; }
         void SetShowThird(bool showThird) { m_ShowThird = showThird; }
         bool GetShowThirdMesh() const { return m_ShowThirdMesh; }
-        void SetShowThirdMesh(bool showThird) { m_ShowFirstMesh = showThird; }
+        void SetShowThirdMesh(bool showThird) { m_ShowThirdMesh = showThird; }
 
 
     private:
@@ -176,9 +176,9 @@ namespace CADMageddon
         bool m_ShowSecond = true;
         bool m_ShowThird = true;
 
-        bool m_ShowFirstMesh = true;
-        bool m_ShowSecondMesh = true;
-        bool m_ShowThirdMesh = true;
+        bool m_ShowFirstMesh = false;
+        bool m_ShowSecondMesh = false;
+        bool m_ShowThirdMesh = false;
 
         Border m_Border[3];
 

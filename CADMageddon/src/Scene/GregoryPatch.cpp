@@ -387,60 +387,6 @@ namespace CADMageddon
                 break;
         }
 
-        GregoryCorner points[4];
-
-        auto curveIn = GetSecondHalfBezier(
-            std::vector<glm::vec3>(b1Border.begin(), b1Border.begin() + 4));
-        std::reverse(curveIn.begin(), curveIn.end());
-        auto curveOut = GetSecondHalfBezier(
-            std::vector<glm::vec3>(b1Border.begin() + 4, b1Border.begin() + 8));
-        std::reverse(curveOut.begin(), curveOut.end());
-
-        for (int i = 0; i < 4; i++)
-            curveOut[i] = 2.0f * curveIn[i] - curveOut[i];
-        points[0].p = curveIn[0];
-        points[0].e[1] = curveIn[1];
-        points[1].e[0] = curveIn[2];
-        points[1].p = curveIn[3];
-        points[0].f[1] = curveOut[1];
-        points[1].f[0] = points[1].f[1] = curveOut[2];
-        points[1].e[1] = curveOut[3];
-
-        curveIn = GetSecondHalfBezier(
-            std::vector<glm::vec3>(b2Border.begin(), b2Border.begin() + 4));
-        curveOut = GetSecondHalfBezier(
-            std::vector<glm::vec3>(b2Border.begin() + 4, b2Border.begin() + 8));
-        for (int i = 0; i < 4; i++)
-            curveOut[i] = 2.0f * curveIn[i] - curveOut[i];
-        points[0].e[0] = curveIn[1];
-        points[3].e[1] = curveIn[2];
-        points[3].p = curveIn[3];
-        points[0].f[0] = curveOut[1];
-        points[3].f[0] = points[3].f[1] = curveOut[2];
-        points[3].e[0] = curveOut[3];
-
-        curveIn = GetSecondHalfBezier(
-            std::vector<glm::vec3>(b3Border.begin(), b3Border.begin() + 4));
-        curveOut = GetSecondHalfBezier(
-            std::vector<glm::vec3>(b3Border.begin() + 4, b3Border.begin() + 8));
-        curveOut[3] = 2.0f * curveIn[3] - curveOut[3];
-        curveOut[3] = (3.0f * curveOut[3] - curveIn[3]) / 2.f;
-        points[2].e[0] = (3.f * points[1].e[1] - points[1].p) / 2.f;
-        points[2].e[1] = (3.f * points[3].e[0] - points[3].p) / 2.f;
-        points[2].p = (curveOut[3] + points[2].e[0] + points[2].e[1]) / 3.f;
-        points[2].e[0] = (2.f * points[2].e[0] + points[2].p) / 3.f;
-        points[2].e[1] = (2.f * points[2].e[1] + points[2].p) / 3.f;
-        curveOut[3] = (2.f * curveOut[3] + points[2].p) / 3.f;
-        glm::vec3 g[3];
-        g[0] = (points[2].e[0] - curveOut[3]) / 2.f;
-        g[2] = points[3].e[1] - points[3].p;
-        g[1] = (g[0] + g[2]) / 2.f;
-        points[2].f[1] = 1.f / 9.f * g[2] + 4.f / 9.f * (g[0] + g[1]) + points[2].e[1];
-
-        g[0] = (points[2].e[1] - curveOut[3]) / 2.f;
-        g[2] = points[1].e[0] - points[1].p;
-        g[1] = (g[0] + g[2]) / 2.f;
-        points[2].f[0] = 1.f / 9.f * g[2] + 4.f / 9.f * (g[0] + g[1]) + points[2].e[0];
 
         return GetFillingData(border, borderLeft, boundaryCurve, boundaryCurveLeft, boundaryCurveRight, showMesh);
     }
