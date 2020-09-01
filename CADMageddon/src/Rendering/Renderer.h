@@ -145,13 +145,13 @@ namespace CADMageddon
             int vSubdivisionCount,
             const glm::vec4& color = DEFAULT_COLOR);
 
-
         static void RenderBSpline(
             const glm::vec3& p0,
             const glm::vec3& p1,
             const glm::vec3& p2,
             const glm::vec3& p3,
-            const glm::vec4& color = DEFAULT_COLOR);
+            const glm::vec4& color = DEFAULT_COLOR,
+            bool snapToEnd = false);
 
     private:
         static void InitTorusRenderData();

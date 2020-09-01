@@ -1,5 +1,7 @@
 #include "InspectorPanel.h"
 #include "CADApplication\ImGuiEditors\ImGuiEditors.h"
+#include "Scene/IntersectionHelper.h"
+#include "misc\cpp\imgui_stdlib.h"
 
 namespace CADMageddon
 {
@@ -20,7 +22,7 @@ namespace CADMageddon
     void InspectorPanel::AddTorus(Ref<Torus> torus)
     {
         m_Torus.push_back(torus);
-
+        m_Surfaces.push_back(torus);
     }
 
     void InspectorPanel::RemoveTorus(Ref<Torus> torus)
@@ -29,6 +31,8 @@ namespace CADMageddon
         if (it != m_Torus.end())
         {
             m_Torus.erase(it);
+            auto it2 = std::find(m_Surfaces.begin(), m_Surfaces.end(), torus);
+            m_Surfaces.erase(it2);
         }
     }
 
@@ -71,25 +75,35 @@ namespace CADMageddon
     void InspectorPanel::AddBezierPatch(Ref<BezierPatch> bezierPatch)
     {
         m_BezierPatch.push_back(bezierPatch);
+        m_Surfaces.push_back(bezierPatch);
     }
 
     void InspectorPanel::RemoveBezierPatch(Ref<BezierPatch> bezierPatch)
     {
         auto it = std::find(m_BezierPatch.begin(), m_BezierPatch.end(), bezierPatch);
         if (it != m_BezierPatch.end())
+        {
             m_BezierPatch.erase(it);
+            auto it2 = std::find(m_Surfaces.begin(), m_Surfaces.end(), bezierPatch);
+            m_Surfaces.erase(it2);
+        }
     }
 
     void InspectorPanel::AddBSplinePatch(Ref<BSplinePatch> bSplinePatch)
     {
         m_BSplinePatch.push_back(bSplinePatch);
+        m_Surfaces.push_back(bSplinePatch);
     }
 
     void InspectorPanel::RemoveBSplinePatch(Ref<BSplinePatch> bSplinePatch)
     {
         auto it = std::find(m_BSplinePatch.begin(), m_BSplinePatch.end(), bSplinePatch);
         if (it != m_BSplinePatch.end())
+        {
             m_BSplinePatch.erase(it);
+            auto it2 = std::find(m_Surfaces.begin(), m_Surfaces.end(), bSplinePatch);
+            m_Surfaces.erase(it2);
+        }
     }
 
     void InspectorPanel::AddGregoryPatch(Ref<GregoryPatch> gregoryPatch)
@@ -104,9 +118,28 @@ namespace CADMageddon
             m_GregoryPatch.erase(it);
     }
 
+    void InspectorPanel::AddIntersectionCurve(Ref<IntersectionCurve> intersectionCurve)
+    {
+        m_IntersectionCurves.push_back(intersectionCurve);
+    }
+
+    void InspectorPanel::RemoveIntersectionCurve(Ref<IntersectionCurve> intersectionCurve)
+    {
+        auto it = std::find(m_IntersectionCurves.begin(), m_IntersectionCurves.end(), intersectionCurve);
+        if (it != m_IntersectionCurves.end())
+            m_IntersectionCurves.erase(it);
+    }
+
     void InspectorPanel::ClearPointsAndToruses()
     {
         m_Points.clear();
+
+        for (auto torus : m_Torus)
+        {
+            auto it = std::find(m_Surfaces.begin(), m_Surfaces.end(), torus);
+            m_Surfaces.erase(it);
+        }
+
         m_Torus.clear();
     }
 
@@ -120,6 +153,13 @@ namespace CADMageddon
         m_BezierPatch.clear();
         m_BSplinePatch.clear();
         m_GregoryPatch.clear();
+        m_Surfaces.clear();
+        m_IntersectionCurves.clear();
+    }
+
+    void InspectorPanel::RenderIntersectionPlot(Ref<IntersectionCurve> intersectionCurve)
+    {
+
     }
 
     void InspectorPanel::RenderMultiSelectInspector()
@@ -188,6 +228,52 @@ namespace CADMageddon
         }
     }
 
+    void InspectorPanel::RenderFindIntersectionInspector()
+    {
+        Ref<SurfaceUV> s1;
+        Ref<SurfaceUV> s2;
+        GetIntersectionSurfaces(s1, s2);
+        if (!s1 || !s2)
+            return;
+
+        ImGui::BeginGroup();
+
+        ImGui::Text("Find Intersection");
+        ImGui::Checkbox("BeginFromCursor", &m_BeginFromCursor);
+        ImGui::DragFloat("Step length", &m_StepLength, 0.001f, 0.001f, 1.0f);
+        if (ImGui::Button("Calculate Intersection"))
+        {
+            bool isClosed = false;
+            auto points = IntersectionHelper::GetIntersectionPoints(s1, s2, m_StepLength, isClosed);
+            if (points.empty())
+            {
+                m_IntersectionNotFound = true;
+            }
+            else
+            {
+                m_IntersectionNotFound = false;
+                m_Scene->CreateIntersectionCurve("Intersected", s1, s2, points, isClosed);
+            }
+        }
+
+
+        ImGui::EndGroup();
+    }
+
+    void InspectorPanel::GetIntersectionSurfaces(Ref<SurfaceUV>& s1, Ref<SurfaceUV>& s2)
+    {
+        if (m_Surfaces.size() == 1)
+        {
+            s1 = m_Surfaces[0];
+            s2 = m_Surfaces[0];
+        }
+        else if (m_Surfaces.size() == 2)
+        {
+            s1 = m_Surfaces[0];
+            s2 = m_Surfaces[1];
+        }
+    }
+
     bool InspectorPanel::GetCommonPoint(Ref<BezierPatch> b1, Ref<BezierPatch> b2, Ref<Point>& commonPoint)
     {
         auto b1ControlPoints = b1->GetControlPoints();
@@ -234,6 +320,21 @@ namespace CADMageddon
 
     void InspectorPanel::Render()
     {
+        if (m_IntersectionNotFound)
+        {
+            ImGui::OpenPopup("Intersection not found");
+        }
+
+        if (ImGui::BeginPopupModal("Intersection not found", &m_IntersectionNotFound))
+        {
+            ImGui::Text("Intersection has not been found");
+            if (ImGui::Button("Ok"))
+            {
+                m_IntersectionNotFound = false;
+            }
+            ImGui::EndPopup();
+        }
+
         ImGui::Begin("Inspector");
 
         unsigned int size =
@@ -244,7 +345,8 @@ namespace CADMageddon
             m_InterPolatedCurve.size() +
             m_BezierPatch.size() +
             m_BSplinePatch.size()
-            + m_GregoryPatch.size();
+            + m_GregoryPatch.size()
+            + m_IntersectionCurves.size();
 
         ImGui::Text("Selected %d items", size);
 
@@ -257,6 +359,7 @@ namespace CADMageddon
         if (size > 1)
         {
             RenderMultiSelectInspector();
+            RenderFindIntersectionInspector();
             ImGui::End();
             return;
         }
@@ -268,6 +371,7 @@ namespace CADMageddon
         else if (m_Torus.size() == 1)
         {
             TorusEditor(m_Torus[0]);
+            RenderFindIntersectionInspector();
         }
         else if (m_Bezier.size() == 1)
         {
@@ -284,16 +388,41 @@ namespace CADMageddon
         else if (m_BezierPatch.size() == 1)
         {
             BezierPatchEditor(m_BezierPatch[0]);
+            RenderFindIntersectionInspector();
         }
         else if (m_BSplinePatch.size() == 1)
         {
             BSplinePatchEditor(m_BSplinePatch[0]);
+            RenderFindIntersectionInspector();
         }
         else if (m_GregoryPatch.size() == 1)
         {
             GregoryEditor(m_GregoryPatch[0]);
         }
+        else if (m_IntersectionCurves.size() == 1)
+        {
+            auto name = m_IntersectionCurves[0]->GetName();
+            if (ImGui::InputText("Name", &name))
+            {
+                m_IntersectionCurves[0]->SetName(name);
+            }
 
+            ImGui::BeginGroup();
+            if (ImGui::Button("Convert to interpolated"))
+            {
+                static int count = 0;
+                auto interpolated = m_IntersectionCurves[0]->ConvertToInterpolated("IntersectionInterpolated_" + std::to_string(count++));
+                m_Scene->CreateInterpolated(interpolated);
+            }
+
+            if (ImGui::Button("Show Plot"))
+            {
+                RenderIntersectionPlot(m_IntersectionCurves[0]);
+            }
+
+
+            ImGui::EndGroup();
+        }
 
         ImGui::End();
     }

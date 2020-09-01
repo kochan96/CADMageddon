@@ -1,5 +1,6 @@
 #pragma once
 #include "Scene\BezierC0.h"
+#include "BaseObjectEditor.h"
 #include "Core\Base.h"
 #include "imgui.h"
 #include "misc\cpp\imgui_stdlib.h"
@@ -30,5 +31,7 @@ namespace CADMageddon
         
 
         ImGui::EndGroup();
+
+        BaseObjectEditor(bezier);
     }
 }

@@ -30,7 +30,7 @@ namespace CADMageddon
 
     struct RenderPointData
     {
-        static const int MaxPoints = 20000;
+        static const int MaxPoints = 50000;
         Ref <OpenGLVertexArray> PointsVertexArray;
         Ref<OpenGLVertexBuffer> PointsVertexBuffer;
         Ref<OpenGLShader> Shader;
@@ -43,7 +43,7 @@ namespace CADMageddon
 
     struct RenderLineData
     {
-        static const int MaxLines = 20000;
+        static const int MaxLines = 50000;
         Ref <OpenGLVertexArray> LinesVertexArray;
         Ref<OpenGLVertexBuffer> LinesVertexBuffer;
         Ref<OpenGLShader> Shader;

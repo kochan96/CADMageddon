@@ -8,6 +8,7 @@
 #include "BezierPatch.h"
 #include "BSplinePatch.h"
 #include "GregoryPatch.h"
+#include "IntersectionCurve.h"
 
 namespace CADMageddon
 {
@@ -58,6 +59,7 @@ namespace CADMageddon
         Ref<BezierC0> CreateBezierC0(std::string name);
         Ref<BSpline> CreateBSpline(std::string name);
         Ref<InterpolatedCurve> CreateInterpolated(std::string name);
+        Ref<InterpolatedCurve> CreateInterpolated(Ref<InterpolatedCurve> curve);
 
         Ref<BezierPatch> CreateBezierPatchRect(std::string name, const PatchRectCreationParameters& parameters);
         Ref<BezierPatch> CreateBezierPatchCylinder(std::string name, const PatchCylinderCreationParameters& parameters);
@@ -65,6 +67,8 @@ namespace CADMageddon
 
         Ref<BSplinePatch> CreateBSplinePatchRect(std::string name, const PatchRectCreationParameters& parameters);
         Ref<BSplinePatch> CreateBSplinePatchCylinder(std::string name, const PatchCylinderCreationParameters& parameters);
+
+        Ref<IntersectionCurve> CreateIntersectionCurve(std::string name, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2, std::vector<IntersectionPoint> points, bool isClosed);
 
         std::vector<Ref<Point>> GetFreePoints() const { return m_FreePoints; }
         std::vector<Ref<Point>> GetPoints() const { return m_Points; }
@@ -75,6 +79,7 @@ namespace CADMageddon
         std::vector<Ref<BezierPatch>> GetBezierPatch() const { return m_BezierPatch; }
         std::vector<Ref<BSplinePatch>> GetBSplinePatch() const { return m_BSplinePatch; }
         std::vector<Ref<GregoryPatch>> GetGregoryPatch() const { return m_GregoryPatch; }
+        std::vector<Ref<IntersectionCurve>>  GetIntersectionCurve() const { return m_IntersectionCurve; }
 
         void SetOnPointMerged(std::function<void(Ref<Point> p1, Ref<Point> p2, Ref<Point> p3)> onPointMergedCallback)
         {
@@ -102,6 +107,7 @@ namespace CADMageddon
         void RenderGregoryPatch(Ref<GregoryPatch> gregoryPatch);
         void RenderGregoryPatch(FillingData fillingData, int uDivisionCount, int vDivisionCount, bool showMesh, const glm::vec4& color);
         void RenderGregoryPatchMesh(FillingData fillingData, const glm::vec4& color);
+        void RenderIntersectionCurve(Ref<IntersectionCurve> curve);
 
         bool AddNewPointToBezier(Ref<Point> point);
         bool AddNewPointToBSpline(Ref<Point> point);
@@ -116,6 +122,7 @@ namespace CADMageddon
         void DeleteBezierPatch(Ref<BezierPatch> bezierPatch);
         void DeleteGregoryPatch(Ref<GregoryPatch> gregoryPatch);
         void DeleteBSplinePatch(Ref<BSplinePatch> bSplinePatch);
+        void DeleteIntersectionCurve(Ref<IntersectionCurve> curve);
 
     private:
         std::unordered_set<Ref<BaseObject>> m_BaseObjects;
@@ -130,6 +137,7 @@ namespace CADMageddon
         std::vector<Ref<BezierPatch>> m_BezierPatch;
         std::vector<Ref<GregoryPatch>> m_GregoryPatch;
         std::vector<Ref<BSplinePatch>> m_BSplinePatch;
+        std::vector<Ref<IntersectionCurve>> m_IntersectionCurve;
 
 
         glm::vec4 m_SelectionColor;

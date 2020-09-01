@@ -68,10 +68,10 @@ vec4 SplineBasis(float t)
 vec3 CubicSplineSum(vec4 bezpatch[16], vec4 basisU, vec4 basisV)
 {
     vec3 sum = vec3(0.0f, 0.0f, 0.0f);
-    sum  = basisV.x * (basisU.x*bezpatch[0].xyz  + basisU.y*bezpatch[1].xyz  + basisU.z*bezpatch[2].xyz  + basisU.w*bezpatch[3].xyz);
-    sum += basisV.y * (basisU.x*bezpatch[4].xyz  + basisU.y*bezpatch[5].xyz  + basisU.z*bezpatch[6].xyz  + basisU.w*bezpatch[7].xyz);
-    sum += basisV.z * (basisU.x*bezpatch[8].xyz  + basisU.y*bezpatch[9].xyz  + basisU.z*bezpatch[10].xyz + basisU.w*bezpatch[11].xyz);
-    sum += basisV.w * (basisU.x*bezpatch[12].xyz + basisU.y*bezpatch[13].xyz + basisU.z*bezpatch[14].xyz + basisU.w*bezpatch[15].xyz);
+    sum  = basisU.x * (basisV.x*bezpatch[0].xyz  + basisV.y*bezpatch[4].xyz  + basisV.z*bezpatch[8].xyz  + basisV.w*bezpatch[12].xyz);
+    sum += basisU.y * (basisV.x*bezpatch[1].xyz  + basisV.y*bezpatch[5].xyz  + basisV.z*bezpatch[9].xyz  + basisV.w*bezpatch[13].xyz);
+    sum += basisU.z * (basisV.x*bezpatch[2].xyz  + basisV.y*bezpatch[6].xyz  + basisV.z*bezpatch[10].xyz + basisV.w*bezpatch[14].xyz);
+    sum += basisU.w * (basisV.x*bezpatch[3].xyz + basisV.y*bezpatch[7].xyz + basisV.z*bezpatch[11].xyz + basisV.w*bezpatch[15].xyz);
 
     return sum;
 }

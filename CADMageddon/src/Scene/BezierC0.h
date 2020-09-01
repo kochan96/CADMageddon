@@ -17,6 +17,7 @@ namespace CADMageddon
         bool GetShowPoints() const { return m_ShowPoints; }
         void SetShowPoints(bool setShowPoints);
 
+
     private:
         bool m_ShowPoints = true;
         bool m_ShowPolygon = false;

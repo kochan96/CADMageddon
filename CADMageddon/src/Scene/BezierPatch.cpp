@@ -54,6 +54,8 @@ namespace CADMageddon
         return bezierPatch;
     }
 
+
+
     void BezierPatch::GenerateRectControlPoints(glm::vec3 startPosition, int PatchCountx, int PatchCounty, float width, float height)
     {
         int verticesCountX = PatchCountx * 3 + 1;
@@ -194,5 +196,196 @@ namespace CADMageddon
                 }
             }
         }
+    }
+
+    std::vector<uint32_t> BezierPatch::GetPatchIndices(float u, float v)
+    {
+        const int verticesCountX = m_IsCylinder ? m_PatchCountX * 3 : m_PatchCountX * 3 + 1;
+        unsigned int startRow = std::min(int(v), m_PatchCountY - 1) * 3 * verticesCountX;
+        unsigned int startColumn = std::min(int(u), m_PatchCountX - 1) * 3;
+        std::vector<uint32_t> indices;
+
+        int start = startRow + startColumn;
+        for (int i = 0; i < 4; i++)
+        {
+            for (int j = 0; j < 4; j++)
+            {
+                int index = startRow + i * verticesCountX + (j + startColumn) % verticesCountX;
+                indices.push_back(index);
+            }
+        }
+        return indices;
+    }
+
+    glm::vec4 BezierPatch::BernsteinBasis(float t)
+    {
+        float invT = 1.0f - t;
+
+        return glm::vec4(
+            invT * invT * invT,
+            3.0f * t * invT * invT,
+            3.0f * t * t * invT,
+            t * t * t);
+    }
+
+    glm::vec4 BezierPatch::dBernsteinBasis(float t)
+    {
+        float invT = 1.0f - t;
+
+        return glm::vec4(
+            -3 * invT * invT,
+            3 * invT * invT - 6 * t * invT,
+            6 * t * invT - 3.0f * t * t,
+            3 * t * t);
+    }
+
+    glm::vec3 BezierPatch::GetPointAt(float u, float v)
+    {
+        u = std::clamp(u, 0.0f, 1.0f);
+        v = m_IsCylinder ? v - std::floorf(v) : glm::clamp(v, 0.0f, 1.0f);
+
+        u = u * m_PatchCountX;
+        v = v * m_PatchCountY;
+        auto patchIndices = GetPatchIndices(u, v);
+
+        u -= std::min(int(u), m_PatchCountX - 1);
+        v -= std::min(int(v), m_PatchCountY - 1);
+
+        glm::vec3 point;
+
+        auto basisU = BernsteinBasis(u);
+        auto basisV = BernsteinBasis(v);
+
+        std::vector<glm::vec3> controlPointsPosition;
+        controlPointsPosition.reserve(m_ControlPoints.size());
+        std::transform(m_ControlPoints.begin(), m_ControlPoints.end(), std::back_inserter(controlPointsPosition), [](Ref<Point> p) {return p->GetPosition(); });
+
+        point = basisU.x * (basisV.x * controlPointsPosition[patchIndices[0]]
+            + basisV.y * controlPointsPosition[patchIndices[4]]
+            + basisV.z * controlPointsPosition[patchIndices[8]]
+            + basisV.w * controlPointsPosition[patchIndices[12]]);
+
+        point += basisU.y * (basisV.x * controlPointsPosition[patchIndices[1]]
+            + basisV.y * controlPointsPosition[patchIndices[5]]
+            + basisV.z * controlPointsPosition[patchIndices[9]]
+            + basisV.w * controlPointsPosition[patchIndices[13]]);
+
+        point += basisU.z * (basisV.x * controlPointsPosition[patchIndices[2]]
+            + basisV.y * controlPointsPosition[patchIndices[6]]
+            + basisV.z * controlPointsPosition[patchIndices[10]]
+            + basisV.w * controlPointsPosition[patchIndices[14]]);
+
+        point += basisU.w * (basisV.x * controlPointsPosition[patchIndices[3]]
+            + basisV.y * controlPointsPosition[patchIndices[7]]
+            + basisV.z * controlPointsPosition[patchIndices[11]]
+            + basisV.w * controlPointsPosition[patchIndices[15]]);
+
+        return point;
+    }
+
+    glm::vec3 BezierPatch::GetTangentUAt(float u, float v)
+    {
+        u = std::clamp(u, 0.0f, 1.0f);
+        v = m_IsCylinder ? v - std::floorf(v) : glm::clamp(v, 0.0f, 1.0f);
+
+        u = u * m_PatchCountX;
+        v = v * m_PatchCountY;
+        auto patchIndices = GetPatchIndices(u, v);
+
+        u -= std::min(int(u), m_PatchCountX - 1);
+        v -= std::min(int(v), m_PatchCountY - 1);
+
+        glm::vec3 point;
+        auto basisU = dBernsteinBasis(u);
+        auto basisV = BernsteinBasis(v);
+
+        std::vector<glm::vec3> controlPointsPosition;
+        controlPointsPosition.reserve(m_ControlPoints.size());
+        std::transform(m_ControlPoints.begin(), m_ControlPoints.end(), std::back_inserter(controlPointsPosition), [](Ref<Point> p) {return p->GetPosition(); });
+
+        point = basisU.x * (basisV.x * controlPointsPosition[patchIndices[0]]
+            + basisV.y * controlPointsPosition[patchIndices[4]]
+            + basisV.z * controlPointsPosition[patchIndices[8]]
+            + basisV.w * controlPointsPosition[patchIndices[12]]);
+
+        point += basisU.y * (basisV.x * controlPointsPosition[patchIndices[1]]
+            + basisV.y * controlPointsPosition[patchIndices[5]]
+            + basisV.z * controlPointsPosition[patchIndices[9]]
+            + basisV.w * controlPointsPosition[patchIndices[13]]);
+
+        point += basisU.z * (basisV.x * controlPointsPosition[patchIndices[2]]
+            + basisV.y * controlPointsPosition[patchIndices[6]]
+            + basisV.z * controlPointsPosition[patchIndices[10]]
+            + basisV.w * controlPointsPosition[patchIndices[14]]);
+
+        point += basisU.w * (basisV.x * controlPointsPosition[patchIndices[3]]
+            + basisV.y * controlPointsPosition[patchIndices[7]]
+            + basisV.z * controlPointsPosition[patchIndices[11]]
+            + basisV.w * controlPointsPosition[patchIndices[15]]);
+
+        return point;
+    }
+
+    glm::vec3 BezierPatch::GetTangentVAt(float u, float v)
+    {
+        u = std::clamp(u, 0.0f, 1.0f);
+        v = m_IsCylinder ? v - std::floorf(v) : glm::clamp(v, 0.0f, 1.0f);
+
+        u = u * m_PatchCountX;
+        v = v * m_PatchCountY;
+        auto patchIndices = GetPatchIndices(u, v);
+
+        u -= std::min(int(u), m_PatchCountX - 1);
+        v -= std::min(int(v), m_PatchCountY - 1);
+
+        glm::vec3 point;
+        auto basisU = BernsteinBasis(u);
+        auto basisV = dBernsteinBasis(v);
+
+        std::vector<glm::vec3> controlPointsPosition;
+        controlPointsPosition.reserve(m_ControlPoints.size());
+        std::transform(m_ControlPoints.begin(), m_ControlPoints.end(), std::back_inserter(controlPointsPosition), [](Ref<Point> p) {return p->GetPosition(); });
+
+        point = basisU.x * (basisV.x * controlPointsPosition[patchIndices[0]]
+            + basisV.y * controlPointsPosition[patchIndices[4]]
+            + basisV.z * controlPointsPosition[patchIndices[8]]
+            + basisV.w * controlPointsPosition[patchIndices[12]]);
+
+        point += basisU.y * (basisV.x * controlPointsPosition[patchIndices[1]]
+            + basisV.y * controlPointsPosition[patchIndices[5]]
+            + basisV.z * controlPointsPosition[patchIndices[9]]
+            + basisV.w * controlPointsPosition[patchIndices[13]]);
+
+        point += basisU.z * (basisV.x * controlPointsPosition[patchIndices[2]]
+            + basisV.y * controlPointsPosition[patchIndices[6]]
+            + basisV.z * controlPointsPosition[patchIndices[10]]
+            + basisV.w * controlPointsPosition[patchIndices[14]]);
+
+        point += basisU.w * (basisV.x * controlPointsPosition[patchIndices[3]]
+            + basisV.y * controlPointsPosition[patchIndices[7]]
+            + basisV.z * controlPointsPosition[patchIndices[11]]
+            + basisV.w * controlPointsPosition[patchIndices[15]]);
+
+        return point;
+    }
+
+    float BezierPatch::GetMinU() const
+    {
+        return 0.0f;
+    }
+
+    float BezierPatch::GetMaxU() const
+    {
+        return 1.0f;
+    }
+
+    float BezierPatch::GetMinV() const
+    {
+        return 0.0f;
+    }
+
+    float BezierPatch::GetMaxV() const
+    {
+        return 1.0f;
     }
 }

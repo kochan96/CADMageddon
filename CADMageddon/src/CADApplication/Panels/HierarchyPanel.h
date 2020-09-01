@@ -56,6 +56,11 @@ namespace CADMageddon
             m_OnGregorySelectionChanged = selectionGregoryChangedCallback;
         }
 
+        void SetOnIntersectionCurveSelectionChanged(std::function<void(bool, Ref<IntersectionCurve>)> selectionIntersectionCurveChanged)
+        {
+            m_OnIntersectionCurveSelectionChanged = selectionIntersectionCurveChanged;
+        }
+
         void SetScene(Ref<Scene> scene) { m_Scene = scene; }
 
     private:
@@ -81,6 +86,8 @@ namespace CADMageddon
         void RenderGregoryNode(Ref<GregoryPatch> gregoryPatch, int& id);
         void RenderGregoryBezierPatchNode(Ref<BezierPatch> bezierPatch, int& id);
 
+        void RenderIntersectionCurveNode(Ref<IntersectionCurve> intersectionCurve, int& id);
+
     private:
         std::function<void(bool, Ref<Point>)> m_OnSelectionPointChanged;
         std::function<void(bool, Ref<Torus>)> m_OnSelectionTorusChanged;
@@ -90,6 +97,7 @@ namespace CADMageddon
         std::function<void(bool, Ref<BezierPatch>)> m_OnBezierPatchSelectionChanged;
         std::function<void(bool, Ref<BSplinePatch>)> m_OnBSplinePatchSelectionChanged;
         std::function<void(bool, Ref<GregoryPatch>)> m_OnGregorySelectionChanged;
+        std::function<void(bool, Ref<IntersectionCurve>)> m_OnIntersectionCurveSelectionChanged;
         std::function<void()> m_OnSelectionCleared;
         Ref<Scene> m_Scene;
     };

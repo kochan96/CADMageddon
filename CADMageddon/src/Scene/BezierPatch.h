@@ -3,10 +3,11 @@
 #include "Point.h"
 #include <glm/glm.hpp>
 #include "BaseObject.h"
+#include "SurfaceUV.h"
 
 namespace CADMageddon
 {
-    class BezierPatch : public BaseObject
+    class BezierPatch : public BaseObject, public SurfaceUV
     {
     public:
         BezierPatch(std::string name, int patchCountX, int patchCountY, int uDivisionCount = 4, int vDivisionCount = 4);
@@ -62,7 +63,18 @@ namespace CADMageddon
             bool isCylinder,
             bool showPolygon);
 
+        virtual glm::vec3 GetPointAt(float u, float v) override;
+        virtual glm::vec3 GetTangentUAt(float u, float v) override;
+        virtual glm::vec3 GetTangentVAt(float u, float v) override;
+        virtual float GetMinU() const override;
+        virtual float GetMaxU() const override;
+        virtual float GetMinV() const override;
+        virtual float GetMaxV() const override;
+
     private:
+        std::vector<uint32_t> GetPatchIndices(float u, float v);
+        glm::vec4 BernsteinBasis(float t);
+        glm::vec4 dBernsteinBasis(float t);
         void GenerateRectControlPoints(glm::vec3 startPosition, int PatchCountx, int PatchCounty, float width, float height);
         void GenerateCylinderControlPoints(glm::vec3 center, int PatchCountx, int PatchCounty, float radius, float height);
 

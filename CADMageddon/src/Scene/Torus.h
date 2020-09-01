@@ -2,6 +2,8 @@
 #include "cadpch.h"
 #include "Point.h"
 #include "Core\Base.h"
+#include "BaseObject.h"
+#include "SurfaceUV.h"
 
 namespace CADMageddon
 {
@@ -13,7 +15,7 @@ namespace CADMageddon
         int MinorRadiusCount = 15;
     };
 
-    class Torus
+    class Torus : public SurfaceUV
     {
     public:
         Torus(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), std::string name = "Torus");
@@ -31,6 +33,14 @@ namespace CADMageddon
 
         bool GetIsSelected() { return m_IsSelected; }
         void SetIsSelected(bool isSelected) { m_IsSelected = isSelected; }
+
+        virtual glm::vec3 GetPointAt(float u, float v) override;
+        virtual glm::vec3 GetTangentUAt(float u, float v) override;
+        virtual glm::vec3 GetTangentVAt(float u, float v) override;
+        virtual float GetMinU() const override;
+        virtual float GetMaxU() const override;
+        virtual float GetMinV() const override;
+        virtual float GetMaxV() const override;
 
     private:
         Ref<Transform> m_Transform;

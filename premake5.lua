@@ -17,6 +17,7 @@ IncludeDir["ImGui"] = "CADMageddon/vendor/imgui"
 IncludeDir["glm"] = "CADMageddon/vendor/glm"
 IncludeDir["entt"] = "CADMageddon/vendor/entt/include"
 IncludeDir["tinyxml"] = "CADMageddon/vendor/tinyxml2"
+IncludeDir["stb_image"] = "CADMageddon/vendor/stb_image"
 
 group "Dependencies"
     include "CADMageddon/vendor/glfw"
@@ -40,6 +41,8 @@ project "CADMageddon"
         "%{prj.name}/src/**.h",
         "%{prj.name}/src/**.cpp",
         "%{prj.name}/assets/**",
+        "%{prj.name}/vendor/stb_image/**.h",
+		"%{prj.name}/vendor/stb_image/**.cpp",
         "%{prj.name}/vendor/glm/glm/**.hpp",
         "%{prj.name}/vendor/glm/glm/**.inl",
     }
@@ -60,6 +63,7 @@ project "CADMageddon"
         "%{IncludeDir.glm}",
         "%{IncludeDir.entt}",
         "%{IncludeDir.tinyxml}",
+        "%{IncludeDir.stb_image}",
     }
 
     links 

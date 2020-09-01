@@ -41,9 +41,10 @@ namespace CADMageddon
         m_HierarchyPanel->SetOnBezierPatchSelectionChanged(std::bind(&EditorLayer::OnSelectionChangedBezierPatch, this, std::placeholders::_1, std::placeholders::_2));
         m_HierarchyPanel->SetOnBSplinePatchSelectionChanged(std::bind(&EditorLayer::OnSelectionChangedBSplinePatch, this, std::placeholders::_1, std::placeholders::_2));
         m_HierarchyPanel->SetOnGregoryPatchSelectionChanged(std::bind(&EditorLayer::OnSelectionChangedGregoryPatch, this, std::placeholders::_1, std::placeholders::_2));
+        m_HierarchyPanel->SetOnIntersectionCurveSelectionChanged(std::bind(&EditorLayer::OnSelectionChangedIntersectionCurve, this, std::placeholders::_1, std::placeholders::_2));
         m_HierarchyPanel->SetOnSelectionClearedCallback(std::bind(&EditorLayer::OnSelectionCleared, this));
 
-        m_InspectorPanel = CreateRef<InspectorPanel>(m_Scene, m_TransformationSystem);
+        m_InspectorPanel = CreateRef<InspectorPanel>(m_Scene, m_TransformationSystem,m_CursorController.getCursor());
 
         m_PickingSystem->SetOnPointSelectionChanged(std::bind(&EditorLayer::OnSelectionChangedPoint, this, std::placeholders::_1, std::placeholders::_2));
         m_PickingSystem->SetOnTorusSelectionChanged(std::bind(&EditorLayer::OnSelectionChangedTorus, this, std::placeholders::_1, std::placeholders::_2));
@@ -213,6 +214,18 @@ namespace CADMageddon
         else
         {
             m_InspectorPanel->RemoveGregoryPatch(gregoryPatch);
+        }
+    }
+
+    void EditorLayer::OnSelectionChangedIntersectionCurve(bool selected, Ref<IntersectionCurve> intersectionCurve)
+    {
+        if (selected)
+        {
+            m_InspectorPanel->AddIntersectionCurve(intersectionCurve);
+        }
+        else
+        {
+            m_InspectorPanel->RemoveIntersectionCurve(intersectionCurve);
         }
     }
 

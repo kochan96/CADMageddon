@@ -119,6 +119,18 @@ namespace CADMageddon
             ImGui::TreePop();
         }
 
+        auto intersectionCurves = m_Scene->GetIntersectionCurve();
+        if (!intersectionCurves.empty() && ImGui::TreeNode("Intersection Curves"))
+        {
+            int id = 0;
+            for (auto intersectionCurve : intersectionCurves)
+            {
+                RenderIntersectionCurveNode(intersectionCurve, id);
+            }
+
+            ImGui::TreePop();
+        }
+
         ImGui::End();
     }
 
@@ -163,6 +175,11 @@ namespace CADMageddon
         for (auto gregory : m_Scene->GetGregoryPatch())
         {
             gregory->SetIsSelected(false);
+        }
+
+        for (auto intersection : m_Scene->GetIntersectionCurve())
+        {
+            intersection->SetIsSelected(false);
         }
 
         if (m_OnSelectionCleared)
@@ -786,6 +803,38 @@ namespace CADMageddon
 
             if (m_OnBezierPatchSelectionChanged)
                 m_OnBezierPatchSelectionChanged(bezierPatch->GetIsSelected(), bezierPatch);
+        }
+
+        id++;
+    }
+
+    void HierarchyPanel::RenderIntersectionCurveNode(Ref<IntersectionCurve> intersectionCurve, int& id)
+    {
+        static ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
+        ImGuiTreeNodeFlags node_flags = base_flags;
+
+        if (intersectionCurve->GetIsSelected())
+        {
+            node_flags |= ImGuiTreeNodeFlags_Selected;
+        }
+
+        node_flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+        bool node_open = ImGui::TreeNodeEx((void*)(intptr_t)id, node_flags, intersectionCurve->GetName().c_str());
+        if (ImGui::IsItemClicked())
+        {
+            if (ImGui::GetIO().KeyCtrl)
+            {
+                intersectionCurve->SetIsSelected(!intersectionCurve->GetIsSelected());
+            }
+            else
+            {
+                bool oldSelected = intersectionCurve->GetIsSelected();
+                ClearSelection();
+                intersectionCurve->SetIsSelected(!oldSelected);
+            }
+
+            if (m_OnIntersectionCurveSelectionChanged)
+                m_OnIntersectionCurveSelectionChanged(intersectionCurve->GetIsSelected(), intersectionCurve);
         }
 
         id++;

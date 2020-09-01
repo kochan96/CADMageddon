@@ -3,6 +3,8 @@
 #include "Core\Base.h"
 #include "imgui.h"
 #include "misc\cpp\imgui_stdlib.h"
+#include "BaseObjectEditor.h"
+
 
 namespace CADMageddon
 {
@@ -47,5 +49,7 @@ namespace CADMageddon
         ImGui::Text("Cylinder: %s", bezierPatch->GetIsCylinder() ? "Yes" : "No");
 
         ImGui::EndGroup();
+
+        BaseObjectEditor(bezierPatch);
     }
 }

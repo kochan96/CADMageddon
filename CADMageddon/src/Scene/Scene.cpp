@@ -109,6 +109,18 @@ namespace CADMageddon
         return interpolated;
     }
 
+    Ref<InterpolatedCurve> Scene::CreateInterpolated(Ref<InterpolatedCurve> curve)
+    {
+        for (auto point : curve->GetControlPoints())
+        {
+            m_Points.push_back(point);
+        }
+
+        m_InterpolatedCurve.push_back(curve);
+        m_BaseObjects.insert(curve);
+        return curve;
+    }
+
     static int bezierPatchCount = 0;
 
     Ref<BezierPatch> Scene::CreateBezierPatchRect(std::string name, const PatchRectCreationParameters& parameters)
@@ -178,6 +190,14 @@ namespace CADMageddon
         return bSpline;
     }
 
+    Ref<IntersectionCurve> Scene::CreateIntersectionCurve(std::string name, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2, std::vector<IntersectionPoint> points, bool isClosed)
+    {
+        static int intersectionCount = 0;
+        auto intersectionCurve = IntersectionCurve::Create("Intersection_" + std::to_string(intersectionCount++), points, s1, s2, isClosed);
+        m_IntersectionCurve.push_back(intersectionCurve);
+        return intersectionCurve;
+    }
+
     void Scene::Update()
     {
         for (auto torus : m_Torus)
@@ -194,32 +214,44 @@ namespace CADMageddon
 
         for (auto bezierC0 : m_BezierC0)
         {
-            RenderBezier(bezierC0);
+            if (bezierC0->GetIsVisible())
+                RenderBezier(bezierC0);
         }
 
         for (auto bSpline : m_BSpline)
         {
-            RenderBSpline(bSpline);
+            if (bSpline->GetIsVisible())
+                RenderBSpline(bSpline);
         }
 
         for (auto interpolated : m_InterpolatedCurve)
         {
-            RenderInterpolatedCurve(interpolated);
+            if (interpolated->GetIsVisible())
+                RenderInterpolatedCurve(interpolated);
         }
 
         for (auto bezierPatch : m_BezierPatch)
         {
-            RenderBezierPatch(bezierPatch);
+            if (bezierPatch->GetIsVisible())
+                RenderBezierPatch(bezierPatch);
         }
 
         for (auto bSplinePatch : m_BSplinePatch)
         {
-            RenderBSplinePatch(bSplinePatch);
+            if (bSplinePatch->GetIsVisible())
+                RenderBSplinePatch(bSplinePatch);
         }
 
         for (auto gregoryPatch : m_GregoryPatch)
         {
-            RenderGregoryPatch(gregoryPatch);
+            if (gregoryPatch->GetIsVisible())
+                RenderGregoryPatch(gregoryPatch);
+        }
+
+        for (auto intersectionCurve : m_IntersectionCurve)
+        {
+            if (intersectionCurve->GetIsVisible())
+                RenderIntersectionCurve(intersectionCurve);
         }
 
         RenderControlPoints(m_FreePoints);
@@ -240,6 +272,7 @@ namespace CADMageddon
         auto bezierPatches = m_BezierPatch;
         auto bSplinePatches = m_BSplinePatch;
         auto gregoryPatches = m_GregoryPatch;
+        auto intersectionCurves = m_IntersectionCurve;
 
         for (auto point : points)
         {
@@ -287,6 +320,12 @@ namespace CADMageddon
         {
             if (gregoryPatch->GetIsSelected())
                 DeleteGregoryPatch(gregoryPatch);
+        }
+
+        for (auto intersected : intersectionCurves)
+        {
+            if (intersected->GetIsSelected())
+                DeleteIntersectionCurve(intersected);
         }
     }
 
@@ -528,6 +567,7 @@ namespace CADMageddon
         auto controlPoints = bezierPatch->GetControlPoints();
 
         auto color = bezierPatch->GetIsSelected() ? m_SelectionColor : m_DefaultColor;
+
         for (int i = 0; i < indices.size(); i += 16)
         {
             Renderer::RenderBezierPatch(
@@ -566,6 +606,7 @@ namespace CADMageddon
         auto controlPoints = bSplinePatch->GetControlPoints();
 
         auto color = bSplinePatch->GetIsSelected() ? m_SelectionColor : m_DefaultColor;
+
         for (int i = 0; i < indices.size(); i += 16)
         {
             Renderer::RenderBSplinePatch(
@@ -691,6 +732,18 @@ namespace CADMageddon
         Renderer::RenderLine(fillingData.gregoryPoints.e3_p, fillingData.gregoryPoints.e0_m, color);
     }
 
+    void Scene::RenderIntersectionCurve(Ref<IntersectionCurve> curve)
+    {
+        auto points = curve->GetIntersectionPoints();
+        auto color = curve->GetIsSelected() ? m_SelectionColor : m_DefaultColor;
+        for (int i = 1; i < points.size(); i++)
+        {
+            auto start = points[i - 1];
+            auto end = points[i];
+            Renderer::RenderLine(start.Location, end.Location, color);
+        }
+    }
+
     void Scene::DeleteFreePoint(Ref<Point> point)
     {
         {
@@ -811,7 +864,6 @@ namespace CADMageddon
                     m_OnGregoryPatchDeleted(gregory);
             }
         }
-
     }
 
     void Scene::DeleteGregoryPatch(Ref<GregoryPatch> gregoryPatch)
@@ -839,5 +891,16 @@ namespace CADMageddon
         }
 
         m_BaseObjects.erase(bSplinePatch);
+    }
+
+    void Scene::DeleteIntersectionCurve(Ref<IntersectionCurve> curve)
+    {
+        auto it = std::find(m_IntersectionCurve.begin(), m_IntersectionCurve.end(), curve);
+        if (it != m_IntersectionCurve.end())
+        {
+            m_IntersectionCurve.erase(it);
+            curve->GetFirstSurface()->SetIntersectionCurve(nullptr);
+            curve->GetSecondSurface()->SetIntersectionCurve(nullptr);
+        }
     }
 }

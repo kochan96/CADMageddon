@@ -134,8 +134,8 @@ namespace CADMageddon
             auto bezierPatchElement = sceneElement->InsertNewChildElement("PatchC2");
             bezierPatchElement->SetAttribute("Name", bSplinePatch->GetName().c_str());
             bezierPatchElement->SetAttribute("ShowControlPolygon", bSplinePatch->GetShowPolygon());
-            bezierPatchElement->SetAttribute("RowSlices", bSplinePatch->GetUDivisionCount());
-            bezierPatchElement->SetAttribute("ColumnSlices", bSplinePatch->GetVDivisionCount());
+            bezierPatchElement->SetAttribute("ColumnSlices", bSplinePatch->GetUDivisionCount());
+            bezierPatchElement->SetAttribute("RowSlices", bSplinePatch->GetVDivisionCount());
             bezierPatchElement->SetAttribute("WrapDirection", bSplinePatch->GetIsCylinder() ? "Column" : "None");
             auto pointRefsElement = bezierPatchElement->InsertNewChildElement("Points");
 
@@ -297,8 +297,8 @@ namespace CADMageddon
         bool isCylinder = bezierPatchElement->Attribute("WrapDirection") != std::string("None");
         bool isRowWrapDirection = bezierPatchElement->Attribute("WrapDirection") == std::string("Row");
         bool showPolygon = bezierPatchElement->BoolAttribute("ShowControlPolygon");
-        int uDivisionCount = bezierPatchElement->IntAttribute("RowSlices");
-        int vDivisionCount = bezierPatchElement->IntAttribute("ColumnSlices");
+        int uDivisionCount = bezierPatchElement->IntAttribute("ColumnSlices");
+        int vDivisionCount = bezierPatchElement->IntAttribute("RowSlices");
 
         std::vector<Ref<Point>> controlPoints;
 
@@ -347,8 +347,8 @@ namespace CADMageddon
         bool isCylinder = bSplinePatchElement->Attribute("WrapDirection") != std::string("None");
         bool isRowWrapDirection = bSplinePatchElement->Attribute("WrapDirection") == std::string("Row");
         bool showPolygon = bSplinePatchElement->BoolAttribute("ShowControlPolygon");
-        int uDivisionCount = bSplinePatchElement->IntAttribute("RowSlices");
-        int vDivisionCount = bSplinePatchElement->IntAttribute("ColumnSlices");
+        int uDivisionCount = bSplinePatchElement->IntAttribute("ColumnSlices");
+        int vDivisionCount = bSplinePatchElement->IntAttribute("RowSlices");
 
         std::vector<Ref<Point>> controlPoints;
         auto pointRefsElement = bSplinePatchElement->FirstChildElement();

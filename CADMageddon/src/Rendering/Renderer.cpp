@@ -482,37 +482,37 @@ namespace CADMageddon
         float vertices[] =
         {
             p0.x,p0.y,p0.z,
-            p1.x,p1.y,p1.z,
-            p2.x,p2.y,p2.z,
-            p3.x,p3.y,p3.z,
             p4.x,p4.y,p4.z,
-            p5.x,p5.y,p5.z,
-            p6.x,p6.y,p6.z,
-            p7.x,p7.y,p7.z,
             p8.x,p8.y,p8.z,
-            p9.x,p9.y,p9.z,
-            p10.x,p10.y,p10.z,
-            p11.x,p11.y,p11.z,
             p12.x,p12.y,p12.z,
+            p1.x,p1.y,p1.z,
+            p5.x,p5.y,p5.z,
+            p9.x,p9.y,p9.z,
             p13.x,p13.y,p13.z,
+            p2.x,p2.y,p2.z,
+            p6.x,p6.y,p6.z,
+            p10.x,p10.y,p10.z,
             p14.x,p14.y,p14.z,
+            p3.x,p3.y,p3.z,
+            p7.x,p7.y,p7.z,
+            p11.x,p11.y,p11.z,
             p15.x,p15.y,p15.z,
 
             p0.x,p0.y,p0.z,
-            p4.x,p4.y,p4.z,
-            p8.x,p8.y,p8.z,
-            p12.x,p12.y,p12.z,
             p1.x,p1.y,p1.z,
-            p5.x,p5.y,p5.z,
-            p9.x,p9.y,p9.z,
-            p13.x,p13.y,p13.z,
             p2.x,p2.y,p2.z,
-            p6.x,p6.y,p6.z,
-            p10.x,p10.y,p10.z,
-            p14.x,p14.y,p14.z,
             p3.x,p3.y,p3.z,
+            p4.x,p4.y,p4.z,
+            p5.x,p5.y,p5.z,
+            p6.x,p6.y,p6.z,
             p7.x,p7.y,p7.z,
+            p8.x,p8.y,p8.z,
+            p9.x,p9.y,p9.z,
+            p10.x,p10.y,p10.z,
             p11.x,p11.y,p11.z,
+            p12.x,p12.y,p12.z,
+            p13.x,p13.y,p13.z,
+            p14.x,p14.y,p14.z,
             p15.x,p15.y,p15.z,
         };
 
@@ -525,7 +525,7 @@ namespace CADMageddon
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glPatchParameteri(GL_PATCH_VERTICES, 16);
-        glDrawArrays(GL_PATCHES, 0, 16);
+        glDrawArrays(GL_PATCHES, 0, 32);
 
         s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_SubdivisionCount", vSubdivisionCount - 1);
         glDrawArrays(GL_PATCHES, 16, 16);
@@ -571,37 +571,37 @@ namespace CADMageddon
         float vertices[] =
         {
             p0.x,p0.y,p0.z,
-            p1.x,p1.y,p1.z,
-            p2.x,p2.y,p2.z,
-            p3.x,p3.y,p3.z,
             p4.x,p4.y,p4.z,
-            p5.x,p5.y,p5.z,
-            p6.x,p6.y,p6.z,
-            p7.x,p7.y,p7.z,
             p8.x,p8.y,p8.z,
-            p9.x,p9.y,p9.z,
-            p10.x,p10.y,p10.z,
-            p11.x,p11.y,p11.z,
             p12.x,p12.y,p12.z,
+            p1.x,p1.y,p1.z,
+            p5.x,p5.y,p5.z,
+            p9.x,p9.y,p9.z,
             p13.x,p13.y,p13.z,
+            p2.x,p2.y,p2.z,
+            p6.x,p6.y,p6.z,
+            p10.x,p10.y,p10.z,
             p14.x,p14.y,p14.z,
+            p3.x,p3.y,p3.z,
+            p7.x,p7.y,p7.z,
+            p11.x,p11.y,p11.z,
             p15.x,p15.y,p15.z,
 
             p0.x,p0.y,p0.z,
-            p4.x,p4.y,p4.z,
-            p8.x,p8.y,p8.z,
-            p12.x,p12.y,p12.z,
             p1.x,p1.y,p1.z,
-            p5.x,p5.y,p5.z,
-            p9.x,p9.y,p9.z,
-            p13.x,p13.y,p13.z,
             p2.x,p2.y,p2.z,
-            p6.x,p6.y,p6.z,
-            p10.x,p10.y,p10.z,
-            p14.x,p14.y,p14.z,
             p3.x,p3.y,p3.z,
+            p4.x,p4.y,p4.z,
+            p5.x,p5.y,p5.z,
+            p6.x,p6.y,p6.z,
             p7.x,p7.y,p7.z,
+            p8.x,p8.y,p8.z,
+            p9.x,p9.y,p9.z,
+            p10.x,p10.y,p10.z,
             p11.x,p11.y,p11.z,
+            p12.x,p12.y,p12.z,
+            p13.x,p13.y,p13.z,
+            p14.x,p14.y,p14.z,
             p15.x,p15.y,p15.z,
         };
 
@@ -626,14 +626,14 @@ namespace CADMageddon
         glm::vec3 pp2 = (basisV.x * p8 + basisV.y * p9 + basisV.z * p10 + basisV.w * p11);
         glm::vec3 pp3 = (basisV.x * p12 + basisV.y * p13 + basisV.z * p14 + basisV.w * p15);
 
-        RenderBSpline(pp0, pp1, pp2, pp3, color);
+        RenderBSpline(pp0, pp1, pp2, pp3, color, false);
 
         pp0 = (basisV.x * p0 + basisV.y * p4 + basisV.z * p8 + basisV.w * p12);
         pp1 = (basisV.x * p1 + basisV.y * p5 + basisV.z * p9 + basisV.w * p13);
         pp2 = (basisV.x * p2 + basisV.y * p6 + basisV.z * p10 + basisV.w * p14);
         pp3 = (basisV.x * p3 + basisV.y * p7 + basisV.z * p11 + basisV.w * p15);
 
-        RenderBSpline(pp0, pp1, pp2, pp3, color);
+        RenderBSpline(pp0, pp1, pp2, pp3, color, false);
 
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -714,8 +714,8 @@ namespace CADMageddon
 
     void Renderer::RenderGregoryPatch(
         glm::vec3* data,
-        int uSubDivisionCount, 
-        int vSubdivisionCount, 
+        int uSubDivisionCount,
+        int vSubdivisionCount,
         const glm::vec4& color)
     {
         std::vector<float> uValues;
@@ -725,7 +725,7 @@ namespace CADMageddon
             uValues.push_back(float(i) / float(uSubDivisionCount - 1));
         for (int j = 0; j < vSubdivisionCount; j++)
             vValues.push_back(float(j) / float(vSubdivisionCount - 1));
-        
+
 
         s_RenderGregoryPatch.GregoryVertexArray->Bind();
         s_RenderGregoryPatch.GregoryVertexBuffer->SetData(uValues.data(), uValues.size() * sizeof(float));
@@ -743,20 +743,30 @@ namespace CADMageddon
         glDrawArrays(GL_POINTS, 0, vValues.size());
     }
 
-    void Renderer::RenderBSpline(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, const glm::vec4& color)
+    void Renderer::RenderBSpline(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, const glm::vec4& color, bool snapToEnd)
     {
-        auto midPoint0 = p0 * 2.0f / 3.0f + p1 * 1.0f / 3.0f;
-        auto midPoint1 = p0 * 1.0f / 3.0f + p1 * 2.0f / 3.0f;
-        auto midPoint2 = p1 * 2.0f / 3.0f + p2 * 1.0f / 3.0f;
-        auto midPoint3 = p1 * 1.0f / 3.0f + p2 * 2.0f / 3.0f;
-        auto midPoint4 = p2 * 2.0f / 3.0f + p3 * 1.0f / 3.0f;
+        if (!snapToEnd)
+        {
+            auto midPoint0 = p0 * 2.0f / 3.0f + p1 * 1.0f / 3.0f;
+            auto midPoint1 = p0 * 1.0f / 3.0f + p1 * 2.0f / 3.0f;
+            auto midPoint2 = p1 * 2.0f / 3.0f + p2 * 1.0f / 3.0f;
+            auto midPoint3 = p1 * 1.0f / 3.0f + p2 * 2.0f / 3.0f;
+            auto midPoint4 = p2 * 2.0f / 3.0f + p3 * 1.0f / 3.0f;
 
-        glm::vec3 pp0 = (midPoint1 + midPoint2) / 2.0f;
-        glm::vec3 pp1 = midPoint2;
-        glm::vec3 pp2 = midPoint3;
-        glm::vec3 pp3 = (midPoint3 + midPoint4) / 2.0f;
-
-        ShaderRenderBezierC0(pp0, pp1, pp2, pp3, color);
+            glm::vec3 pp0 = (midPoint1 + midPoint2) / 2.0f;
+            glm::vec3 pp1 = midPoint2;
+            glm::vec3 pp2 = midPoint3;
+            glm::vec3 pp3 = (midPoint3 + midPoint4) / 2.0f;
+            ShaderRenderBezierC0(pp0, pp1, pp2, pp3, color);
+        }
+        else
+        {
+            RenderBSpline(p0, p0, p0, p1, color, false);
+            RenderBSpline(p0, p0, p1, p2, color, false);
+            RenderBSpline(p0, p1, p2, p3, color, false);
+            RenderBSpline(p1, p2, p3, p3, color, false);
+            RenderBSpline(p2, p3, p3, p3, color, false);
+        }
     }
 
     float CADMageddon::Renderer::Spline(float t, float ti, float interval)

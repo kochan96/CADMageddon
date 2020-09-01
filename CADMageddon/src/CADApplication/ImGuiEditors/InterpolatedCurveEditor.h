@@ -1,5 +1,6 @@
 #pragma once
 #include "Scene\InterpolatedCurve.h"
+#include "BaseObjectEditor.h"
 #include "Core\Base.h"
 #include "imgui.h"
 #include "misc\cpp\imgui_stdlib.h"
@@ -29,5 +30,7 @@ namespace CADMageddon
         }
 
         ImGui::EndGroup();
+
+        BaseObjectEditor(interpolated);
     }
 }

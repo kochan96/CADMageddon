@@ -44,6 +44,8 @@ namespace CADMageddon
         return bSplinePatch;
     }
 
+
+
     Ref<BSplinePatch> BSplinePatch::CreateRectPatch(
         std::string name,
         glm::vec3 startPosition,
@@ -194,5 +196,199 @@ namespace CADMageddon
                 }
             }
         }
+    }
+
+    std::vector<uint32_t> BSplinePatch::GetPatchIndices(float u, float v)
+    {
+        //handle multipatch and cylinder
+        const int verticesCountX = m_IsCylinder ? m_PatchCountX : m_PatchCountX + 3;
+        unsigned int startRow = std::min(int(v), m_PatchCountY - 1) * verticesCountX;
+        unsigned int startColumn = std::min(int(u), m_PatchCountX - 1);
+        std::vector<uint32_t> indices;
+        for (int k = 0; k < 4; k++)
+        {
+            for (int l = 0; l < 4; l++)
+            {
+                int index = startRow + k * verticesCountX + (l + startColumn) % verticesCountX;
+                indices.push_back(index);
+            }
+        }
+
+        return indices;
+    }
+
+    float BSplinePatch::Spline(float t, float ti, int n)
+    {
+        static const float intval = 1.0f;
+        if (n == 0) {
+            if (ti > t && ti - intval <= t)
+                return 1;
+            else
+                return 0;
+        }
+        float val1 = Spline(t, ti, n - 1) * (t - ti + intval);
+        float val2 = Spline(t, ti + intval, n - 1) * (ti + n * intval - t);
+        return (val1 + val2) / (n * intval);
+    }
+
+    glm::vec4 BSplinePatch::SplineBasis(float t)
+    {
+        return glm::vec4(
+            Spline(t, -2, 3),
+            Spline(t, -1, 3),
+            Spline(t, 0, 3),
+            Spline(t, 1, 3));
+    }
+
+    glm::vec4 BSplinePatch::dSplineBasis(float t)
+    {
+        return glm::vec4(
+            Spline(t, -2, 2) - Spline(t, -1, 2),
+            Spline(t, -1, 2) - Spline(t, 0, 2),
+            Spline(t, 0, 3) - Spline(t, 1, 2),
+            Spline(t, 1, 3) - Spline(t, 2, 2));
+    }
+
+    glm::vec3 BSplinePatch::GetPointAt(float u, float v)
+    {
+        u = std::clamp(u, 0.0f, 1.0f);
+        v = std::clamp(v, 0.0f, 1.0f);
+
+        float U = u * m_PatchCountX;
+        float V = v * m_PatchCountY;
+
+        auto patchIndices = GetPatchIndices(U, V);
+
+        glm::vec3 point;
+        auto basisU = SplineBasis(u);
+        auto basisV = SplineBasis(v);
+
+        std::vector<glm::vec3> controlPointsPosition;
+        controlPointsPosition.reserve(m_ControlPoints.size());
+        std::transform(m_ControlPoints.begin(), m_ControlPoints.end(), std::back_inserter(controlPointsPosition), [](Ref<Point> p) {return p->GetPosition(); });
+
+        point = basisU.x * (basisV.x * controlPointsPosition[patchIndices[0]]
+            + basisV.y * controlPointsPosition[patchIndices[4]]
+            + basisV.z * controlPointsPosition[patchIndices[8]]
+            + basisV.w * controlPointsPosition[patchIndices[12]]);
+
+        point += basisU.y * (basisV.x * controlPointsPosition[patchIndices[1]]
+            + basisV.y * controlPointsPosition[patchIndices[5]]
+            + basisV.z * controlPointsPosition[patchIndices[9]]
+            + basisV.w * controlPointsPosition[patchIndices[13]]);
+
+        point += basisU.z * (basisV.x * controlPointsPosition[patchIndices[2]]
+            + basisV.y * controlPointsPosition[patchIndices[6]]
+            + basisV.z * controlPointsPosition[patchIndices[10]]
+            + basisV.w * controlPointsPosition[patchIndices[14]]);
+
+        point += basisU.w * (basisV.x * controlPointsPosition[patchIndices[3]]
+            + basisV.y * controlPointsPosition[patchIndices[7]]
+            + basisV.z * controlPointsPosition[patchIndices[11]]
+            + basisV.w * controlPointsPosition[patchIndices[15]]);
+
+        return point;
+    }
+
+    glm::vec3 BSplinePatch::GetTangentUAt(float u, float v)
+    {
+        u = std::clamp(u, 0.0f, 1.0f);
+        v = std::clamp(v, 0.0f, 1.0f);
+
+        float U = u * m_PatchCountX;
+        float V = v * m_PatchCountY;
+
+        auto patchIndices = GetPatchIndices(U, V);
+
+        glm::vec3 point;
+        auto basisU = dSplineBasis(u);
+        auto basisV = SplineBasis(v);
+
+        std::vector<glm::vec3> controlPointsPosition;
+        controlPointsPosition.reserve(m_ControlPoints.size());
+        std::transform(m_ControlPoints.begin(), m_ControlPoints.end(), std::back_inserter(controlPointsPosition), [](Ref<Point> p) {return p->GetPosition(); });
+
+        point = basisU.x * (basisV.x * controlPointsPosition[patchIndices[0]]
+            + basisV.y * controlPointsPosition[patchIndices[4]]
+            + basisV.z * controlPointsPosition[patchIndices[8]]
+            + basisV.w * controlPointsPosition[patchIndices[12]]);
+
+        point += basisU.y * (basisV.x * controlPointsPosition[patchIndices[1]]
+            + basisV.y * controlPointsPosition[patchIndices[5]]
+            + basisV.z * controlPointsPosition[patchIndices[9]]
+            + basisV.w * controlPointsPosition[patchIndices[13]]);
+
+        point += basisU.z * (basisV.x * controlPointsPosition[patchIndices[2]]
+            + basisV.y * controlPointsPosition[patchIndices[6]]
+            + basisV.z * controlPointsPosition[patchIndices[10]]
+            + basisV.w * controlPointsPosition[patchIndices[14]]);
+
+        point += basisU.w * (basisV.x * controlPointsPosition[patchIndices[3]]
+            + basisV.y * controlPointsPosition[patchIndices[7]]
+            + basisV.z * controlPointsPosition[patchIndices[11]]
+            + basisV.w * controlPointsPosition[patchIndices[15]]);
+
+        return point;
+    }
+
+    glm::vec3 BSplinePatch::GetTangentVAt(float u, float v)
+    {
+        u = std::clamp(u, 0.0f, 1.0f);
+        v = std::clamp(v, 0.0f, 1.0f);
+
+        float U = u * m_PatchCountX;
+        float V = v * m_PatchCountY;
+
+        auto patchIndices = GetPatchIndices(U, V);
+
+        glm::vec3 point;
+        auto basisU = SplineBasis(u);
+        auto basisV = dSplineBasis(v);
+
+        std::vector<glm::vec3> controlPointsPosition;
+        controlPointsPosition.reserve(m_ControlPoints.size());
+        std::transform(m_ControlPoints.begin(), m_ControlPoints.end(), std::back_inserter(controlPointsPosition), [](Ref<Point> p) {return p->GetPosition(); });
+
+        point = basisU.x * (basisV.x * controlPointsPosition[patchIndices[0]]
+            + basisV.y * controlPointsPosition[patchIndices[4]]
+            + basisV.z * controlPointsPosition[patchIndices[8]]
+            + basisV.w * controlPointsPosition[patchIndices[12]]);
+
+        point += basisU.y * (basisV.x * controlPointsPosition[patchIndices[1]]
+            + basisV.y * controlPointsPosition[patchIndices[5]]
+            + basisV.z * controlPointsPosition[patchIndices[9]]
+            + basisV.w * controlPointsPosition[patchIndices[13]]);
+
+        point += basisU.z * (basisV.x * controlPointsPosition[patchIndices[2]]
+            + basisV.y * controlPointsPosition[patchIndices[6]]
+            + basisV.z * controlPointsPosition[patchIndices[10]]
+            + basisV.w * controlPointsPosition[patchIndices[14]]);
+
+        point += basisU.w * (basisV.x * controlPointsPosition[patchIndices[3]]
+            + basisV.y * controlPointsPosition[patchIndices[7]]
+            + basisV.z * controlPointsPosition[patchIndices[11]]
+            + basisV.w * controlPointsPosition[patchIndices[15]]);
+
+        return point;
+    }
+
+    float BSplinePatch::GetMinU() const
+    {
+        return 0.0f;
+    }
+
+    float BSplinePatch::GetMaxU() const
+    {
+        return 1.0f;
+    }
+
+    float BSplinePatch::GetMinV() const
+    {
+        return 0.0f;
+    }
+
+    float BSplinePatch::GetMaxV() const
+    {
+        return 1.0f;
     }
 }
