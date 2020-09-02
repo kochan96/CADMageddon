@@ -242,11 +242,13 @@ namespace CADMageddon
 
     glm::vec4 BSplinePatch::dSplineBasis(float t)
     {
+        //TODO optimize
+
         return glm::vec4(
             Spline(t, -2, 2) - Spline(t, -1, 2),
             Spline(t, -1, 2) - Spline(t, 0, 2),
-            Spline(t, 0, 3) - Spline(t, 1, 2),
-            Spline(t, 1, 3) - Spline(t, 2, 2));
+            Spline(t, 0, 2) - Spline(t, 1, 2),
+            Spline(t, 1, 2) - Spline(t, 2, 2));
     }
 
     glm::vec3 BSplinePatch::GetPointAt(float u, float v)
@@ -328,7 +330,7 @@ namespace CADMageddon
             + basisV.z * m_ControlPoints[patchIndices[11]]->GetPosition()
             + basisV.w * m_ControlPoints[patchIndices[15]]->GetPosition());
 
-        return point;
+        return point * float(m_PatchCountX);
     }
 
     glm::vec3 BSplinePatch::GetTangentVAt(float u, float v)
@@ -372,7 +374,7 @@ namespace CADMageddon
             + basisV.z * m_ControlPoints[patchIndices[11]]->GetPosition()
             + basisV.w * m_ControlPoints[patchIndices[15]]->GetPosition());
 
-        return point;
+        return point * float(m_PatchCountY);
     }
 
     float BSplinePatch::GetMinU() const

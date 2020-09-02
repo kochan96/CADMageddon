@@ -45,7 +45,7 @@ namespace CADMageddon
                 reversed = true;
                 std::reverse(intersectionPoints.begin(), intersectionPoints.end());
             }
-           /* else if (glm::length(intersectionPoints.back().Location - intersectionPoints[0].Location) <= 2 * stepSize && intersectionPoints.size() > 1)
+            else if (glm::length(intersectionPoints.back().Location - intersectionPoints[0].Location) <= 2 * stepSize && intersectionPoints.size() > 1)
             {
                 isClosed = true;
                 break;
@@ -54,7 +54,7 @@ namespace CADMageddon
             {
                 LOG_INFO("Length: {}", glm::length(intersectionPoints.back().Location - intersectionPoints[0].Location));
                 break;
-            }*/
+            }
         }
 
         return intersectionPoints;
@@ -193,7 +193,7 @@ namespace CADMageddon
 
         for (int i = 0; i < MAX_ITERATIONS; i++)
         {
-            /*lastDirection = direction;
+            lastDirection = direction;
             direction = GetNegativeGradient(parameters.x, parameters.y, s1, parameters.z, parameters.w, s2);
             beta = glm::dot(direction, direction - lastDirection) / glm::dot(lastDirection, lastDirection);
             beta = std::max(0.0f, beta);
@@ -201,13 +201,16 @@ namespace CADMageddon
             alfa = GoldenRatioSearch(alfaMin, alfaMax, parameters, sDirection, s1, s2);
             parameters = parameters + alfa * sDirection;
             parameters = ClampParameters(parameters, minValues, maxValues);
-            lastSDirection = sDirection;*/
+            if (alfa < 0.0000001f)
+                return parameters;
+            
+            lastSDirection = sDirection;
 
-            direction = GetNegativeGradient(parameters.x, parameters.y, s1, parameters.z, parameters.w, s2);
+            /*direction = GetNegativeGradient(parameters.x, parameters.y, s1, parameters.z, parameters.w, s2);
             alfa = GoldenRatioSearch(alfaMin, alfaMax, parameters, direction, s1, s2);
             parameters += alfa * direction;
             if (alfa < 0.0000001f)
-                return parameters;
+                return parameters;*/
         }
 
         return parameters;
