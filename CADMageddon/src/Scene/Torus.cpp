@@ -50,6 +50,8 @@ namespace CADMageddon
         point.y = (m_TorusParameters.MajorRadius + m_TorusParameters.MinorRadius * cos(v)) * cos(u);
         point.z = 0;
 
+        point *= glm::two_pi<float>();
+
         return m_Transform->GetMatrix() * glm::vec4(point, 0.0f);
     }
 
@@ -63,6 +65,8 @@ namespace CADMageddon
         point.x = m_TorusParameters.MinorRadius * -sin(v) * cos(u);
         point.y = m_TorusParameters.MinorRadius * -sin(v) * sin(u);
         point.z = m_TorusParameters.MinorRadius * cos(v);
+
+        point *= glm::two_pi<float>();
 
         return m_Transform->GetMatrix() * glm::vec4(point, 0.0f);
     }

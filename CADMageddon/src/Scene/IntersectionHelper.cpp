@@ -24,15 +24,15 @@ namespace CADMageddon
         intersectionPoints.push_back(intersectionPoint);
 
         bool reversed = false;
-        /*for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 400; i++)
         {
             intersectionPoint = GetNextIntersectionPoint(intersectionPoint.Coords, s1, s2, stepSize, reversed);
             {
                 intersectionPoints.push_back(intersectionPoint);
             }
-        }*/
+        }
 
-        while (true)
+       /* while (true)
         {
             intersectionPoint = GetNextIntersectionPoint(intersectionPoint.Coords, s1, s2, stepSize, reversed);
             if (glm::all(AreParametersInRange(intersectionPoint.Coords, s1, s2)))
@@ -55,7 +55,7 @@ namespace CADMageddon
                 LOG_INFO("Length: {}", glm::length(intersectionPoints.back().Location - intersectionPoints[0].Location));
                 break;
             }
-        }
+        }*/
 
         return intersectionPoints;
     }
