@@ -23,14 +23,38 @@ namespace CADMageddon
 
         intersectionPoints.push_back(intersectionPoint);
 
-        bool found = true;
         bool reversed = false;
-        // while (found)
-
-        for (int i = 0; i < 10; i++)
+        /*for (int i = 0; i < 10; i++)
         {
-            intersectionPoint = GetNextIntersectionPoint(intersectionPoint.Coords, intersectionPoints, s1, s2, stepSize, found);
-            intersectionPoints.push_back(intersectionPoint);
+            intersectionPoint = GetNextIntersectionPoint(intersectionPoint.Coords, s1, s2, stepSize, reversed);
+            {
+                intersectionPoints.push_back(intersectionPoint);
+            }
+        }*/
+
+        while (true)
+        {
+            intersectionPoint = GetNextIntersectionPoint(intersectionPoint.Coords, s1, s2, stepSize, reversed);
+            if (glm::all(AreParametersInRange(intersectionPoint.Coords, s1, s2)))
+            {
+                intersectionPoints.push_back(intersectionPoint);
+            }
+            else if (!reversed)
+            {
+                intersectionPoint = intersectionPoints[0];
+                reversed = true;
+                std::reverse(intersectionPoints.begin(), intersectionPoints.end());
+            }
+           /* else if (glm::length(intersectionPoints.back().Location - intersectionPoints[0].Location) <= 2 * stepSize && intersectionPoints.size() > 1)
+            {
+                isClosed = true;
+                break;
+            }
+            else
+            {
+                LOG_INFO("Length: {}", glm::length(intersectionPoints.back().Location - intersectionPoints[0].Location));
+                break;
+            }*/
         }
 
         return intersectionPoints;
@@ -46,8 +70,8 @@ namespace CADMageddon
 
         float u1Delta = (s1->GetMaxU() - s1->GetMinU()) / divide;
         float u2Delta = (s2->GetMaxU() - s2->GetMinU()) / divide;
-        float v1Delta = (s1->GetMaxV() - s1->GetMaxV()) / divide;
-        float v2Delta = (s2->GetMaxV() - s2->GetMaxV()) / divide;
+        float v1Delta = (s1->GetMaxV() - s1->GetMinV()) / divide;
+        float v2Delta = (s2->GetMaxV() - s2->GetMinV()) / divide;
 
         int index = 0;
         for (int i = 0; i <= divide; i++)
@@ -75,7 +99,7 @@ namespace CADMageddon
         {
             auto parameters = startingPos[bestPos[i].second];
             glm::vec4 pos = GradientMinimalization(parameters.x, parameters.y, s1, parameters.z, parameters.w, s2);
-            float dist = GetDistance(pos.x, pos.y, s1, pos.z, pos.w, s2);
+            float dist = glm::length(s1->GetPointAt(pos.s, pos.t) - s2->GetPointAt(pos.p, pos.q));
             if (dist < 0.01f)
                 return pos;
         }
@@ -85,22 +109,25 @@ namespace CADMageddon
 
     IntersectionPoint IntersectionHelper::GetNextIntersectionPoint(
         glm::vec4 parameters,
-        std::vector<IntersectionPoint>& points,
         Ref<SurfaceUV> s1,
         Ref<SurfaceUV> s2,
         float stepSize,
-        bool& found)
+        bool reversed)
     {
-        static const float epsStep = 1e-6f;
-        static const float epsValue = 0.1f;
+        static const float epsValue = 1e-4f;
 
-        float r = -1.0f;
+        float r = 1.0f;
+        if (reversed)
+            r = -1.0f;
 
         auto initialPoint = s1->GetPointAt(parameters.x, parameters.y);
         glm::vec4 previousPos = parameters;
         glm::vec4 nextPos = parameters;
-        const int MaxIterations = 20;
+        const int MaxIterations = 50;
         glm::vec4 fNext;
+
+        auto s1Pos = s1->GetPointAt(nextPos.x, nextPos.y);
+        auto s2Pos = s2->GetPointAt(nextPos.z, nextPos.w);
 
         for (int i = 0; i <= MaxIterations; i++)
         {
@@ -121,33 +148,19 @@ namespace CADMageddon
             jacobianColumns[3] = glm::vec4(-s2TangentV, 0);
 
             glm::mat4 jacobian(jacobianColumns[0], jacobianColumns[1], jacobianColumns[2], jacobianColumns[3]);
-            if (glm::determinant(jacobian) == 0)
-            {
-                found = false;
-                return IntersectionPoint();
-            }
 
-            auto s1Pos = s1->GetPointAt(nextPos.x, nextPos.y);
-            auto s2Pos = s2->GetPointAt(nextPos.z, nextPos.w);
             auto f = glm::vec4(s1Pos - s2Pos, glm::dot(s1Pos - initialPoint, t) - stepSize);
             nextPos = nextPos - glm::inverse(jacobian) * f;
-            if (glm::any(glm::isnan(nextPos)))
-            {
-                found = false;
-                return IntersectionPoint();
-            }
+            s1Pos = s1->GetPointAt(nextPos.x, nextPos.y);
+            s2Pos = s2->GetPointAt(nextPos.z, nextPos.w);
 
-            if (glm::length(s1Pos - s2Pos) <= stepSize)
+            if (glm::length(f) < epsValue || glm::length(s1Pos - initialPoint) <= stepSize)
             {
-                found = true;
                 return { nextPos,s1->GetPointAt(nextPos.x,nextPos.y) };
             }
-
-            previousPos = nextPos;
         }
 
-        found = false;
-        return IntersectionPoint();
+        return { nextPos,s1->GetPointAt(nextPos.x,nextPos.y) };
     }
 
     glm::vec4 IntersectionHelper::GradientMinimalization(
@@ -180,20 +193,21 @@ namespace CADMageddon
 
         for (int i = 0; i < MAX_ITERATIONS; i++)
         {
-            lastDirection = direction;
+            /*lastDirection = direction;
             direction = GetNegativeGradient(parameters.x, parameters.y, s1, parameters.z, parameters.w, s2);
             beta = glm::dot(direction, direction - lastDirection) / glm::dot(lastDirection, lastDirection);
             beta = std::max(0.0f, beta);
             sDirection = direction + beta * lastSDirection;
             alfa = GoldenRatioSearch(alfaMin, alfaMax, parameters, sDirection, s1, s2);
             parameters = parameters + alfa * sDirection;
-            lastSDirection = sDirection;
+            parameters = ClampParameters(parameters, minValues, maxValues);
+            lastSDirection = sDirection;*/
 
-            /*direction = GetNegativeGradient(parameters.x, parameters.y, s1, parameters.z, parameters.w, s2);
+            direction = GetNegativeGradient(parameters.x, parameters.y, s1, parameters.z, parameters.w, s2);
             alfa = GoldenRatioSearch(alfaMin, alfaMax, parameters, direction, s1, s2);
             parameters += alfa * direction;
             if (alfa < 0.0000001f)
-                return parameters;*/
+                return parameters;
         }
 
         return parameters;

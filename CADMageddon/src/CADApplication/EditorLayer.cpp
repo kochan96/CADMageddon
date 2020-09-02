@@ -10,6 +10,7 @@
 #include <imgui.h>
 #include <examples/imgui_impl_glfw.h>
 #include <examples/imgui_impl_opengl3.h>
+#include "ImGui\implot.h"
 
 #include "Core/Application.h"
 #include "Core/Input.h"

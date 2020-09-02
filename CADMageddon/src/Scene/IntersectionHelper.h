@@ -17,11 +17,10 @@ namespace CADMageddon
 
         static IntersectionPoint GetNextIntersectionPoint(
             glm::vec4 parameters,
-            std::vector<IntersectionPoint>& points,
             Ref<SurfaceUV> s1,
             Ref<SurfaceUV> s2,
             float stepSize,
-            bool& found);
+            bool reversed);
 
         static glm::vec4 GradientMinimalization(
             float uStart1,

@@ -234,8 +234,8 @@ namespace CADMageddon
         TorusParameters torusParameters;
         torusParameters.MajorRadius = torusElement->FloatAttribute("MajorRadius");
         torusParameters.MinorRadius = torusElement->FloatAttribute("MinorRadius");
-        torusParameters.MajorRadiusCount = torusElement->IntAttribute("HorizontalSlices");
-        torusParameters.MinorRadiusCount = torusElement->IntAttribute("VerticalSlices");
+        torusParameters.MinorRadiusCount = torusElement->IntAttribute("HorizontalSlices");
+        torusParameters.MajorRadiusCount = torusElement->IntAttribute("VerticalSlices");
 
         auto torus = CreateRef<Torus>(position, name);
         torus->GetTorusParameters() = torusParameters;

@@ -2,6 +2,7 @@
 #include "CADApplication\ImGuiEditors\ImGuiEditors.h"
 #include "Scene/IntersectionHelper.h"
 #include "misc\cpp\imgui_stdlib.h"
+#include "ImGui\implot.h"
 
 namespace CADMageddon
 {
@@ -159,6 +160,55 @@ namespace CADMageddon
 
     void InspectorPanel::RenderIntersectionPlot(Ref<IntersectionCurve> intersectionCurve)
     {
+        bool showPlot = intersectionCurve->GetShowPlot();
+        if (!showPlot)
+        {
+            return;
+        }
+
+        auto intersectionPoints = intersectionCurve->GetIntersectionPoints();
+
+        ImGui::Begin("Intersection Plot");
+        ImPlot::SetNextPlotLimits(0, 1, 0, 1);
+        std::vector<float> x(intersectionPoints.size());
+        std::vector<float> y(intersectionPoints.size());
+        float offset[] = { 1,0,-1 };
+        ImVec4 colors[] = { ImVec4(1,1,1,1),ImVec4(1,1,1,1) };
+        ImPlot::SetColormap(&colors[0], 2);
+        if (ImPlot::BeginPlot("plot 1", "U", "V", ImVec2(-1, 0), ImPlotFlags_Default ^ ImPlotFlags_Legend))
+        {
+            for (int i = 0; i < intersectionPoints.size(); i++) {
+                x[i] = intersectionPoints[i].Coords.s /*+ offset[j]*/;
+                y[i] = intersectionPoints[i].Coords.t /*+ offset[k]*/;
+            }
+            ImPlot::PlotLine("#polygon1",
+                x.data(), y.data(), x.size(), 0);
+            /*if (curve->s1->isTrimmed)
+                RenderPlotGrid(curve, 0);*/
+            ImPlot::EndPlot();
+        }
+
+        if (ImPlot::BeginPlot("plot 2", "U", "V", ImVec2(-1, 0), ImPlotFlags_Default ^ ImPlotFlags_Legend))
+        {
+            for (int i = 0; i < intersectionPoints.size(); i++) {
+                x[i] = intersectionPoints[i].Coords.p /*+ offset[j]*/;
+                y[i] = intersectionPoints[i].Coords.q /*+ offset[k]*/;
+            }
+
+            ImPlot::PlotLine("#polygon2",
+                x.data(), y.data(), x.size(), 0);
+            /*if (curve->s1->isTrimmed)
+                RenderPlotGrid(curve, 0);*/
+            ImPlot::EndPlot();
+        }
+
+
+        if (ImGui::Button("Close window"))
+        {
+            intersectionCurve->SetShowPlot(false);
+        }
+
+        ImGui::End();
 
     }
 
@@ -417,8 +467,12 @@ namespace CADMageddon
 
             if (ImGui::Button("Show Plot"))
             {
-                RenderIntersectionPlot(m_IntersectionCurves[0]);
+                m_IntersectionCurves[0]->SetShowPlot(true);
             }
+
+            ImGui::Text("IsClosed: %s", m_IntersectionCurves[0]->GetIsClosed() ? "Yes" : "No");
+
+            RenderIntersectionPlot(m_IntersectionCurves[0]);
 
 
             ImGui::EndGroup();

@@ -251,95 +251,98 @@ namespace CADMageddon
 
     glm::vec3 BSplinePatch::GetPointAt(float u, float v)
     {
-        u = std::clamp(u, 0.0f, 1.0f);
         v = std::clamp(v, 0.0f, 1.0f);
+        u = m_IsCylinder ? u - std::floorf(u) : glm::clamp(u, 0.0f, 1.0f);
 
-        float U = u * m_PatchCountX;
-        float V = v * m_PatchCountY;
+        u = u * m_PatchCountX;
+        v = v * m_PatchCountY;
 
-        auto patchIndices = GetPatchIndices(U, V);
+        auto patchIndices = GetPatchIndices(u, v);
+
+        v -= std::min(int(v), m_PatchCountY - 1);
+        u -= std::min(int(u), m_PatchCountX - 1);
 
         glm::vec3 point;
         auto basisU = SplineBasis(u);
         auto basisV = SplineBasis(v);
 
-        std::vector<glm::vec3> controlPointsPosition;
-        controlPointsPosition.reserve(m_ControlPoints.size());
-        std::transform(m_ControlPoints.begin(), m_ControlPoints.end(), std::back_inserter(controlPointsPosition), [](Ref<Point> p) {return p->GetPosition(); });
 
-        point = basisU.x * (basisV.x * controlPointsPosition[patchIndices[0]]
-            + basisV.y * controlPointsPosition[patchIndices[4]]
-            + basisV.z * controlPointsPosition[patchIndices[8]]
-            + basisV.w * controlPointsPosition[patchIndices[12]]);
+        point = basisU.x * (basisV.x * m_ControlPoints[patchIndices[0]]->GetPosition()
+            + basisV.y * m_ControlPoints[patchIndices[4]]->GetPosition()
+            + basisV.z * m_ControlPoints[patchIndices[8]]->GetPosition()
+            + basisV.w * m_ControlPoints[patchIndices[12]]->GetPosition());
 
-        point += basisU.y * (basisV.x * controlPointsPosition[patchIndices[1]]
-            + basisV.y * controlPointsPosition[patchIndices[5]]
-            + basisV.z * controlPointsPosition[patchIndices[9]]
-            + basisV.w * controlPointsPosition[patchIndices[13]]);
+        point += basisU.y * (basisV.x * m_ControlPoints[patchIndices[1]]->GetPosition()
+            + basisV.y * m_ControlPoints[patchIndices[5]]->GetPosition()
+            + basisV.z * m_ControlPoints[patchIndices[9]]->GetPosition()
+            + basisV.w * m_ControlPoints[patchIndices[13]]->GetPosition());
 
-        point += basisU.z * (basisV.x * controlPointsPosition[patchIndices[2]]
-            + basisV.y * controlPointsPosition[patchIndices[6]]
-            + basisV.z * controlPointsPosition[patchIndices[10]]
-            + basisV.w * controlPointsPosition[patchIndices[14]]);
+        point += basisU.z * (basisV.x * m_ControlPoints[patchIndices[2]]->GetPosition()
+            + basisV.y * m_ControlPoints[patchIndices[6]]->GetPosition()
+            + basisV.z * m_ControlPoints[patchIndices[10]]->GetPosition()
+            + basisV.w * m_ControlPoints[patchIndices[14]]->GetPosition());
 
-        point += basisU.w * (basisV.x * controlPointsPosition[patchIndices[3]]
-            + basisV.y * controlPointsPosition[patchIndices[7]]
-            + basisV.z * controlPointsPosition[patchIndices[11]]
-            + basisV.w * controlPointsPosition[patchIndices[15]]);
+        point += basisU.w * (basisV.x * m_ControlPoints[patchIndices[3]]->GetPosition()
+            + basisV.y * m_ControlPoints[patchIndices[7]]->GetPosition()
+            + basisV.z * m_ControlPoints[patchIndices[11]]->GetPosition()
+            + basisV.w * m_ControlPoints[patchIndices[15]]->GetPosition());
 
         return point;
     }
 
     glm::vec3 BSplinePatch::GetTangentUAt(float u, float v)
     {
-        u = std::clamp(u, 0.0f, 1.0f);
         v = std::clamp(v, 0.0f, 1.0f);
+        u = m_IsCylinder ? u - std::floorf(u) : glm::clamp(u, 0.0f, 1.0f);
 
-        float U = u * m_PatchCountX;
-        float V = v * m_PatchCountY;
+        u = u * m_PatchCountX;
+        v = v * m_PatchCountY;
 
-        auto patchIndices = GetPatchIndices(U, V);
+        auto patchIndices = GetPatchIndices(u, v);
+
+        v -= std::min(int(v), m_PatchCountY - 1);
+        u -= std::min(int(u), m_PatchCountX - 1);
 
         glm::vec3 point;
         auto basisU = dSplineBasis(u);
         auto basisV = SplineBasis(v);
 
-        std::vector<glm::vec3> controlPointsPosition;
-        controlPointsPosition.reserve(m_ControlPoints.size());
-        std::transform(m_ControlPoints.begin(), m_ControlPoints.end(), std::back_inserter(controlPointsPosition), [](Ref<Point> p) {return p->GetPosition(); });
 
-        point = basisU.x * (basisV.x * controlPointsPosition[patchIndices[0]]
-            + basisV.y * controlPointsPosition[patchIndices[4]]
-            + basisV.z * controlPointsPosition[patchIndices[8]]
-            + basisV.w * controlPointsPosition[patchIndices[12]]);
+        point = basisU.x * (basisV.x * m_ControlPoints[patchIndices[0]]->GetPosition()
+            + basisV.y * m_ControlPoints[patchIndices[4]]->GetPosition()
+            + basisV.z * m_ControlPoints[patchIndices[8]]->GetPosition()
+            + basisV.w * m_ControlPoints[patchIndices[12]]->GetPosition());
 
-        point += basisU.y * (basisV.x * controlPointsPosition[patchIndices[1]]
-            + basisV.y * controlPointsPosition[patchIndices[5]]
-            + basisV.z * controlPointsPosition[patchIndices[9]]
-            + basisV.w * controlPointsPosition[patchIndices[13]]);
+        point += basisU.y * (basisV.x * m_ControlPoints[patchIndices[1]]->GetPosition()
+            + basisV.y * m_ControlPoints[patchIndices[5]]->GetPosition()
+            + basisV.z * m_ControlPoints[patchIndices[9]]->GetPosition()
+            + basisV.w * m_ControlPoints[patchIndices[13]]->GetPosition());
 
-        point += basisU.z * (basisV.x * controlPointsPosition[patchIndices[2]]
-            + basisV.y * controlPointsPosition[patchIndices[6]]
-            + basisV.z * controlPointsPosition[patchIndices[10]]
-            + basisV.w * controlPointsPosition[patchIndices[14]]);
+        point += basisU.z * (basisV.x * m_ControlPoints[patchIndices[2]]->GetPosition()
+            + basisV.y * m_ControlPoints[patchIndices[6]]->GetPosition()
+            + basisV.z * m_ControlPoints[patchIndices[10]]->GetPosition()
+            + basisV.w * m_ControlPoints[patchIndices[14]]->GetPosition());
 
-        point += basisU.w * (basisV.x * controlPointsPosition[patchIndices[3]]
-            + basisV.y * controlPointsPosition[patchIndices[7]]
-            + basisV.z * controlPointsPosition[patchIndices[11]]
-            + basisV.w * controlPointsPosition[patchIndices[15]]);
+        point += basisU.w * (basisV.x * m_ControlPoints[patchIndices[3]]->GetPosition()
+            + basisV.y * m_ControlPoints[patchIndices[7]]->GetPosition()
+            + basisV.z * m_ControlPoints[patchIndices[11]]->GetPosition()
+            + basisV.w * m_ControlPoints[patchIndices[15]]->GetPosition());
 
         return point;
     }
 
     glm::vec3 BSplinePatch::GetTangentVAt(float u, float v)
     {
-        u = std::clamp(u, 0.0f, 1.0f);
         v = std::clamp(v, 0.0f, 1.0f);
+        u = m_IsCylinder ? u - std::floorf(u) : glm::clamp(u, 0.0f, 1.0f);
 
-        float U = u * m_PatchCountX;
-        float V = v * m_PatchCountY;
+        u = u * m_PatchCountX;
+        v = v * m_PatchCountY;
 
-        auto patchIndices = GetPatchIndices(U, V);
+        auto patchIndices = GetPatchIndices(u, v);
+
+        v -= std::min(int(v), m_PatchCountY - 1);
+        u -= std::min(int(u), m_PatchCountX - 1);
 
         glm::vec3 point;
         auto basisU = SplineBasis(u);
@@ -349,25 +352,25 @@ namespace CADMageddon
         controlPointsPosition.reserve(m_ControlPoints.size());
         std::transform(m_ControlPoints.begin(), m_ControlPoints.end(), std::back_inserter(controlPointsPosition), [](Ref<Point> p) {return p->GetPosition(); });
 
-        point = basisU.x * (basisV.x * controlPointsPosition[patchIndices[0]]
-            + basisV.y * controlPointsPosition[patchIndices[4]]
-            + basisV.z * controlPointsPosition[patchIndices[8]]
-            + basisV.w * controlPointsPosition[patchIndices[12]]);
+        point = basisU.x * (basisV.x * m_ControlPoints[patchIndices[0]]->GetPosition()
+            + basisV.y * m_ControlPoints[patchIndices[4]]->GetPosition()
+            + basisV.z * m_ControlPoints[patchIndices[8]]->GetPosition()
+            + basisV.w * m_ControlPoints[patchIndices[12]]->GetPosition());
 
-        point += basisU.y * (basisV.x * controlPointsPosition[patchIndices[1]]
-            + basisV.y * controlPointsPosition[patchIndices[5]]
-            + basisV.z * controlPointsPosition[patchIndices[9]]
-            + basisV.w * controlPointsPosition[patchIndices[13]]);
+        point += basisU.y * (basisV.x * m_ControlPoints[patchIndices[1]]->GetPosition()
+            + basisV.y * m_ControlPoints[patchIndices[5]]->GetPosition()
+            + basisV.z * m_ControlPoints[patchIndices[9]]->GetPosition()
+            + basisV.w * m_ControlPoints[patchIndices[13]]->GetPosition());
 
-        point += basisU.z * (basisV.x * controlPointsPosition[patchIndices[2]]
-            + basisV.y * controlPointsPosition[patchIndices[6]]
-            + basisV.z * controlPointsPosition[patchIndices[10]]
-            + basisV.w * controlPointsPosition[patchIndices[14]]);
+        point += basisU.z * (basisV.x * m_ControlPoints[patchIndices[2]]->GetPosition()
+            + basisV.y * m_ControlPoints[patchIndices[6]]->GetPosition()
+            + basisV.z * m_ControlPoints[patchIndices[10]]->GetPosition()
+            + basisV.w * m_ControlPoints[patchIndices[14]]->GetPosition());
 
-        point += basisU.w * (basisV.x * controlPointsPosition[patchIndices[3]]
-            + basisV.y * controlPointsPosition[patchIndices[7]]
-            + basisV.z * controlPointsPosition[patchIndices[11]]
-            + basisV.w * controlPointsPosition[patchIndices[15]]);
+        point += basisU.w * (basisV.x * m_ControlPoints[patchIndices[3]]->GetPosition()
+            + basisV.y * m_ControlPoints[patchIndices[7]]->GetPosition()
+            + basisV.z * m_ControlPoints[patchIndices[11]]->GetPosition()
+            + basisV.w * m_ControlPoints[patchIndices[15]]->GetPosition());
 
         return point;
     }

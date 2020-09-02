@@ -27,8 +27,8 @@ namespace CADMageddon
 
     glm::vec3 Torus::GetPointAt(float u, float v)
     {
-        u = std::clamp(u, GetMinU(), GetMaxU());
-        v = std::clamp(v, GetMinV(), GetMaxV());
+        u = glm::two_pi<float>() * u;
+        v = glm::two_pi<float>() * v;
 
         glm::vec3 point;
 
@@ -41,8 +41,8 @@ namespace CADMageddon
 
     glm::vec3 Torus::GetTangentUAt(float u, float v)
     {
-        u = std::clamp(u, GetMinU(), GetMaxU());
-        v = std::clamp(v, GetMinV(), GetMaxV());
+        u = glm::two_pi<float>() * u;
+        v = glm::two_pi<float>() * v;
 
         glm::vec3 point;
 
@@ -55,8 +55,8 @@ namespace CADMageddon
 
     glm::vec3 Torus::GetTangentVAt(float u, float v)
     {
-        u = std::clamp(u, GetMinU(), GetMaxU());
-        v = std::clamp(v, GetMinV(), GetMaxV());
+        u = glm::two_pi<float>() * u;
+        v = glm::two_pi<float>() * v;
 
         glm::vec3 point;
 
@@ -74,7 +74,7 @@ namespace CADMageddon
 
     float Torus::GetMaxU() const
     {
-        return glm::two_pi<float>();
+        return 1.0f;
     }
 
     float Torus::GetMinV() const
@@ -84,7 +84,7 @@ namespace CADMageddon
 
     float Torus::GetMaxV() const
     {
-        return glm::two_pi<float>();
+        return 1.0f;
     }
 }
 
