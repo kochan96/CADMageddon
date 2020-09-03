@@ -23,6 +23,23 @@ namespace CADMageddon
         }
 
         m_Indices = mesh.Indices;
+
+        m_TextureCoordinates.clear();
+        m_TextureCoordinates.reserve(m_Points.size());
+
+        int uCount = m_TorusParameters.MajorRadiusCount;
+        int vCount = m_TorusParameters.MinorRadiusCount;
+        float uDelta = 1.0f / uCount;
+        float vDelta = 1.0f / vCount;
+        for (int i = 0; i < uCount; i++)
+        {
+            float u = i * uDelta;
+            for (int j = 0; j < vCount; j++)
+            {
+                float v = j * vDelta;
+                m_TextureCoordinates.push_back(glm::vec2(u, v));
+            }
+        }
     }
 
     glm::vec3 Torus::GetPointAt(float u, float v)

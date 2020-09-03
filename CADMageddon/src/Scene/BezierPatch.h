@@ -70,6 +70,8 @@ namespace CADMageddon
         virtual float GetMaxU() const override;
         virtual float GetMinV() const override;
         virtual float GetMaxV() const override;
+        virtual bool GetRollU() const { return m_IsCylinder; }
+
 
     private:
         std::vector<uint32_t> GetPatchIndices(float u, float v);

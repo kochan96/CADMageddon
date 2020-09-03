@@ -27,6 +27,7 @@ namespace CADMageddon
 
         std::vector<Ref<Point>> GetPoints() { return m_Points; }
         std::vector<uint32_t> GetIndices() { return m_Indices; }
+        std::vector<glm::vec2> GetTextureCoordinates() { return m_TextureCoordinates; }
         Ref<Transform> GetTransform() { return m_Transform; }
 
         void RecalculateMesh();
@@ -41,6 +42,8 @@ namespace CADMageddon
         virtual float GetMaxU() const override;
         virtual float GetMinV() const override;
         virtual float GetMaxV() const override;
+        virtual bool GetRollU() const override { return true; }
+        virtual bool GetRollV() const override { return true; }
 
     private:
         Ref<Transform> m_Transform;
@@ -49,6 +52,7 @@ namespace CADMageddon
 
         std::vector<Ref<Point>> m_Points;
         std::vector<uint32_t> m_Indices;
+        std::vector<glm::vec2> m_TextureCoordinates;
 
         bool m_IsSelected = false;
     };

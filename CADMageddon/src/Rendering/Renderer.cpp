@@ -40,6 +40,8 @@ namespace CADMageddon
     static RenderSelectionBoxData s_RenderSelectionBoxData;
     static RenderGregoryPatchData s_RenderGregoryPatch;
 
+    static RenderTextureQuadData s_RenderTextureQuadData;
+
     void Renderer::Init()
     {
         glEnable(GL_DEBUG_OUTPUT);
@@ -62,6 +64,8 @@ namespace CADMageddon
         s_ShaderLibrary->Load("BSplinePatchShader", "assets/shaders/BSplinePatchShader.glsl");
         s_ShaderLibrary->Load("SelectionBoxShader", "assets/shaders/SelectionBoxShader.glsl");
         s_ShaderLibrary->Load("GregoryPatchShader", "assets/shaders/GregoryPatchShader.glsl");
+        s_ShaderLibrary->Load("TorusShader", "assets/shaders/TorusShader.glsl");
+        s_ShaderLibrary->Load("TextureQuadShader", "assets/shaders/TextureShader.glsl");
 
         InitTorusRenderData();
         InitPointRenderData();
@@ -71,21 +75,51 @@ namespace CADMageddon
         InitBSplinePatchRenderData();
         InitGregoryPatchRenderData();
         InitSelectionBoxRenderData();
+
+        s_RenderTextureQuadData.TextureQuadVertexArray = CreateRef<OpenGLVertexArray>();
+
+
+        s_RenderTextureQuadData.TextureQuadVertexBuffer = CreateRef<OpenGLVertexBuffer>(s_RenderTextureQuadData.PointCount * sizeof(VertexT));
+        float verticesData[] =
+        {
+            -1.0f,-1.0f,0.0f, 0.0f,0.0f,
+            1.0f,-1.0f,0.0f, 1.0f,0.0f,
+            1.0f,1.0f,0.0f, 1.0f, 1.0f,
+            -1.0f, 1.0f, 0.0f, 0.0f,1.0f
+        };
+
+        s_RenderTextureQuadData.TextureQuadVertexBuffer->SetLayout({
+            { ShaderDataType::Float3, "a_Position" },
+            { ShaderDataType::Float2, "a_TextureCoordinates" }
+            });
+
+        uint32_t indices[] =
+        {
+            0,1,2,
+            2,3,0
+        };
+
+        s_RenderTextureQuadData.TextureQuadIndexBuffer = CreateRef<OpenGLIndexBuffer>(indices, 6);
+        s_RenderTextureQuadData.TextureQuadVertexBuffer->SetData(verticesData, sizeof(verticesData));
+        s_RenderTextureQuadData.TextureQuadVertexArray->AddVertexBuffer(s_RenderTextureQuadData.TextureQuadVertexBuffer);
+        s_RenderTextureQuadData.TextureQuadVertexArray->SetIndexBuffer(s_RenderTextureQuadData.TextureQuadIndexBuffer);
+        s_RenderTextureQuadData.TextureQuadShader = s_ShaderLibrary->Get("TextureQuadShader");
     }
 
     void Renderer::InitTorusRenderData()
     {
         s_RenderTorusData.TorusVertexArray = CreateRef<OpenGLVertexArray>();
-        s_RenderTorusData.TorusVertexBuffer = CreateRef<OpenGLVertexBuffer>(s_RenderTorusData.MaxVertices * sizeof(Vertex));
+        s_RenderTorusData.TorusVertexBuffer = CreateRef<OpenGLVertexBuffer>(s_RenderTorusData.MaxVertices * sizeof(VertexT));
         s_RenderTorusData.TorusIndexBuffer = CreateRef<OpenGLIndexBuffer>(s_RenderTorusData.MaxIndices);
 
         s_RenderTorusData.TorusVertexBuffer->SetLayout({
-            { ShaderDataType::Float3, "a_Position" }
+            { ShaderDataType::Float3, "a_Position" },
+            { ShaderDataType::Float2, "a_TextureCoordinates" }
             });
 
         s_RenderTorusData.TorusVertexArray->AddVertexBuffer(s_RenderTorusData.TorusVertexBuffer);
         s_RenderTorusData.TorusVertexArray->SetIndexBuffer(s_RenderTorusData.TorusIndexBuffer);
-        s_RenderTorusData.FlatColorShader = s_ShaderLibrary->Get("FlatColorShader");
+        s_RenderTorusData.TorusShader = s_ShaderLibrary->Get("TorusShader");
     }
 
     void Renderer::InitPointRenderData()
@@ -242,6 +276,7 @@ namespace CADMageddon
 
     void Renderer::RenderTorus(
         const std::vector<glm::vec3>& vertices,
+        const std::vector<glm::vec2>& textureCoordinates,
         const::std::vector<uint32_t>& indices,
         const glm::mat4& transform,
         const glm::vec4& color)
@@ -249,18 +284,73 @@ namespace CADMageddon
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-        s_RenderTorusData.FlatColorShader->Bind();
-        s_RenderTorusData.FlatColorShader->SetMat4("u_ViewProjectionMatrix", s_SceneData->ViewProjectionMatrix);
-        s_RenderTorusData.FlatColorShader->SetMat4("u_ModelMatrix", transform);
-        s_RenderTorusData.FlatColorShader->SetFloat4("u_Color", color);
+        s_RenderTorusData.TorusShader->Bind();
+        s_RenderTorusData.TorusShader->SetMat4("u_ViewProjectionMatrix", s_SceneData->ViewProjectionMatrix);
+        s_RenderTorusData.TorusShader->SetMat4("u_ModelMatrix", transform);
+        s_RenderTorusData.TorusShader->SetFloat4("u_Color", color);
+        s_RenderTorusData.TorusShader->SetBool("isTrimmed", false);
+
+        std::vector<float> verticesData(vertices.size() * 5);
+        for (int i = 0; i < vertices.size(); i++)
+        {
+            verticesData[5 * i] = vertices[i].x;
+            verticesData[5 * i + 1] = vertices[i].y;
+            verticesData[5 * i + 2] = vertices[i].z;
+            verticesData[5 * i + 3] = textureCoordinates[i].x;
+            verticesData[5 * i + 4] = textureCoordinates[i].y;
+        }
 
         s_RenderTorusData.TorusVertexArray->Bind();
-        s_RenderTorusData.TorusVertexBuffer->SetData(&vertices[0].x, vertices.size() * sizeof(Vertex));
+        s_RenderTorusData.TorusVertexBuffer->SetData(verticesData.data(), vertices.size() * sizeof(VertexT));
         s_RenderTorusData.TorusIndexBuffer->SetIndices(indices.data(), indices.size());
 
         glDrawElements(GL_LINES, s_RenderTorusData.TorusVertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+
+    void Renderer::RenderTrimmedTorus(
+        const std::vector<glm::vec3>& vertices,
+        const std::vector<glm::vec2>& textureCoordinates,
+        const bool reverseTrimming,
+        const unsigned int textureId,
+        const std::vector<uint32_t>& indices,
+        const glm::mat4& transform,
+        const glm::vec4& color)
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+        s_RenderTorusData.TorusShader->Bind();
+        s_RenderTorusData.TorusShader->SetMat4("u_ViewProjectionMatrix", s_SceneData->ViewProjectionMatrix);
+        s_RenderTorusData.TorusShader->SetMat4("u_ModelMatrix", transform);
+        s_RenderTorusData.TorusShader->SetFloat4("u_Color", color);
+        s_RenderTorusData.TorusShader->SetBool("isTrimmed", true);
+        s_RenderTorusData.TorusShader->SetBool("reverseTrimming", reverseTrimming);
+
+
+        s_RenderTorusData.TorusVertexArray->Bind();
+        std::vector<float> verticesData(vertices.size() * 5);
+        for (int i = 0; i < vertices.size(); i++)
+        {
+            verticesData[5 * i] = vertices[i].x;
+            verticesData[5 * i + 1] = vertices[i].y;
+            verticesData[5 * i + 2] = vertices[i].z;
+            verticesData[5 * i + 3] = textureCoordinates[i].x;
+            verticesData[5 * i + 4] = textureCoordinates[i].y;
+        }
+
+        s_RenderTorusData.TorusVertexBuffer->SetData(verticesData.data(), vertices.size() * sizeof(VertexT));
+        s_RenderTorusData.TorusIndexBuffer->SetIndices(indices.data(), indices.size());
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, textureId);
+        s_RenderTorusData.TorusShader->SetBool("trimmingSampler", 0);
+
+        glDrawElements(GL_LINES, s_RenderTorusData.TorusVertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
+
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+        //RenderTextureQuad(textureId);
     }
 
     void Renderer::RenderGrid(const Ref<OpenGLVertexArray>& vertexArray, const glm::mat4& transform, const glm::vec4& color)
@@ -477,6 +567,9 @@ namespace CADMageddon
         const glm::vec3& p15,
         float uSubdivisionCount,
         float vSubdivisionCount,
+        bool isTrimmed,
+        unsigned int textureId,
+        bool reverseTrimming,
         const glm::vec4& color)
     {
         float vertices[] =
@@ -498,6 +591,23 @@ namespace CADMageddon
             p11.x,p11.y,p11.z,
             p15.x,p15.y,p15.z,
 
+            p15.x,p15.y,p15.z,
+            p11.x,p11.y,p11.z,
+            p7.x,p7.y,p7.z,
+            p3.x,p3.y,p3.z,
+            p14.x,p14.y,p14.z,
+            p10.x,p10.y,p10.z,
+            p6.x,p6.y,p6.z,
+            p2.x,p2.y,p2.z,
+            p13.x,p13.y,p13.z,
+            p9.x,p9.y,p9.z,
+            p5.x,p5.y,p5.z,
+            p1.x,p1.y,p1.z,
+            p12.x,p12.y,p12.z,
+            p8.x,p8.y,p8.z,
+            p4.x,p4.y,p4.z,
+            p0.x,p0.y,p0.z,
+
             p0.x,p0.y,p0.z,
             p1.x,p1.y,p1.z,
             p2.x,p2.y,p2.z,
@@ -514,6 +624,23 @@ namespace CADMageddon
             p13.x,p13.y,p13.z,
             p14.x,p14.y,p14.z,
             p15.x,p15.y,p15.z,
+
+            p15.x,p15.y,p15.z,
+            p14.x,p14.y,p14.z,
+            p13.x,p13.y,p13.z,
+            p12.x,p12.y,p12.z,
+            p11.x,p11.y,p11.z,
+            p10.x,p10.y,p10.z,
+            p9.x,p9.y,p9.z,
+            p8.x,p8.y,p8.z,
+            p7.x,p7.y,p7.z,
+            p6.x,p6.y,p6.z,
+            p5.x,p5.y,p5.z,
+            p4.x,p4.y,p4.z,
+            p3.x,p3.y,p3.z,
+            p2.x,p2.y,p2.z,
+            p1.x,p1.y,p1.z,
+            p0.x,p0.y,p0.z,
         };
 
         s_RenderBezierPatchData.BezierPatchVertexArray->Bind();
@@ -522,27 +649,30 @@ namespace CADMageddon
         s_RenderBezierPatchData.BezierPatchShader->SetMat4("u_ViewProjectionMatrix", s_SceneData->ViewProjectionMatrix);
         s_RenderBezierPatchData.BezierPatchShader->SetFloat4("u_Color", color);
         s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_SubdivisionCount", uSubdivisionCount - 1);
+        s_RenderBezierPatchData.BezierPatchShader->SetBool("isTrimmed", isTrimmed);
+        s_RenderBezierPatchData.BezierPatchShader->SetBool("u_ReverseTexture", true);
+        if (isTrimmed)
+        {
+            s_RenderBezierPatchData.BezierPatchShader->SetBool("reverseTrimming", reverseTrimming);
+            s_RenderBezierPatchData.BezierPatchShader->SetInt("trimmingSampler", 0);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, textureId);
+        }
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glPatchParameteri(GL_PATCH_VERTICES, 16);
-        glDrawArrays(GL_PATCHES, 0, 32);
+        glDrawArrays(GL_PATCHES, 0, 16);
 
-        s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_SubdivisionCount", vSubdivisionCount - 1);
+        s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_SubdivisionCount", 1);
         glDrawArrays(GL_PATCHES, 16, 16);
 
-        glm::vec3 pp0 = p3;
-        glm::vec3 pp1 = p7;
-        glm::vec3 pp2 = p11;
-        glm::vec3 pp3 = p15;
+        s_RenderBezierPatchData.BezierPatchShader->SetBool("u_ReverseTexture", false);
 
-        ShaderRenderBezierC0(pp0, pp1, pp2, pp3, color);
+        s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_SubdivisionCount", vSubdivisionCount - 1);
+        glDrawArrays(GL_PATCHES, 32, 16);
 
-        pp0 = p12;
-        pp1 = p13;
-        pp2 = p14;
-        pp3 = p15;
-
-        ShaderRenderBezierC0(pp0, pp1, pp2, pp3, color);
+        s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_SubdivisionCount", 1);
+        glDrawArrays(GL_PATCHES, 48, 16);
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
@@ -566,6 +696,9 @@ namespace CADMageddon
         const glm::vec3& p15,
         float uSubdivisionCount,
         float vSubdivionCount,
+        bool isTrimmed,
+        unsigned int textureId,
+        bool reverseTrimming,
         const glm::vec4& color)
     {
         float vertices[] =
@@ -587,6 +720,23 @@ namespace CADMageddon
             p11.x,p11.y,p11.z,
             p15.x,p15.y,p15.z,
 
+            p15.x,p15.y,p15.z,
+            p11.x,p11.y,p11.z,
+            p7.x,p7.y,p7.z,
+            p3.x,p3.y,p3.z,
+            p14.x,p14.y,p14.z,
+            p10.x,p10.y,p10.z,
+            p6.x,p6.y,p6.z,
+            p2.x,p2.y,p2.z,
+            p13.x,p13.y,p13.z,
+            p9.x,p9.y,p9.z,
+            p5.x,p5.y,p5.z,
+            p1.x,p1.y,p1.z,
+            p12.x,p12.y,p12.z,
+            p8.x,p8.y,p8.z,
+            p4.x,p4.y,p4.z,
+            p0.x,p0.y,p0.z,
+
             p0.x,p0.y,p0.z,
             p1.x,p1.y,p1.z,
             p2.x,p2.y,p2.z,
@@ -603,6 +753,23 @@ namespace CADMageddon
             p13.x,p13.y,p13.z,
             p14.x,p14.y,p14.z,
             p15.x,p15.y,p15.z,
+
+            p15.x,p15.y,p15.z,
+            p14.x,p14.y,p14.z,
+            p13.x,p13.y,p13.z,
+            p12.x,p12.y,p12.z,
+            p11.x,p11.y,p11.z,
+            p10.x,p10.y,p10.z,
+            p9.x,p9.y,p9.z,
+            p8.x,p8.y,p8.z,
+            p7.x,p7.y,p7.z,
+            p6.x,p6.y,p6.z,
+            p5.x,p5.y,p5.z,
+            p4.x,p4.y,p4.z,
+            p3.x,p3.y,p3.z,
+            p2.x,p2.y,p2.z,
+            p1.x,p1.y,p1.z,
+            p0.x,p0.y,p0.z,
         };
 
         s_RenderBSplinePatchData.BSplinePatchVertexArray->Bind();
@@ -611,30 +778,34 @@ namespace CADMageddon
         s_RenderBSplinePatchData.BSplinePatchShader->SetMat4("u_ViewProjectionMatrix", s_SceneData->ViewProjectionMatrix);
         s_RenderBSplinePatchData.BSplinePatchShader->SetFloat4("u_Color", color);
         s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_SubdivisionCount", uSubdivisionCount - 1);
+        s_RenderBSplinePatchData.BSplinePatchShader->SetBool("u_ReverseTexture", true);
 
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+        s_RenderBSplinePatchData.BSplinePatchShader->SetBool("isTrimmed", isTrimmed);
+        s_RenderBSplinePatchData.BSplinePatchShader->SetBool("u_ReverseTexture", true);
+        if (isTrimmed)
+        {
+            s_RenderBSplinePatchData.BSplinePatchShader->SetBool("reverseTrimming", reverseTrimming);
+            s_RenderBSplinePatchData.BSplinePatchShader->SetInt("trimmingSampler", 0);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, textureId);
+        }
+
         glPatchParameteri(GL_PATCH_VERTICES, 16);
         glDrawArrays(GL_PATCHES, 0, 16);
 
-        s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_SubdivisionCount", vSubdivionCount - 1);
+        s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_SubdivisionCount", 1);
         glDrawArrays(GL_PATCHES, 16, 16);
 
-        glm::vec4 basisV = SplineBasis(1.0f);
+        s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_SubdivisionCount", vSubdivionCount - 1);
+        s_RenderBSplinePatchData.BSplinePatchShader->SetBool("u_ReverseTexture", false);
 
-        glm::vec3 pp0 = (basisV.x * p0 + basisV.y * p1 + basisV.z * p2 + basisV.w * p3);
-        glm::vec3 pp1 = (basisV.x * p4 + basisV.y * p5 + basisV.z * p6 + basisV.w * p7);
-        glm::vec3 pp2 = (basisV.x * p8 + basisV.y * p9 + basisV.z * p10 + basisV.w * p11);
-        glm::vec3 pp3 = (basisV.x * p12 + basisV.y * p13 + basisV.z * p14 + basisV.w * p15);
+        glDrawArrays(GL_PATCHES, 32, 16);
 
-        RenderBSpline(pp0, pp1, pp2, pp3, color, false);
-
-        pp0 = (basisV.x * p0 + basisV.y * p4 + basisV.z * p8 + basisV.w * p12);
-        pp1 = (basisV.x * p1 + basisV.y * p5 + basisV.z * p9 + basisV.w * p13);
-        pp2 = (basisV.x * p2 + basisV.y * p6 + basisV.z * p10 + basisV.w * p14);
-        pp3 = (basisV.x * p3 + basisV.y * p7 + basisV.z * p11 + basisV.w * p15);
-
-        RenderBSpline(pp0, pp1, pp2, pp3, color, false);
-
+        s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_SubdivisionCount", 1);
+        glDrawArrays(GL_PATCHES, 48, 16);
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
@@ -767,6 +938,18 @@ namespace CADMageddon
             RenderBSpline(p1, p2, p3, p3, color, false);
             RenderBSpline(p2, p3, p3, p3, color, false);
         }
+    }
+
+    void Renderer::RenderTextureQuad(int textureId)
+    {
+        s_RenderTextureQuadData.TextureQuadVertexArray->Bind();
+        s_RenderTextureQuadData.TextureQuadShader->Bind();
+        s_RenderTextureQuadData.TextureQuadShader->SetInt("trimmingSampler", 0);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, textureId);
+
+        glDrawElements(GL_TRIANGLES, s_RenderTextureQuadData.TextureQuadIndexBuffer->GetCount(), GL_UNSIGNED_INT, 0);
     }
 
     float CADMageddon::Renderer::Spline(float t, float ti, float interval)

@@ -99,6 +99,7 @@ namespace CADMageddon
 
         void RenderControlGrid(const std::vector<Ref<Point>>& points, const std::vector<uint32_t>& gridIndices, const glm::vec4& color = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
 
+        void RenderTorus(Ref<Torus> torus);
         void RenderBezier(Ref<BezierC0> bezierC0);
         void RenderBSpline(Ref<BSpline> bSpline);
         void RenderInterpolatedCurve(Ref<InterpolatedCurve> interPolatedCurve);

@@ -4,6 +4,7 @@
 #include "imgui.h"
 #include "misc\cpp\imgui_stdlib.h"
 #include "BaseObjectEditor.h"
+#include "SurfaceEditor.h"
 
 
 namespace CADMageddon
@@ -50,6 +51,12 @@ namespace CADMageddon
 
         ImGui::EndGroup();
 
+        ImGui::Separator();
+
         BaseObjectEditor(bezierPatch);
+
+        ImGui::Separator();
+
+        SurfaceEditor(bezierPatch);
     }
 }

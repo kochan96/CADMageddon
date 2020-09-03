@@ -59,7 +59,6 @@ namespace CADMageddon
             glm::vec4 minValues,
             glm::vec4 maxValues);
 
-        static glm::bvec4 AreParametersInRange(glm::vec4 parameters, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2);
-       
+        static bool CheckParameters(glm::vec4& parameters, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2);
     };
 }

@@ -29,6 +29,9 @@ void main()
 layout (isolines, equal_spacing, cw) in;
 
 uniform mat4 u_ViewProjectionMatrix;
+uniform bool u_ReverseTexture;
+
+out vec2 tess_TextureCoordinates;
 
 vec4 BernsteinBasis(float t)
 {
@@ -55,6 +58,10 @@ void main ()
 {
     float u = gl_TessCoord.x;
     float v = gl_TessCoord.y;
+    if(u_ReverseTexture)
+        tess_TextureCoordinates = vec2(v,u);
+    else
+        tess_TextureCoordinates = vec2(u,v);
 
     vec4 bezpatch[16];
     bezpatch[0] = gl_in[0].gl_Position;
@@ -91,9 +98,28 @@ void main ()
 
 layout(location = 0) out vec4 color;
 
+in vec2 tess_TextureCoordinates;
+
 uniform vec4 u_Color;
+uniform bool isTrimmed;
+uniform bool reverseTrimming;
+
+uniform sampler2D trimmingSampler;
 
 void main()
 {
+
+    if(isTrimmed)
+    {
+        float alfa = texture(trimmingSampler,tess_TextureCoordinates).r;
+        if(reverseTrimming)
+        {
+           alfa = 1.0f - alfa; 
+        }
+
+        if(alfa <0.2f)
+            discard;
+    }
+
     color = u_Color;
 }

@@ -195,6 +195,10 @@ namespace CADMageddon
         static int intersectionCount = 0;
         auto intersectionCurve = IntersectionCurve::Create("Intersection_" + std::to_string(intersectionCount++), points, s1, s2, isClosed);
         m_IntersectionCurve.push_back(intersectionCurve);
+        s1->SetIntersectionCurve(intersectionCurve);
+        s1->SetReverseTrimming(true);
+        s2->SetIntersectionCurve(intersectionCurve);
+
         return intersectionCurve;
     }
 
@@ -202,14 +206,7 @@ namespace CADMageddon
     {
         for (auto torus : m_Torus)
         {
-            std::vector<glm::vec3> vertices;
-            for (auto point : torus->GetPoints())
-            {
-                vertices.push_back(point->GetTransform()->Translation); // should be little faster than GetPosition
-            }
-
-            auto color = torus->GetIsSelected() ? m_SelectionColor : m_DefaultColor;
-            Renderer::RenderTorus(vertices, torus->GetIndices(), torus->GetTransform()->GetMatrix(), color);
+            RenderTorus(torus);
         }
 
         for (auto bezierC0 : m_BezierC0)
@@ -495,6 +492,50 @@ namespace CADMageddon
         }
     }
 
+    void Scene::RenderTorus(Ref<Torus> torus)
+    {
+
+        std::vector<glm::vec3> vertices;
+        for (auto point : torus->GetPoints())
+        {
+            vertices.push_back(point->GetTransform()->Translation);
+        }
+
+        auto color = torus->GetIsSelected() ? m_SelectionColor : m_DefaultColor;
+
+        if (!torus->GetIsTrimmed())
+        {
+            Renderer::RenderTorus(vertices, torus->GetTextureCoordinates(), torus->GetIndices(), torus->GetTransform()->GetMatrix(), color);
+        }
+        else
+        {
+            bool isFirst = torus->GetIntersectionCurve()->GetFirstSurface() == torus;
+            unsigned int textureId = 0;
+            if (isFirst)
+            {
+                textureId = torus->GetIntersectionCurve()->GetFirstTextureId();
+            }
+            else
+            {
+                textureId = torus->GetIntersectionCurve()->GetSecondTextureId();
+            }
+
+            Renderer::RenderTrimmedTorus(
+                vertices,
+                torus->GetTextureCoordinates(),
+                torus->GetReverseTrimming(),
+                textureId,
+                torus->GetIndices(),
+                torus->GetTransform()->GetMatrix(),
+                color);
+        }
+
+
+        auto pos = torus->GetPointAt(0.0f, 0.5f);
+        auto tangentU = torus->GetTangentUAt(0.0f, 0.5f);
+        Renderer::RenderLine(pos, pos + tangentU, glm::vec4(1.0f, 0.0, 0.0f, 1.0f));
+    }
+
     void Scene::RenderBezier(Ref<BezierC0> bezierC0)
     {
         auto controlPoints = bezierC0->GetControlPoints();
@@ -589,6 +630,9 @@ namespace CADMageddon
                 controlPoints[indices[i + 15]]->GetPosition(),
                 bezierPatch->GetUDivisionCount(),
                 bezierPatch->GetVDivisionCount(),
+                bezierPatch->GetIsTrimmed(),
+                bezierPatch->GetTextureId(),
+                bezierPatch->GetReverseTrimming(),
                 color);
         }
 
@@ -628,6 +672,9 @@ namespace CADMageddon
                 controlPoints[indices[i + 15]]->GetPosition(),
                 bSplinePatch->GetUDivisionCount(),
                 bSplinePatch->GetVDivisionCount(),
+                bSplinePatch->GetIsTrimmed(),
+                bSplinePatch->GetTextureId(),
+                bSplinePatch->GetReverseTrimming(),
                 color);
         }
 

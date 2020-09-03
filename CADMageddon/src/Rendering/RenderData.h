@@ -17,6 +17,12 @@ namespace CADMageddon
         glm::vec4 Color;
     };
 
+    struct VertexT
+    {
+        glm::vec3 Position;
+        glm::vec2 TextureCoordinates;
+    };
+
     struct RenderTorusData
     {
         static const int MaxVertices = 20000;
@@ -25,7 +31,7 @@ namespace CADMageddon
         Ref<OpenGLVertexArray> TorusVertexArray;
         Ref<OpenGLVertexBuffer> TorusVertexBuffer;
         Ref<OpenGLIndexBuffer> TorusIndexBuffer;
-        Ref<OpenGLShader> FlatColorShader;
+        Ref<OpenGLShader> TorusShader;
     };
 
     struct RenderPointData
@@ -66,7 +72,7 @@ namespace CADMageddon
 
     struct RenderBezierPatchData
     {
-        static const int PointCount = 32;
+        static const int PointCount = 64;
         Ref<OpenGLVertexArray> BezierPatchVertexArray;
         Ref<OpenGLVertexBuffer> BezierPatchVertexBuffer;
         Ref<OpenGLShader> BezierPatchShader;
@@ -74,7 +80,7 @@ namespace CADMageddon
 
     struct RenderBSplinePatchData
     {
-        static const int PointCount = 32;
+        static const int PointCount = 64;
         Ref<OpenGLVertexArray> BSplinePatchVertexArray;
         Ref<OpenGLVertexBuffer> BSplinePatchVertexBuffer;
         Ref<OpenGLShader> BSplinePatchShader;
@@ -95,5 +101,14 @@ namespace CADMageddon
         Ref<OpenGLVertexArray> GregoryVertexArray;
         Ref<OpenGLVertexBuffer> GregoryVertexBuffer;
         Ref<OpenGLShader> GregoryShader;
+    };
+
+    struct RenderTextureQuadData
+    {
+        static const int PointCount = 4;
+        Ref<OpenGLVertexArray> TextureQuadVertexArray;
+        Ref<OpenGLVertexBuffer> TextureQuadVertexBuffer;
+        Ref<OpenGLIndexBuffer> TextureQuadIndexBuffer;
+        Ref<OpenGLShader> TextureQuadShader;
     };
 }

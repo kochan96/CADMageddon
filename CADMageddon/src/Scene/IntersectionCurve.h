@@ -34,14 +34,14 @@ namespace CADMageddon
 
         bool GetIsClosed() const { return m_IsClosed; }
 
+        unsigned int GetFirstTextureId() const { return m_TextureIds[0]; }
+        unsigned int GetSecondTextureId() const { return m_TextureIds[1]; }
+
     private:
         bool m_ShowPlot;
 
         void GenerateTextures();
 
-        bool GetIzolineIntersection(float line, glm::vec2 p1, glm::vec2 p2, bool isReversed, float& intersection);
-
-        std::vector<glm::vec2> CalculateTrimming(int lineCount, bool alongU, bool isFirst);
 
         IntersectionCurve(
             std::string name,
@@ -50,12 +50,16 @@ namespace CADMageddon
             Ref<SurfaceUV> secondSurface,
             bool isClosed);
 
+        std::vector<float> GetIntersectionsAlongU(float lineV, std::vector<glm::vec2> coords);
+        void CheckIfPixelInsideIntersections(float pixel, std::vector<float> intersections, int& intersectionIndex, bool& isIn);
+        bool GetIzolineIntersection(float line, glm::vec2 p1, glm::vec2 p2, float& intersection);
+
         std::vector<IntersectionPoint> m_IntersectionPoints;
         Ref<SurfaceUV> m_FirstSurface;
         Ref<SurfaceUV> m_SecondSurface;
 
         bool m_IsClosed;
 
-        unsigned int m_TexrureIds[2];
+        unsigned int m_TextureIds[2];
     };
 }

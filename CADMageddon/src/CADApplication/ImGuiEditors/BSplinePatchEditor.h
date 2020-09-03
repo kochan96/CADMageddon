@@ -4,6 +4,8 @@
 #include "Core\Base.h"
 #include "imgui.h"
 #include "misc\cpp\imgui_stdlib.h"
+#include "SurfaceEditor.h"
+
 
 namespace CADMageddon
 {
@@ -50,6 +52,9 @@ namespace CADMageddon
 
         ImGui::EndGroup();
 
+        ImGui::Separator();
         BaseObjectEditor(bSplinePatch);
+        ImGui::Separator();
+        SurfaceEditor(bSplinePatch);
     }
 }

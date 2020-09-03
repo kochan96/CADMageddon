@@ -61,7 +61,7 @@ namespace CADMageddon
     private:
         bool m_IntersectionNotFound = false;
         bool m_BeginFromCursor = false;
-        float m_StepLength = 0.001f;
+        float m_StepLength = 0.1f;
 
         Ref<Scene> m_Scene;
         Ref<TransformationSystem> m_transformationSystem;

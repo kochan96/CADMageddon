@@ -24,6 +24,16 @@ namespace CADMageddon
         static void RenderGrid(const Ref<OpenGLVertexArray>& vertexArray, const glm::mat4& transform, const glm::vec4& color = DEFAULT_COLOR);
         static void RenderTorus(
             const std::vector<glm::vec3>& vertices,
+            const std::vector<glm::vec2>& textureCoordinates,
+            const std::vector<uint32_t>& indices,
+            const glm::mat4& transform,
+            const glm::vec4& color = DEFAULT_COLOR);
+
+        static void RenderTrimmedTorus(
+            const std::vector<glm::vec3>& vertices,
+            const std::vector<glm::vec2>& textureCoordinates,
+            const bool reverseTrimming,
+            const unsigned int textureId,
             const std::vector<uint32_t>& indices,
             const glm::mat4& transform,
             const glm::vec4& color = DEFAULT_COLOR);
@@ -88,6 +98,9 @@ namespace CADMageddon
             const glm::vec3& p15,
             float uSubdivisionCount,
             float vSubdivionCount,
+            bool isTrimmed,
+            unsigned int textureId,
+            bool reverseTrimming,
             const glm::vec4& color = DEFAULT_COLOR
         );
 
@@ -110,6 +123,9 @@ namespace CADMageddon
             const glm::vec3& p15,
             float uSubdivisionCount,
             float vSubdivionCount,
+            bool isTrimmed,
+            unsigned int textureId,
+            bool reverseTrimming,
             const glm::vec4& color = DEFAULT_COLOR
         );
 
@@ -152,6 +168,8 @@ namespace CADMageddon
             const glm::vec3& p3,
             const glm::vec4& color = DEFAULT_COLOR,
             bool snapToEnd = false);
+
+        static void RenderTextureQuad(int textureId);
 
     private:
         static void InitTorusRenderData();

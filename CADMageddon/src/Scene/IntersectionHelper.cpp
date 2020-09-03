@@ -24,18 +24,15 @@ namespace CADMageddon
         intersectionPoints.push_back(intersectionPoint);
 
         bool reversed = false;
-        for (int i = 0; i < 400; i++)
+        while (true)
         {
             intersectionPoint = GetNextIntersectionPoint(intersectionPoint.Coords, s1, s2, stepSize, reversed);
+            if (glm::length(intersectionPoints.back().Location - intersectionPoints.front().Location) < stepSize && intersectionPoints.size() > 2)
             {
-                intersectionPoints.push_back(intersectionPoint);
+                isClosed = true;
+                break;
             }
-        }
-
-       /* while (true)
-        {
-            intersectionPoint = GetNextIntersectionPoint(intersectionPoint.Coords, s1, s2, stepSize, reversed);
-            if (glm::all(AreParametersInRange(intersectionPoint.Coords, s1, s2)))
+            else if (CheckParameters(intersectionPoint.Coords, s1, s2))
             {
                 intersectionPoints.push_back(intersectionPoint);
             }
@@ -45,17 +42,12 @@ namespace CADMageddon
                 reversed = true;
                 std::reverse(intersectionPoints.begin(), intersectionPoints.end());
             }
-            else if (glm::length(intersectionPoints.back().Location - intersectionPoints[0].Location) <= 2 * stepSize && intersectionPoints.size() > 1)
-            {
-                isClosed = true;
-                break;
-            }
             else
             {
                 LOG_INFO("Length: {}", glm::length(intersectionPoints.back().Location - intersectionPoints[0].Location));
                 break;
             }
-        }*/
+        }
 
         return intersectionPoints;
     }
@@ -123,7 +115,7 @@ namespace CADMageddon
         auto initialPoint = s1->GetPointAt(parameters.x, parameters.y);
         glm::vec4 previousPos = parameters;
         glm::vec4 nextPos = parameters;
-        const int MaxIterations = 50;
+        const int MaxIterations = 20;
         glm::vec4 fNext;
 
         auto s1Pos = s1->GetPointAt(nextPos.x, nextPos.y);
@@ -203,7 +195,7 @@ namespace CADMageddon
             parameters = ClampParameters(parameters, minValues, maxValues);
             if (alfa < 0.0000001f)
                 return parameters;
-            
+
             lastSDirection = sDirection;
 
             /*direction = GetNegativeGradient(parameters.x, parameters.y, s1, parameters.z, parameters.w, s2);
@@ -324,15 +316,38 @@ namespace CADMageddon
         return parameters;
     }
 
-    glm::bvec4 IntersectionHelper::AreParametersInRange(glm::vec4 parameters, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2)
+    bool IntersectionHelper::CheckParameters(glm::vec4& parameters, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2)
     {
-        glm::vec4 minValues = { s1->GetMinU(),s1->GetMinV(),s2->GetMinU(),s2->GetMinV() };
-        glm::vec4 maxValues = { s1->GetMaxU(),s1->GetMaxU(),s2->GetMaxU(),s2->GetMaxV() };
+        bool isU1OutOfRange = parameters.x < s1->GetMinU() || parameters.x > s1->GetMaxU();
+        bool isV1OutOfRange = parameters.y < s1->GetMinV() || parameters.y > s1->GetMaxV();
 
-        glm::bvec4 result;
-        for (int i = 0; i < 4; i++)
-            result[i] = minValues[i] <= parameters[i] && parameters[i] <= maxValues[i];
+        bool isU2OutOfRange = parameters.z < s2->GetMinU() || parameters.z > s2->GetMaxU();
+        bool isV2OutOfRange = parameters.w < s2->GetMinV() || parameters.w > s2->GetMaxV();
 
-        return result;
+        if (isU1OutOfRange && s1->GetRollU())
+        {
+            //parameters.x = parameters.x - std::floorf(parameters.x);
+            isU1OutOfRange = false;
+        }
+
+        if (isV1OutOfRange && s1->GetRollV())
+        {
+            //parameters.y = parameters.y - std::floorf(parameters.y);
+            isV1OutOfRange = false;
+        }
+
+        if (isU2OutOfRange && s2->GetRollU())
+        {
+            //parameters.z = parameters.z - std::floorf(parameters.z);
+            isU2OutOfRange = false;
+        }
+
+        if (isV2OutOfRange && s2->GetRollV())
+        {
+            //parameters.w = parameters.w - std::floorf(parameters.w);
+            isV2OutOfRange = false;
+        }
+
+        return !isU1OutOfRange && !isV1OutOfRange && !isU2OutOfRange && !isV2OutOfRange;
     }
 }

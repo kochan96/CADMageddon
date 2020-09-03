@@ -70,6 +70,8 @@ namespace CADMageddon
         virtual float GetMaxU() const override;
         virtual float GetMinV() const override;
         virtual float GetMaxV() const override;
+        virtual bool GetRollU() const { return m_IsCylinder; }
+
 
     private:
         void GenerateRectControlPoints(glm::vec3 startPosition, int PatchCountx, int PatchCounty, float width, float height);
