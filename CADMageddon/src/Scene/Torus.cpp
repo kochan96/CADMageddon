@@ -31,10 +31,10 @@ namespace CADMageddon
         int vCount = m_TorusParameters.MinorRadiusCount;
         float uDelta = 1.0f / uCount;
         float vDelta = 1.0f / vCount;
-        for (int i = 0; i < uCount; i++)
+        for (int i = 0; i <= uCount; i++)
         {
             float u = i * uDelta;
-            for (int j = 0; j < vCount; j++)
+            for (int j = 0; j <= vCount; j++)
             {
                 float v = j * vDelta;
                 m_TextureCoordinates.push_back(glm::vec2(u, v));

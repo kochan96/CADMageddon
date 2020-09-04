@@ -72,17 +72,23 @@ namespace CADMageddon
 
     struct RenderBezierPatchData
     {
-        static const int PointCount = 64;
+        static const int MaxPatches = 1000;
+        static const int MaxPoints = 16 * MaxPatches;
+        static const int MaxIndices = 64 * MaxPatches;
         Ref<OpenGLVertexArray> BezierPatchVertexArray;
+        Ref<OpenGLIndexBuffer> BezierPatchIndexBuffer;
         Ref<OpenGLVertexBuffer> BezierPatchVertexBuffer;
         Ref<OpenGLShader> BezierPatchShader;
     };
 
     struct RenderBSplinePatchData
     {
-        static const int PointCount = 64;
+        static const int MaxPatches = 1000;
+        static const int MaxPoints = 16 * MaxPatches;
+        static const int MaxIndices = 64 * MaxPatches;
         Ref<OpenGLVertexArray> BSplinePatchVertexArray;
         Ref<OpenGLVertexBuffer> BSplinePatchVertexBuffer;
+        Ref<OpenGLIndexBuffer> BSplinePatchIndexBuffer;
         Ref<OpenGLShader> BSplinePatchShader;
     };
 

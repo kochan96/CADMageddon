@@ -7,6 +7,33 @@ namespace CADMageddon
     {
     }
 
+    std::vector<glm::vec3> BezierPatch::GetRenderingVertices() const
+    {
+        int rowCount = m_PatchCountY * 3 + 1;
+        int verticesColumnCount = m_IsCylinder ? m_PatchCountX * 3 : m_PatchCountX * 3 + 1;
+        int columnCount = m_PatchCountX * 3 + 1;
+        std::vector<glm::vec3> vertices(rowCount * columnCount);
+
+        for (int i = 0; i < rowCount; i++)
+        {
+            int controlPointsRow = i * verticesColumnCount;
+            int row = i * columnCount;
+            for (int j = 0; j < columnCount; j++)
+            {
+                int controlPointsIndex = controlPointsRow + j;
+                int index = row + j;
+                if (j >= verticesColumnCount)
+                {
+                    controlPointsIndex -= verticesColumnCount;
+                }
+
+                vertices[index] = m_ControlPoints[controlPointsIndex]->GetPosition();
+            }
+        }
+
+        return vertices;
+    }
+
     void BezierPatch::SetShowPoints(bool setShowPoints)
     {
         m_ShowPoints = setShowPoints;
@@ -28,18 +55,17 @@ namespace CADMageddon
     {
         int PatchCountx = columnCount / 3;
         int PatchCounty = rowCount / 3;
+        if (isCylinder)
+            columnCount++;
 
         auto bezierPatch = CreateRef<BezierPatch>(name, PatchCountx, PatchCounty, uDivisionCount, vDivisionCount);
         bezierPatch->m_IsCylinder = isCylinder;
         bezierPatch->m_ShowPolygon = showPolygon;
         bezierPatch->m_ControlPoints = controlPoints;
 
-        if (isCylinder)
-            bezierPatch->GenerateCylinderIndices(PatchCountx, PatchCounty);
-        else
-            bezierPatch->GenerateRectIndices(PatchCountx, PatchCounty);
-
+        bezierPatch->GenerateIndices(PatchCountx, PatchCounty);
         bezierPatch->GenerateGridIndices(rowCount, columnCount);
+        bezierPatch->GenerateTextureCoordinates(rowCount, columnCount);
 
         return bezierPatch;
     }
@@ -49,11 +75,11 @@ namespace CADMageddon
         auto bezierPatch = CreateRef<BezierPatch>(name, PatchCountx, PatchCounty, uDivisionCount, vDivisionCount);
         bezierPatch->m_IsCylinder = false;
         bezierPatch->GenerateRectControlPoints(startPosition, PatchCountx, PatchCounty, width, height);
-        bezierPatch->GenerateRectIndices(PatchCountx, PatchCounty);
+        bezierPatch->GenerateIndices(PatchCountx, PatchCounty);
         bezierPatch->GenerateGridIndices(PatchCounty * 3 + 1, PatchCountx * 3 + 1);
+        bezierPatch->GenerateTextureCoordinates(PatchCounty * 3 + 1, PatchCountx * 3 + 1);
         return bezierPatch;
     }
-
 
 
     void BezierPatch::GenerateRectControlPoints(glm::vec3 startPosition, int PatchCountx, int PatchCounty, float width, float height)
@@ -81,7 +107,7 @@ namespace CADMageddon
         }
     }
 
-    void BezierPatch::GenerateRectIndices(int PatchCountx, int PatchCounty)
+    void BezierPatch::GenerateIndices(int PatchCountx, int PatchCounty)
     {
         int verticesCountX = PatchCountx * 3 + 1;
 
@@ -99,17 +125,47 @@ namespace CADMageddon
                         m_Indices.push_back(index);
                     }
                 }
+
+                for (int k = 3; k >= 0; k--)
+                {
+                    for (int l = 0; l < 4; l++)
+                    {
+                        int index = start + k * verticesCountX + l;
+                        m_Indices.push_back(index);
+                    }
+                }
+
+                for (int k = 0; k < 4; k++)
+                {
+                    for (int l = 0; l < 4; l++)
+                    {
+                        int index = start + l * verticesCountX + k;
+                        m_Indices.push_back(index);
+                    }
+                }
+
+                for (int k = 3; k >= 0; k--)
+                {
+                    for (int l = 0; l < 4; l++)
+                    {
+                        int index = start + l * verticesCountX + k;
+                        m_Indices.push_back(index);
+                    }
+                }
             }
         }
     }
+
+
 
     Ref<BezierPatch> BezierPatch::CreateCyliderPatch(std::string name, glm::vec3 center, int PatchCountx, int PatchCounty, float radius, float height, int uDivisionCount, int vDivisionCount)
     {
         auto bezierPatch = CreateRef<BezierPatch>(name, PatchCountx, PatchCounty, uDivisionCount, vDivisionCount);
         bezierPatch->m_IsCylinder = true;
         bezierPatch->GenerateCylinderControlPoints(center, PatchCountx, PatchCounty, radius, height);
-        bezierPatch->GenerateCylinderIndices(PatchCountx, PatchCounty);
+        bezierPatch->GenerateIndices(PatchCountx, PatchCounty);
         bezierPatch->GenerateGridIndices(PatchCounty * 3 + 1, PatchCountx * 3);
+        bezierPatch->GenerateTextureCoordinates(PatchCounty * 3 + 1, PatchCountx * 3 + 1);
         return bezierPatch;
     }
 
@@ -143,33 +199,6 @@ namespace CADMageddon
     }
 
 
-    void BezierPatch::GenerateCylinderIndices(int PatchCountx, int PatchCounty)
-    {
-        int verticesCountX = PatchCountx * 3;
-
-        for (int j = 0; j < PatchCounty; j++)
-        {
-            int startRow = (j * 3 * verticesCountX);
-            for (int i = 0; i < PatchCountx; i++)
-            {
-                int start = startRow + i * 3;
-                for (int k = 0; k < 4; k++)
-                {
-                    for (int l = 0; l < 4; l++)
-                    {
-                        int index = start + k * verticesCountX + l;
-                        if (i == (PatchCountx - 1) && l == 3)
-                        {
-                            index = startRow + k * verticesCountX;
-                        }
-
-                        m_Indices.push_back(index);
-                    }
-                }
-            }
-        }
-    }
-
     void BezierPatch::GenerateGridIndices(int rowCount, int columnCount)
     {
         for (int i = 0; i < rowCount; i++)
@@ -194,6 +223,19 @@ namespace CADMageddon
                     m_GridIndices.push_back(index);
                     m_GridIndices.push_back(index + columnCount);
                 }
+            }
+        }
+    }
+
+    void BezierPatch::GenerateTextureCoordinates(int rowCount, int columnCount)
+    {
+        for (int i = 0; i < rowCount; i++)
+        {
+            float v = float(i) / (rowCount - 1);
+            for (int j = 0; j < columnCount; j++)
+            {
+                float u = float(j) / (columnCount - 1);
+                m_TextureCooridnates.push_back(glm::vec2(u, v));
             }
         }
     }

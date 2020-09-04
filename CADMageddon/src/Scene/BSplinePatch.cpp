@@ -7,6 +7,33 @@ namespace CADMageddon
     {
     }
 
+    std::vector<glm::vec3> BSplinePatch::GetRenderingVertices() const
+    {
+        int rowCount = m_PatchCountY + 3;
+        int verticesColumnCount = m_IsCylinder ? m_PatchCountX : m_PatchCountX + 3;
+        int columnCount = m_PatchCountX + 3;
+        std::vector<glm::vec3> vertices(rowCount * columnCount);
+
+        for (int i = 0; i < rowCount; i++)
+        {
+            int controlPointsRow = i * verticesColumnCount;
+            int row = i * columnCount;
+            for (int j = 0; j < columnCount; j++)
+            {
+                int controlPointsIndex = controlPointsRow + j;
+                int index = row + j;
+                if (j >= verticesColumnCount)
+                {
+                    controlPointsIndex -= verticesColumnCount;
+                }
+
+                vertices[index] = m_ControlPoints[controlPointsIndex]->GetPosition();
+            }
+        }
+
+        return vertices;
+    }
+
     void BSplinePatch::SetShowPoints(bool setShowPoints)
     {
         m_ShowPoints = setShowPoints;
@@ -34,11 +61,8 @@ namespace CADMageddon
         bSplinePatch->m_IsCylinder = isCylinder;
         bSplinePatch->m_ShowPolygon = showPolygon;
 
-        if (isCylinder)
-            bSplinePatch->GenerateCylinderIndices(PatchCountx, PatchCounty);
-        else
-            bSplinePatch->GenerateRectIndices(PatchCountx, PatchCounty);
-
+        bSplinePatch->GenerateIndices(PatchCountx, PatchCounty);
+        bSplinePatch->GenerateTextureCoordinates(PatchCounty + 3, PatchCountx + 3);
         bSplinePatch->GenerateGridIndices(rowCount, columnCount);
 
         return bSplinePatch;
@@ -59,7 +83,8 @@ namespace CADMageddon
         auto bSplinePatch = CreateRef<BSplinePatch>(name, PatchCountx, PatchCounty, uDivisionCount, vDivisionCount);
         bSplinePatch->m_IsCylinder = false;
         bSplinePatch->GenerateRectControlPoints(startPosition, PatchCountx, PatchCounty, width, height);
-        bSplinePatch->GenerateRectIndices(PatchCountx, PatchCounty);
+        bSplinePatch->GenerateIndices(PatchCountx, PatchCounty);
+        bSplinePatch->GenerateTextureCoordinates(PatchCounty + 3, PatchCountx + 3);
         bSplinePatch->GenerateGridIndices(PatchCounty + 3, PatchCountx + 3);
         return bSplinePatch;
     }
@@ -88,7 +113,7 @@ namespace CADMageddon
         }
     }
 
-    void BSplinePatch::GenerateRectIndices(int PatchCountx, int PatchCounty)
+    void BSplinePatch::GenerateIndices(int PatchCountx, int PatchCounty)
     {
         int verticesCountX = PatchCountx + 3;
 
@@ -106,6 +131,46 @@ namespace CADMageddon
                         m_Indices.push_back(index);
                     }
                 }
+
+                for (int k = 3; k >= 0; k--)
+                {
+                    for (int l = 0; l < 4; l++)
+                    {
+                        int index = start + k * verticesCountX + l;
+                        m_Indices.push_back(index);
+                    }
+                }
+
+                for (int k = 0; k < 4; k++)
+                {
+                    for (int l = 0; l < 4; l++)
+                    {
+                        int index = start + l * verticesCountX + k;
+                        m_Indices.push_back(index);
+                    }
+                }
+
+                for (int k = 3; k >= 0; k--)
+                {
+                    for (int l = 0; l < 4; l++)
+                    {
+                        int index = start + l * verticesCountX + k;
+                        m_Indices.push_back(index);
+                    }
+                }
+            }
+        }
+    }
+
+    void BSplinePatch::GenerateTextureCoordinates(int rowCount, int columnCount)
+    {
+        for (int i = 0; i < rowCount; i++)
+        {
+            float v = float(i) / (rowCount - 1);
+            for (int j = 0; j < columnCount; j++)
+            {
+                float u = float(j) / (columnCount - 1);
+                m_TextureCooridnates.push_back(glm::vec2(u, v));
             }
         }
     }
@@ -115,7 +180,8 @@ namespace CADMageddon
         auto bSplinePatch = CreateRef<BSplinePatch>(name, PatchCountx, PatchCounty, uDivisionCount, vDivisionCount);
         bSplinePatch->m_IsCylinder = true;
         bSplinePatch->GenerateCylinderControlPoints(center, PatchCountx, PatchCounty, radius, height);
-        bSplinePatch->GenerateCylinderIndices(PatchCountx, PatchCounty);
+        bSplinePatch->GenerateTextureCoordinates(PatchCounty + 3, PatchCountx + 3);
+        bSplinePatch->GenerateIndices(PatchCountx, PatchCounty);
         bSplinePatch->GenerateGridIndices(PatchCounty + 3, PatchCountx);
         return bSplinePatch;
     }
@@ -145,27 +211,6 @@ namespace CADMageddon
                 auto point = CreateRef<Point>(position, m_Name + "Point_" + std::to_string(pointCount++));
                 point->SetReferencedCount(1);
                 m_ControlPoints.push_back(point);
-            }
-        }
-    }
-
-    void BSplinePatch::GenerateCylinderIndices(int PatchCountx, int PatchCounty)
-    {
-        int verticesCountX = PatchCountx;
-        for (int j = 0; j < PatchCounty; j++)
-        {
-            int startRow = j * verticesCountX;
-            for (int i = 0; i < PatchCountx; i++)
-            {
-                int start = startRow + i;
-                for (int k = 0; k < 4; k++)
-                {
-                    for (int l = 0; l < 4; l++)
-                    {
-                        int index = (k + j) * verticesCountX + (l + i) % verticesCountX;
-                        m_Indices.push_back(index);
-                    }
-                }
             }
         }
     }

@@ -2,6 +2,8 @@
 #include "cadpch.h"
 #include "InterpolatedCurve.h"
 #include <glm\glm.hpp>
+#include "Rendering\FrameBuffer.h"
+#include "Rendering\Shader.h"
 
 namespace CADMageddon
 {
@@ -42,7 +44,6 @@ namespace CADMageddon
 
         void GenerateTextures();
 
-
         IntersectionCurve(
             std::string name,
             std::vector<IntersectionPoint> points,
@@ -52,13 +53,15 @@ namespace CADMageddon
 
         std::vector<float> GetIntersectionsAlongU(float lineV, std::vector<glm::vec2> coords);
         void CheckIfPixelInsideIntersections(float pixel, std::vector<float> intersections, int& intersectionIndex, bool& isIn);
-        bool GetIzolineIntersection(float line, glm::vec2 p1, glm::vec2 p2, float& intersection);
+        bool GetIzolineIntersection(float line, glm::vec2 p1, glm::vec2 p2, std::vector<float>& intersection);
 
         std::vector<IntersectionPoint> m_IntersectionPoints;
         Ref<SurfaceUV> m_FirstSurface;
         Ref<SurfaceUV> m_SecondSurface;
 
         bool m_IsClosed;
+
+        std::vector<glm::vec2> TriangulateCurve();
 
         unsigned int m_TextureIds[2];
     };

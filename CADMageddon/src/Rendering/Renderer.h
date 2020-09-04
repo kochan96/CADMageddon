@@ -80,54 +80,30 @@ namespace CADMageddon
 
 
         static void RenderBezierPatch(
-            const glm::vec3& p0,
-            const glm::vec3& p1,
-            const glm::vec3& p2,
-            const glm::vec3& p3,
-            const glm::vec3& p4,
-            const glm::vec3& p5,
-            const glm::vec3& p6,
-            const glm::vec3& p7,
-            const glm::vec3& p8,
-            const glm::vec3& p9,
-            const glm::vec3& p10,
-            const glm::vec3& p11,
-            const glm::vec3& p12,
-            const glm::vec3& p13,
-            const glm::vec3& p14,
-            const glm::vec3& p15,
+            const std::vector<glm::vec3>& vertices,
+            const std::vector<uint32_t>& indices,
+            const std::vector<glm::vec2>& textureCoordinates,
             float uSubdivisionCount,
             float vSubdivionCount,
+            int patchCountx,
+            int patchCounty,
             bool isTrimmed,
             unsigned int textureId,
             bool reverseTrimming,
-            const glm::vec4& color = DEFAULT_COLOR
-        );
+            const glm::vec4& color = DEFAULT_COLOR);
 
         static void RenderBSplinePatch(
-            const glm::vec3& p0,
-            const glm::vec3& p1,
-            const glm::vec3& p2,
-            const glm::vec3& p3,
-            const glm::vec3& p4,
-            const glm::vec3& p5,
-            const glm::vec3& p6,
-            const glm::vec3& p7,
-            const glm::vec3& p8,
-            const glm::vec3& p9,
-            const glm::vec3& p10,
-            const glm::vec3& p11,
-            const glm::vec3& p12,
-            const glm::vec3& p13,
-            const glm::vec3& p14,
-            const glm::vec3& p15,
+            const std::vector<glm::vec3>& vertices,
+            const std::vector<uint32_t>& indices,
+            const std::vector<glm::vec2>& textureCoordinates,
             float uSubdivisionCount,
             float vSubdivionCount,
+            int patchCountx,
+            int patchCounty,
             bool isTrimmed,
             unsigned int textureId,
             bool reverseTrimming,
-            const glm::vec4& color = DEFAULT_COLOR
-        );
+            const glm::vec4& color = DEFAULT_COLOR);
 
         static void RenderGregoryPatch(
             const glm::vec3& p0,
@@ -168,8 +144,6 @@ namespace CADMageddon
             const glm::vec3& p3,
             const glm::vec4& color = DEFAULT_COLOR,
             bool snapToEnd = false);
-
-        static void RenderTextureQuad(int textureId);
 
     private:
         static void InitTorusRenderData();

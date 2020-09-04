@@ -5,6 +5,8 @@
 
 layout (location =0) in vec3 a_Position;
 
+out vec2 v_TextureCoordinates;
+
 void main()
 {
     gl_Position = vec4(a_Position, 1.0f);
@@ -29,6 +31,11 @@ void main()
 layout (isolines, equal_spacing, cw) in;
 
 uniform mat4 u_ViewProjectionMatrix;
+
+uniform float u_uTexMin = 0.0f;
+uniform float u_uTexMax = 1.0f;
+uniform float u_vTexMin = 0.0f;
+uniform float u_vTexMax = 1.0f;
 uniform bool u_ReverseTexture;
 
 out vec2 tess_TextureCoordinates;
@@ -54,14 +61,21 @@ vec3 CubicBezierSum(vec4 bezpatch[16], vec4 basisU, vec4 basisV)
     return sum;
 }
 
+vec2 QuadraticBezierSum(vec2 bezpatch[16], vec4 basisU, vec4 basisV)
+{
+    vec2 sum = vec2(0.0f, 0.0f);
+    sum  = basisU.x * (basisV.x*bezpatch[0].xy  + basisV.y*bezpatch[4].xy  + basisV.z*bezpatch[8].xy  + basisV.w*bezpatch[12].xy);
+    sum += basisU.y * (basisV.x*bezpatch[1].xy  + basisV.y*bezpatch[5].xy  + basisV.z*bezpatch[9].xy  + basisV.w*bezpatch[13].xy);
+    sum += basisU.z * (basisV.x*bezpatch[2].xy  + basisV.y*bezpatch[6].xy  + basisV.z*bezpatch[10].xy + basisV.w*bezpatch[14].xy);
+    sum += basisU.w * (basisV.x*bezpatch[3].xy + basisV.y*bezpatch[7].xy + basisV.z*bezpatch[11].xy + basisV.w*bezpatch[15].xy);
+
+    return sum;
+}
+
 void main ()
 {
     float u = gl_TessCoord.x;
     float v = gl_TessCoord.y;
-    if(u_ReverseTexture)
-        tess_TextureCoordinates = vec2(v,u);
-    else
-        tess_TextureCoordinates = vec2(u,v);
 
     vec4 bezpatch[16];
     bezpatch[0] = gl_in[0].gl_Position;
@@ -88,6 +102,16 @@ void main ()
 	vec4 basisV = BernsteinBasis(v);
 
     vec3 pos  = CubicBezierSum(bezpatch, basisU, basisV);
+    if(u_ReverseTexture)
+    {
+        tess_TextureCoordinates.x = mix(u_uTexMin,u_uTexMax,v);
+        tess_TextureCoordinates.y = mix(u_vTexMin,u_vTexMax,u);
+    }
+    else
+    {
+        tess_TextureCoordinates.x = mix(u_uTexMin,u_uTexMax,u);
+        tess_TextureCoordinates.y = mix(u_vTexMin,u_vTexMax,v);
+    }
 
     gl_Position = u_ViewProjectionMatrix * vec4(pos,1.0f);
 }
@@ -108,7 +132,7 @@ uniform sampler2D trimmingSampler;
 
 void main()
 {
-
+    
     if(isTrimmed)
     {
         float alfa = texture(trimmingSampler,tess_TextureCoordinates).r;
@@ -117,7 +141,7 @@ void main()
            alfa = 1.0f - alfa; 
         }
 
-        if(alfa <0.2f)
+        if(alfa <0.9f)
             discard;
     }
 

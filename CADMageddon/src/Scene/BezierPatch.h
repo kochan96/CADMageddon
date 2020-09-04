@@ -14,6 +14,8 @@ namespace CADMageddon
 
         std::vector<uint32_t> GetRenderingIndices() const { return m_Indices; }
         std::vector<uint32_t> GetGridIndices() const { return m_GridIndices; }
+        std::vector<glm::vec2> GetTextureCoordinates() const { return m_TextureCooridnates; }
+        std::vector<glm::vec3> GetRenderingVertices() const;
 
         bool GetShowPolygon() const { return m_ShowPolygon; }
         void SetShowPolygon(bool showPolygon) { m_ShowPolygon = showPolygon; }
@@ -80,10 +82,9 @@ namespace CADMageddon
         void GenerateRectControlPoints(glm::vec3 startPosition, int PatchCountx, int PatchCounty, float width, float height);
         void GenerateCylinderControlPoints(glm::vec3 center, int PatchCountx, int PatchCounty, float radius, float height);
 
-        void GenerateRectIndices(int PatchCountx, int PatchCounty);
-        void GenerateCylinderIndices(int PatchCountx, int PatchCounty);
-
+        void GenerateIndices(int PatchCountx, int PatchCounty);
         void GenerateGridIndices(int rowCount, int columnCount);
+        void GenerateTextureCoordinates(int rowCount, int columnCount);
 
     private:
         int m_PatchCountX;
@@ -97,5 +98,6 @@ namespace CADMageddon
         bool m_ShowPolygon = false;
         std::vector<uint32_t> m_Indices;
         std::vector<uint32_t> m_GridIndices;
+        std::vector<glm::vec2> m_TextureCooridnates;
     };
 }

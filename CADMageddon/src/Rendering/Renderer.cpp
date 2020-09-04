@@ -75,35 +75,6 @@ namespace CADMageddon
         InitBSplinePatchRenderData();
         InitGregoryPatchRenderData();
         InitSelectionBoxRenderData();
-
-        s_RenderTextureQuadData.TextureQuadVertexArray = CreateRef<OpenGLVertexArray>();
-
-
-        s_RenderTextureQuadData.TextureQuadVertexBuffer = CreateRef<OpenGLVertexBuffer>(s_RenderTextureQuadData.PointCount * sizeof(VertexT));
-        float verticesData[] =
-        {
-            -1.0f,-1.0f,0.0f, 0.0f,0.0f,
-            1.0f,-1.0f,0.0f, 1.0f,0.0f,
-            1.0f,1.0f,0.0f, 1.0f, 1.0f,
-            -1.0f, 1.0f, 0.0f, 0.0f,1.0f
-        };
-
-        s_RenderTextureQuadData.TextureQuadVertexBuffer->SetLayout({
-            { ShaderDataType::Float3, "a_Position" },
-            { ShaderDataType::Float2, "a_TextureCoordinates" }
-            });
-
-        uint32_t indices[] =
-        {
-            0,1,2,
-            2,3,0
-        };
-
-        s_RenderTextureQuadData.TextureQuadIndexBuffer = CreateRef<OpenGLIndexBuffer>(indices, 6);
-        s_RenderTextureQuadData.TextureQuadVertexBuffer->SetData(verticesData, sizeof(verticesData));
-        s_RenderTextureQuadData.TextureQuadVertexArray->AddVertexBuffer(s_RenderTextureQuadData.TextureQuadVertexBuffer);
-        s_RenderTextureQuadData.TextureQuadVertexArray->SetIndexBuffer(s_RenderTextureQuadData.TextureQuadIndexBuffer);
-        s_RenderTextureQuadData.TextureQuadShader = s_ShaderLibrary->Get("TextureQuadShader");
     }
 
     void Renderer::InitTorusRenderData()
@@ -179,13 +150,15 @@ namespace CADMageddon
     {
         s_RenderBezierPatchData.BezierPatchVertexArray = CreateRef<OpenGLVertexArray>();
 
-        s_RenderBezierPatchData.BezierPatchVertexBuffer = CreateRef<OpenGLVertexBuffer>(s_RenderBezierPatchData.PointCount * sizeof(Vertex));
+        s_RenderBezierPatchData.BezierPatchVertexBuffer = CreateRef<OpenGLVertexBuffer>(s_RenderBezierPatchData.MaxPoints * sizeof(Vertex));
         s_RenderBezierPatchData.BezierPatchVertexBuffer->SetLayout({
             { ShaderDataType::Float3, "a_Position" },
             });
 
-        s_RenderBezierPatchData.BezierPatchVertexArray->AddVertexBuffer(s_RenderBezierPatchData.BezierPatchVertexBuffer);
+        s_RenderBezierPatchData.BezierPatchIndexBuffer = CreateRef<OpenGLIndexBuffer>(s_RenderBezierPatchData.MaxIndices);
 
+        s_RenderBezierPatchData.BezierPatchVertexArray->AddVertexBuffer(s_RenderBezierPatchData.BezierPatchVertexBuffer);
+        s_RenderBezierPatchData.BezierPatchVertexArray->SetIndexBuffer(s_RenderBezierPatchData.BezierPatchIndexBuffer);
         s_RenderBezierPatchData.BezierPatchShader = s_ShaderLibrary->Get("BezierPatchShader");
 
     }
@@ -194,12 +167,15 @@ namespace CADMageddon
     {
         s_RenderBSplinePatchData.BSplinePatchVertexArray = CreateRef<OpenGLVertexArray>();
 
-        s_RenderBSplinePatchData.BSplinePatchVertexBuffer = CreateRef<OpenGLVertexBuffer>(s_RenderBSplinePatchData.PointCount * sizeof(Vertex));
+        s_RenderBSplinePatchData.BSplinePatchVertexBuffer = CreateRef<OpenGLVertexBuffer>(s_RenderBSplinePatchData.MaxPoints * sizeof(Vertex));
         s_RenderBSplinePatchData.BSplinePatchVertexBuffer->SetLayout({
             { ShaderDataType::Float3, "a_Position" },
             });
 
+        s_RenderBSplinePatchData.BSplinePatchIndexBuffer = CreateRef<OpenGLIndexBuffer>(s_RenderBSplinePatchData.MaxIndices);
+
         s_RenderBSplinePatchData.BSplinePatchVertexArray->AddVertexBuffer(s_RenderBSplinePatchData.BSplinePatchVertexBuffer);
+        s_RenderBSplinePatchData.BSplinePatchVertexArray->SetIndexBuffer(s_RenderBSplinePatchData.BSplinePatchIndexBuffer);
 
         s_RenderBSplinePatchData.BSplinePatchShader = s_ShaderLibrary->Get("BSplinePatchShader");
     }
@@ -549,263 +525,160 @@ namespace CADMageddon
     }
 
     void Renderer::RenderBezierPatch(
-        const glm::vec3& p0,
-        const glm::vec3& p1,
-        const glm::vec3& p2,
-        const glm::vec3& p3,
-        const glm::vec3& p4,
-        const glm::vec3& p5,
-        const glm::vec3& p6,
-        const glm::vec3& p7,
-        const glm::vec3& p8,
-        const glm::vec3& p9,
-        const glm::vec3& p10,
-        const glm::vec3& p11,
-        const glm::vec3& p12,
-        const glm::vec3& p13,
-        const glm::vec3& p14,
-        const glm::vec3& p15,
+        const std::vector<glm::vec3>& vertices,
+        const std::vector<uint32_t>& indices,
+        const std::vector<glm::vec2>& textureCoordinates,
         float uSubdivisionCount,
-        float vSubdivisionCount,
+        float vSubdivisonCount,
+        int patchCountx,
+        int patchCounty,
         bool isTrimmed,
         unsigned int textureId,
         bool reverseTrimming,
         const glm::vec4& color)
     {
-        float vertices[] =
-        {
-            p0.x,p0.y,p0.z,
-            p4.x,p4.y,p4.z,
-            p8.x,p8.y,p8.z,
-            p12.x,p12.y,p12.z,
-            p1.x,p1.y,p1.z,
-            p5.x,p5.y,p5.z,
-            p9.x,p9.y,p9.z,
-            p13.x,p13.y,p13.z,
-            p2.x,p2.y,p2.z,
-            p6.x,p6.y,p6.z,
-            p10.x,p10.y,p10.z,
-            p14.x,p14.y,p14.z,
-            p3.x,p3.y,p3.z,
-            p7.x,p7.y,p7.z,
-            p11.x,p11.y,p11.z,
-            p15.x,p15.y,p15.z,
-
-            p15.x,p15.y,p15.z,
-            p11.x,p11.y,p11.z,
-            p7.x,p7.y,p7.z,
-            p3.x,p3.y,p3.z,
-            p14.x,p14.y,p14.z,
-            p10.x,p10.y,p10.z,
-            p6.x,p6.y,p6.z,
-            p2.x,p2.y,p2.z,
-            p13.x,p13.y,p13.z,
-            p9.x,p9.y,p9.z,
-            p5.x,p5.y,p5.z,
-            p1.x,p1.y,p1.z,
-            p12.x,p12.y,p12.z,
-            p8.x,p8.y,p8.z,
-            p4.x,p4.y,p4.z,
-            p0.x,p0.y,p0.z,
-
-            p0.x,p0.y,p0.z,
-            p1.x,p1.y,p1.z,
-            p2.x,p2.y,p2.z,
-            p3.x,p3.y,p3.z,
-            p4.x,p4.y,p4.z,
-            p5.x,p5.y,p5.z,
-            p6.x,p6.y,p6.z,
-            p7.x,p7.y,p7.z,
-            p8.x,p8.y,p8.z,
-            p9.x,p9.y,p9.z,
-            p10.x,p10.y,p10.z,
-            p11.x,p11.y,p11.z,
-            p12.x,p12.y,p12.z,
-            p13.x,p13.y,p13.z,
-            p14.x,p14.y,p14.z,
-            p15.x,p15.y,p15.z,
-
-            p15.x,p15.y,p15.z,
-            p14.x,p14.y,p14.z,
-            p13.x,p13.y,p13.z,
-            p12.x,p12.y,p12.z,
-            p11.x,p11.y,p11.z,
-            p10.x,p10.y,p10.z,
-            p9.x,p9.y,p9.z,
-            p8.x,p8.y,p8.z,
-            p7.x,p7.y,p7.z,
-            p6.x,p6.y,p6.z,
-            p5.x,p5.y,p5.z,
-            p4.x,p4.y,p4.z,
-            p3.x,p3.y,p3.z,
-            p2.x,p2.y,p2.z,
-            p1.x,p1.y,p1.z,
-            p0.x,p0.y,p0.z,
-        };
-
-        s_RenderBezierPatchData.BezierPatchVertexArray->Bind();
-        s_RenderBezierPatchData.BezierPatchVertexBuffer->SetData(vertices, sizeof(vertices));
-        s_RenderBezierPatchData.BezierPatchShader->Bind();
-        s_RenderBezierPatchData.BezierPatchShader->SetMat4("u_ViewProjectionMatrix", s_SceneData->ViewProjectionMatrix);
-        s_RenderBezierPatchData.BezierPatchShader->SetFloat4("u_Color", color);
-        s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_SubdivisionCount", uSubdivisionCount - 1);
-        s_RenderBezierPatchData.BezierPatchShader->SetBool("isTrimmed", isTrimmed);
-        s_RenderBezierPatchData.BezierPatchShader->SetBool("u_ReverseTexture", true);
-        if (isTrimmed)
-        {
-            s_RenderBezierPatchData.BezierPatchShader->SetBool("reverseTrimming", reverseTrimming);
-            s_RenderBezierPatchData.BezierPatchShader->SetInt("trimmingSampler", 0);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, textureId);
-        }
-
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        glPatchParameteri(GL_PATCH_VERTICES, 16);
-        glDrawArrays(GL_PATCHES, 0, 16);
 
-        s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_SubdivisionCount", 1);
-        glDrawArrays(GL_PATCHES, 16, 16);
+        s_RenderBezierPatchData.BezierPatchShader->Bind();
+        s_RenderBezierPatchData.BezierPatchVertexArray->Bind();
+        s_RenderBezierPatchData.BezierPatchVertexBuffer->SetData(vertices.data(), vertices.size() * sizeof(Vertex));
+        s_RenderBezierPatchData.BezierPatchIndexBuffer->SetIndices(indices.data(), indices.size());
 
-        s_RenderBezierPatchData.BezierPatchShader->SetBool("u_ReverseTexture", false);
 
-        s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_SubdivisionCount", vSubdivisionCount - 1);
-        glDrawArrays(GL_PATCHES, 32, 16);
+        int columnRendered = 0;
+        int rowsRendered = 0;
+        float deltaColumn = 1.0f / patchCountx;
+        float deltaRow = 1.0f / patchCounty;
 
-        s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_SubdivisionCount", 1);
-        glDrawArrays(GL_PATCHES, 48, 16);
+        for (int i = 0; i < indices.size(); i += 64)
+        {
+            s_RenderBezierPatchData.BezierPatchShader->SetMat4("u_ViewProjectionMatrix", s_SceneData->ViewProjectionMatrix);
+            s_RenderBezierPatchData.BezierPatchShader->SetFloat4("u_Color", color);
+            s_RenderBezierPatchData.BezierPatchShader->SetBool("isTrimmed", isTrimmed);
+            s_RenderBezierPatchData.BezierPatchShader->SetBool("u_ReverseTexture", false);
+            if (isTrimmed)
+            {
+                s_RenderBezierPatchData.BezierPatchShader->SetBool("reverseTrimming", reverseTrimming);
+                s_RenderBezierPatchData.BezierPatchShader->SetInt("trimmingSampler", 0);
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, textureId);
+            }
+
+            glPatchParameteri(GL_PATCH_VERTICES, 16);
+
+            s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_SubdivisionCount", vSubdivisonCount);
+            s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_uTexMin", columnRendered * deltaColumn);
+            s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_uTexMax", (columnRendered + 1) * deltaColumn);
+            s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_vTexMin", (rowsRendered)*deltaRow);
+            s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_vTexMax", (rowsRendered + 1) * deltaRow);
+
+            glDrawElements(GL_PATCHES, 16, GL_UNSIGNED_INT, (void*)(i * sizeof(GLuint)));
+
+            s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_vTexMin", rowsRendered + 1);
+            s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_vTexMax", rowsRendered);
+            s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_SubdivisionCount", 1);
+            glDrawElements(GL_PATCHES, 16, GL_UNSIGNED_INT, (void*)((i + 16) * sizeof(GLuint)));
+
+
+            s_RenderBezierPatchData.BezierPatchShader->SetBool("u_ReverseTexture", true);
+            s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_uTexMin", columnRendered * deltaColumn);
+            s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_uTexMax", (columnRendered + 1) * deltaColumn);
+            s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_vTexMin", (rowsRendered)*deltaRow);
+            s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_vTexMax", (rowsRendered + 1) * deltaRow);
+            s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_SubdivisionCount", uSubdivisionCount);
+            glDrawElements(GL_PATCHES, 16, GL_UNSIGNED_INT, (void*)((i + 32) * sizeof(GLuint)));
+
+            s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_uTexMin", (columnRendered + 1) * deltaColumn);
+            s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_uTexMax", (columnRendered)*deltaColumn);
+            s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_SubdivisionCount", 1);
+            glDrawElements(GL_PATCHES, 16, GL_UNSIGNED_INT, (void*)((i + 48) * sizeof(GLuint)));
+
+            columnRendered++;
+            if (columnRendered == patchCountx)
+            {
+                columnRendered = 0;
+                rowsRendered++;
+            }
+        }
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
 
     void Renderer::RenderBSplinePatch(
-        const glm::vec3& p0,
-        const glm::vec3& p1,
-        const glm::vec3& p2,
-        const glm::vec3& p3,
-        const glm::vec3& p4,
-        const glm::vec3& p5,
-        const glm::vec3& p6,
-        const glm::vec3& p7,
-        const glm::vec3& p8,
-        const glm::vec3& p9,
-        const glm::vec3& p10,
-        const glm::vec3& p11,
-        const glm::vec3& p12,
-        const glm::vec3& p13,
-        const glm::vec3& p14,
-        const glm::vec3& p15,
+        const std::vector<glm::vec3>& vertices,
+        const std::vector<uint32_t>& indices,
+        const std::vector<glm::vec2>& textureCoordinates,
         float uSubdivisionCount,
-        float vSubdivionCount,
+        float vSubdivisonCount,
+        int patchCountx,
+        int patchCounty,
         bool isTrimmed,
         unsigned int textureId,
         bool reverseTrimming,
         const glm::vec4& color)
     {
-        float vertices[] =
-        {
-            p0.x,p0.y,p0.z,
-            p4.x,p4.y,p4.z,
-            p8.x,p8.y,p8.z,
-            p12.x,p12.y,p12.z,
-            p1.x,p1.y,p1.z,
-            p5.x,p5.y,p5.z,
-            p9.x,p9.y,p9.z,
-            p13.x,p13.y,p13.z,
-            p2.x,p2.y,p2.z,
-            p6.x,p6.y,p6.z,
-            p10.x,p10.y,p10.z,
-            p14.x,p14.y,p14.z,
-            p3.x,p3.y,p3.z,
-            p7.x,p7.y,p7.z,
-            p11.x,p11.y,p11.z,
-            p15.x,p15.y,p15.z,
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-            p15.x,p15.y,p15.z,
-            p11.x,p11.y,p11.z,
-            p7.x,p7.y,p7.z,
-            p3.x,p3.y,p3.z,
-            p14.x,p14.y,p14.z,
-            p10.x,p10.y,p10.z,
-            p6.x,p6.y,p6.z,
-            p2.x,p2.y,p2.z,
-            p13.x,p13.y,p13.z,
-            p9.x,p9.y,p9.z,
-            p5.x,p5.y,p5.z,
-            p1.x,p1.y,p1.z,
-            p12.x,p12.y,p12.z,
-            p8.x,p8.y,p8.z,
-            p4.x,p4.y,p4.z,
-            p0.x,p0.y,p0.z,
-
-            p0.x,p0.y,p0.z,
-            p1.x,p1.y,p1.z,
-            p2.x,p2.y,p2.z,
-            p3.x,p3.y,p3.z,
-            p4.x,p4.y,p4.z,
-            p5.x,p5.y,p5.z,
-            p6.x,p6.y,p6.z,
-            p7.x,p7.y,p7.z,
-            p8.x,p8.y,p8.z,
-            p9.x,p9.y,p9.z,
-            p10.x,p10.y,p10.z,
-            p11.x,p11.y,p11.z,
-            p12.x,p12.y,p12.z,
-            p13.x,p13.y,p13.z,
-            p14.x,p14.y,p14.z,
-            p15.x,p15.y,p15.z,
-
-            p15.x,p15.y,p15.z,
-            p14.x,p14.y,p14.z,
-            p13.x,p13.y,p13.z,
-            p12.x,p12.y,p12.z,
-            p11.x,p11.y,p11.z,
-            p10.x,p10.y,p10.z,
-            p9.x,p9.y,p9.z,
-            p8.x,p8.y,p8.z,
-            p7.x,p7.y,p7.z,
-            p6.x,p6.y,p6.z,
-            p5.x,p5.y,p5.z,
-            p4.x,p4.y,p4.z,
-            p3.x,p3.y,p3.z,
-            p2.x,p2.y,p2.z,
-            p1.x,p1.y,p1.z,
-            p0.x,p0.y,p0.z,
-        };
-
-        s_RenderBSplinePatchData.BSplinePatchVertexArray->Bind();
-        s_RenderBSplinePatchData.BSplinePatchVertexBuffer->SetData(vertices, sizeof(vertices));
         s_RenderBSplinePatchData.BSplinePatchShader->Bind();
-        s_RenderBSplinePatchData.BSplinePatchShader->SetMat4("u_ViewProjectionMatrix", s_SceneData->ViewProjectionMatrix);
-        s_RenderBSplinePatchData.BSplinePatchShader->SetFloat4("u_Color", color);
-        s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_SubdivisionCount", uSubdivisionCount - 1);
-        s_RenderBSplinePatchData.BSplinePatchShader->SetBool("u_ReverseTexture", true);
+        s_RenderBSplinePatchData.BSplinePatchVertexArray->Bind();
+        s_RenderBSplinePatchData.BSplinePatchVertexBuffer->SetData(vertices.data(), vertices.size() * sizeof(Vertex));
+        s_RenderBSplinePatchData.BSplinePatchIndexBuffer->SetIndices(indices.data(), indices.size());
 
+        int columnRendered = 0;
+        int rowsRendered = 0;
+        float deltaColumn = 1.0f / patchCountx;
+        float deltaRow = 1.0f / patchCounty;
 
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-        s_RenderBSplinePatchData.BSplinePatchShader->SetBool("isTrimmed", isTrimmed);
-        s_RenderBSplinePatchData.BSplinePatchShader->SetBool("u_ReverseTexture", true);
-        if (isTrimmed)
+        for (int i = 0; i < indices.size(); i += 64)
         {
-            s_RenderBSplinePatchData.BSplinePatchShader->SetBool("reverseTrimming", reverseTrimming);
-            s_RenderBSplinePatchData.BSplinePatchShader->SetInt("trimmingSampler", 0);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, textureId);
+            s_RenderBSplinePatchData.BSplinePatchShader->SetMat4("u_ViewProjectionMatrix", s_SceneData->ViewProjectionMatrix);
+            s_RenderBSplinePatchData.BSplinePatchShader->SetFloat4("u_Color", color);
+            s_RenderBSplinePatchData.BSplinePatchShader->SetBool("isTrimmed", isTrimmed);
+            s_RenderBSplinePatchData.BSplinePatchShader->SetBool("u_ReverseTexture", false);
+            if (isTrimmed)
+            {
+                s_RenderBSplinePatchData.BSplinePatchShader->SetBool("reverseTrimming", reverseTrimming);
+                s_RenderBSplinePatchData.BSplinePatchShader->SetInt("trimmingSampler", 0);
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, textureId);
+            }
+
+            glPatchParameteri(GL_PATCH_VERTICES, 16);
+
+            s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_SubdivisionCount", vSubdivisonCount);
+            s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_uTexMin", columnRendered * deltaColumn);
+            s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_uTexMax", (columnRendered + 1) * deltaColumn);
+            s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_vTexMin", (rowsRendered)*deltaRow);
+            s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_vTexMax", (rowsRendered + 1) * deltaRow);
+
+            glDrawElements(GL_PATCHES, 16, GL_UNSIGNED_INT, (void*)(i * sizeof(GLuint)));
+
+            s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_vTexMin", rowsRendered + 1);
+            s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_vTexMax", rowsRendered);
+            s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_SubdivisionCount", 1);
+            glDrawElements(GL_PATCHES, 16, GL_UNSIGNED_INT, (void*)((i + 16) * sizeof(GLuint)));
+
+
+            s_RenderBSplinePatchData.BSplinePatchShader->SetBool("u_ReverseTexture", true);
+            s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_uTexMin", columnRendered * deltaColumn);
+            s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_uTexMax", (columnRendered + 1) * deltaColumn);
+            s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_vTexMin", (rowsRendered)*deltaRow);
+            s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_vTexMax", (rowsRendered + 1) * deltaRow);
+            s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_SubdivisionCount", uSubdivisionCount);
+            glDrawElements(GL_PATCHES, 16, GL_UNSIGNED_INT, (void*)((i + 32) * sizeof(GLuint)));
+
+            s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_uTexMin", (columnRendered + 1) * deltaColumn);
+            s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_uTexMax", (columnRendered) * deltaColumn);
+            s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_SubdivisionCount", 1);
+            glDrawElements(GL_PATCHES, 16, GL_UNSIGNED_INT, (void*)((i + 48) * sizeof(GLuint)));
+
+            columnRendered++;
+            if (columnRendered == patchCountx)
+            {
+                columnRendered = 0;
+                rowsRendered++;
+            }
         }
-
-        glPatchParameteri(GL_PATCH_VERTICES, 16);
-        glDrawArrays(GL_PATCHES, 0, 16);
-
-        s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_SubdivisionCount", 1);
-        glDrawArrays(GL_PATCHES, 16, 16);
-
-        s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_SubdivisionCount", vSubdivionCount - 1);
-        s_RenderBSplinePatchData.BSplinePatchShader->SetBool("u_ReverseTexture", false);
-
-        glDrawArrays(GL_PATCHES, 32, 16);
-
-        s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_SubdivisionCount", 1);
-        glDrawArrays(GL_PATCHES, 48, 16);
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
@@ -938,18 +811,6 @@ namespace CADMageddon
             RenderBSpline(p1, p2, p3, p3, color, false);
             RenderBSpline(p2, p3, p3, p3, color, false);
         }
-    }
-
-    void Renderer::RenderTextureQuad(int textureId)
-    {
-        s_RenderTextureQuadData.TextureQuadVertexArray->Bind();
-        s_RenderTextureQuadData.TextureQuadShader->Bind();
-        s_RenderTextureQuadData.TextureQuadShader->SetInt("trimmingSampler", 0);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, textureId);
-
-        glDrawElements(GL_TRIANGLES, s_RenderTextureQuadData.TextureQuadIndexBuffer->GetCount(), GL_UNSIGNED_INT, 0);
     }
 
     float CADMageddon::Renderer::Spline(float t, float ti, float interval)

@@ -529,11 +529,6 @@ namespace CADMageddon
                 torus->GetTransform()->GetMatrix(),
                 color);
         }
-
-
-        auto pos = torus->GetPointAt(0.0f, 0.5f);
-        auto tangentU = torus->GetTangentUAt(0.0f, 0.5f);
-        Renderer::RenderLine(pos, pos + tangentU, glm::vec4(1.0f, 0.0, 0.0f, 1.0f));
     }
 
     void Scene::RenderBezier(Ref<BezierC0> bezierC0)
@@ -606,35 +601,22 @@ namespace CADMageddon
     {
         auto indices = bezierPatch->GetRenderingIndices();
         auto controlPoints = bezierPatch->GetControlPoints();
-
+        auto vertices = bezierPatch->GetRenderingVertices();
+        auto textureCooridnates = bezierPatch->GetTextureCoordinates();
         auto color = bezierPatch->GetIsSelected() ? m_SelectionColor : m_DefaultColor;
 
-        for (int i = 0; i < indices.size(); i += 16)
-        {
-            Renderer::RenderBezierPatch(
-                controlPoints[indices[i]]->GetPosition(),
-                controlPoints[indices[i + 1]]->GetPosition(),
-                controlPoints[indices[i + 2]]->GetPosition(),
-                controlPoints[indices[i + 3]]->GetPosition(),
-                controlPoints[indices[i + 4]]->GetPosition(),
-                controlPoints[indices[i + 5]]->GetPosition(),
-                controlPoints[indices[i + 6]]->GetPosition(),
-                controlPoints[indices[i + 7]]->GetPosition(),
-                controlPoints[indices[i + 8]]->GetPosition(),
-                controlPoints[indices[i + 9]]->GetPosition(),
-                controlPoints[indices[i + 10]]->GetPosition(),
-                controlPoints[indices[i + 11]]->GetPosition(),
-                controlPoints[indices[i + 12]]->GetPosition(),
-                controlPoints[indices[i + 13]]->GetPosition(),
-                controlPoints[indices[i + 14]]->GetPosition(),
-                controlPoints[indices[i + 15]]->GetPosition(),
-                bezierPatch->GetUDivisionCount(),
-                bezierPatch->GetVDivisionCount(),
-                bezierPatch->GetIsTrimmed(),
-                bezierPatch->GetTextureId(),
-                bezierPatch->GetReverseTrimming(),
-                color);
-        }
+        Renderer::RenderBezierPatch(
+            vertices,
+            indices,
+            textureCooridnates,
+            bezierPatch->GetUDivisionCount(),
+            bezierPatch->GetVDivisionCount(),
+            bezierPatch->GetPatchCountX(),
+            bezierPatch->GetPatchCountY(),
+            bezierPatch->GetIsTrimmed(),
+            bezierPatch->GetTextureId(),
+            bezierPatch->GetReverseTrimming(),
+            color);
 
         RenderControlPoints(controlPoints);
 
@@ -648,35 +630,22 @@ namespace CADMageddon
     {
         auto indices = bSplinePatch->GetRenderingIndices();
         auto controlPoints = bSplinePatch->GetControlPoints();
-
+        auto vertices = bSplinePatch->GetRenderingVertices();
+        auto textureCooridnates = bSplinePatch->GetTextureCoordinates();
         auto color = bSplinePatch->GetIsSelected() ? m_SelectionColor : m_DefaultColor;
 
-        for (int i = 0; i < indices.size(); i += 16)
-        {
-            Renderer::RenderBSplinePatch(
-                controlPoints[indices[i]]->GetPosition(),
-                controlPoints[indices[i + 1]]->GetPosition(),
-                controlPoints[indices[i + 2]]->GetPosition(),
-                controlPoints[indices[i + 3]]->GetPosition(),
-                controlPoints[indices[i + 4]]->GetPosition(),
-                controlPoints[indices[i + 5]]->GetPosition(),
-                controlPoints[indices[i + 6]]->GetPosition(),
-                controlPoints[indices[i + 7]]->GetPosition(),
-                controlPoints[indices[i + 8]]->GetPosition(),
-                controlPoints[indices[i + 9]]->GetPosition(),
-                controlPoints[indices[i + 10]]->GetPosition(),
-                controlPoints[indices[i + 11]]->GetPosition(),
-                controlPoints[indices[i + 12]]->GetPosition(),
-                controlPoints[indices[i + 13]]->GetPosition(),
-                controlPoints[indices[i + 14]]->GetPosition(),
-                controlPoints[indices[i + 15]]->GetPosition(),
-                bSplinePatch->GetUDivisionCount(),
-                bSplinePatch->GetVDivisionCount(),
-                bSplinePatch->GetIsTrimmed(),
-                bSplinePatch->GetTextureId(),
-                bSplinePatch->GetReverseTrimming(),
-                color);
-        }
+        Renderer::RenderBSplinePatch(
+            vertices,
+            indices,
+            textureCooridnates,
+            bSplinePatch->GetUDivisionCount(),
+            bSplinePatch->GetVDivisionCount(),
+            bSplinePatch->GetPatchCountX(),
+            bSplinePatch->GetPatchCountY(),
+            bSplinePatch->GetIsTrimmed(),
+            bSplinePatch->GetTextureId(),
+            bSplinePatch->GetReverseTrimming(),
+            color);
 
         RenderControlPoints(controlPoints);
 

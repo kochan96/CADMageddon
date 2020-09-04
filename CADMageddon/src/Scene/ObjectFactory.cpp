@@ -33,10 +33,10 @@ namespace CADMageddon
         constexpr float vEnd = glm::two_pi<float>();
         float vDelta = (vEnd - vBegin) / minorRadiusCount;
 
-        for (int uIndex = 0; uIndex < majorRadiusCount; uIndex++)
+        for (int uIndex = 0; uIndex <= majorRadiusCount; uIndex++)
         {
             float actualU = uBegin + uIndex * uDelta;
-            for (int vIndex = 0; vIndex < minorRadiusCount; vIndex++)
+            for (int vIndex = 0; vIndex <= minorRadiusCount; vIndex++)
             {
                 float actualV = vBegin + vIndex * vDelta;
                 vertices.push_back(GetTorusPoint(majorRadius, minorRadius, actualU, actualV));
@@ -48,18 +48,9 @@ namespace CADMageddon
         {
             for (int vIndex = 0; vIndex < minorRadiusCount; vIndex++)
             {
-                int currentIndex = uIndex * minorRadiusCount + vIndex;
-                int nextIndexInMajorCircle = currentIndex + minorRadiusCount;
+                int currentIndex = uIndex * (minorRadiusCount + 1) + vIndex;
+                int nextIndexInMajorCircle = currentIndex + minorRadiusCount + 1;
                 int nextIndexInMinorCircle = currentIndex + 1;
-
-                int maxIndex = majorRadiusCount * minorRadiusCount - 1;
-                int maxIndexInMinorCircle = uIndex * minorRadiusCount + minorRadiusCount - 1;
-
-                if (nextIndexInMajorCircle > maxIndex)
-                    nextIndexInMajorCircle -= maxIndex + 1;
-
-                if (nextIndexInMinorCircle > maxIndexInMinorCircle)
-                    nextIndexInMinorCircle -= minorRadiusCount;
 
                 indices.push_back(currentIndex);
                 indices.push_back(nextIndexInMinorCircle);

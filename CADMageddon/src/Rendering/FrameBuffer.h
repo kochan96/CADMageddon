@@ -27,6 +27,7 @@ namespace CADMageddon
         void Resize(uint32_t width, uint32_t height);
 
         uint32_t GetColorAttachmentRendererID() const { return m_ColorAttachment; }
+        uint32_t GetDepthAttachmentID() const { return m_DepthAttachment; }
 
         const FramebufferSpecification& GetSpecification() const { return m_Specification; }
     private:
