@@ -1,14 +1,23 @@
 #pragma once
 #include "Scene\IntersectionCurve.h"
+#include "CADApplication\Systems\Cursor3D.h"
 
 namespace CADMageddon
 {
     class IntersectionHelper
     {
     public:
+        static std::vector<IntersectionPoint> GetIntersectionPoints(Ref<Cursor3D> cursor, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2, float stepSize, IntersectionType& intersectionType);
+
         static std::vector<IntersectionPoint> GetIntersectionPoints(Ref<SurfaceUV> s1, Ref<SurfaceUV> s2, float stepSize, IntersectionType& intersectionType);
 
     private:
+        static glm::vec4 GetFirstPointFromOneSurfaceCursor(Ref<SurfaceUV> s1, Ref<Cursor3D> cursor, float divide = 5.0f);
+
+        static glm::vec4 GetFirstPointFromOneSurface(Ref<SurfaceUV> s1, float divide = 5.0f);
+
+        static glm::vec4 GetFirstPointFromTwoSurfacesCursor(Ref<Cursor3D> cursor, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2, float divide = 5.0f);
+
         static glm::vec4 GetFirstPointFromTwoSurfaces(
             Ref<SurfaceUV> s1,
             Ref<SurfaceUV> s2,
@@ -23,18 +32,13 @@ namespace CADMageddon
             bool reversed);
 
         static glm::vec4 GradientMinimalization(
-            float uStart1,
-            float vStart1,
+            glm::vec4 parameters,
             Ref<SurfaceUV> s1,
-            float uStart2,
-            float vStart2,
             Ref<SurfaceUV> s2);
 
-        static float GetDistance(float uStart1,
-            float vStart1,
+        static float GetDistance(
+            glm::vec4 parameters,
             Ref<SurfaceUV> s1,
-            float uStart2,
-            float vStart2,
             Ref<SurfaceUV> s2);
 
         static glm::vec4 GetNegativeGradient(
@@ -64,7 +68,7 @@ namespace CADMageddon
         static IntersectionType GetIntersectionType(glm::vec4& parameters, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2);
 
         static IntersectionType GetIntersectionType(IntersectionType intersectionType, glm::vec4& parameters, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2);
-        
+
         static IntersectionPoint GetLastIntersectionPoint(IntersectionType intersectionType, IntersectionPoint parameters, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2);
     };
 }

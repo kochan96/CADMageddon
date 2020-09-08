@@ -10,8 +10,16 @@ namespace CADMageddon
         IntersectionType& intersectionType)
     {
         intersectionType = IntersectionType::ClosedClosed;
+        glm::vec4 firstPoint;
+        if (s1 == s2)
+        {
+            firstPoint = GetFirstPointFromOneSurface(s1);
+        }
+        else
+        {
+            firstPoint = GetFirstPointFromTwoSurfaces(s1, s2);
+        }
 
-        glm::vec4 firstPoint = GetFirstPointFromTwoSurfaces(s1, s2, 5);
         if (firstPoint.x == -1 || glm::any(glm::isnan(firstPoint)))
             return std::vector<IntersectionPoint>();
 
@@ -27,7 +35,7 @@ namespace CADMageddon
         {
             intersectionPoint = GetNextIntersectionPoint(intersectionPoint.Coords, s1, s2, stepSize, reversed);
             if (glm::length(intersectionPoint.Location - intersectionPoints.front().Location) < stepSize && intersectionPoints.size() > 2)
-            {   
+            {
                 intersectionType = GetIntersectionType(intersectionType, intersectionPoint.Coords, s1, s2);
                 intersectionPoints.push_back(GetNextIntersectionPoint(intersectionPoint.Coords, s1, s2, stepSize, reversed));
                 break;
@@ -60,6 +68,201 @@ namespace CADMageddon
         return intersectionPoints;
     }
 
+    std::vector<IntersectionPoint> IntersectionHelper::GetIntersectionPoints(Ref<Cursor3D> cursor, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2, float stepSize, IntersectionType& intersectionType)
+    {
+        glm::vec4 firstPoint;
+        if (s1 == s2)
+        {
+            firstPoint = GetFirstPointFromOneSurfaceCursor(s1, cursor);
+        }
+        else
+        {
+            firstPoint = GetFirstPointFromTwoSurfacesCursor(cursor, s1, s2);
+        }
+
+        intersectionType = IntersectionType::ClosedClosed;
+
+        if (firstPoint.x == -1 || glm::any(glm::isnan(firstPoint)))
+            return std::vector<IntersectionPoint>();
+
+        std::vector<IntersectionPoint> intersectionPoints;
+        IntersectionPoint intersectionPoint = {
+            firstPoint,
+            s1->GetPointAt(firstPoint.x,firstPoint.y) };
+
+        intersectionPoints.push_back(intersectionPoint);
+
+        bool reversed = false;
+        while (true)
+        {
+            intersectionPoint = GetNextIntersectionPoint(intersectionPoint.Coords, s1, s2, stepSize, reversed);
+            if (glm::length(intersectionPoint.Location - intersectionPoints.front().Location) < stepSize && intersectionPoints.size() > 2)
+            {
+                intersectionType = GetIntersectionType(intersectionType, intersectionPoint.Coords, s1, s2);
+                intersectionPoints.push_back(GetNextIntersectionPoint(intersectionPoint.Coords, s1, s2, stepSize, reversed));
+                break;
+            }
+            else if (CheckParameters(intersectionPoint.Coords, s1, s2))
+            {
+                intersectionPoints.push_back(intersectionPoint);
+            }
+            else if (!reversed)
+            {
+                intersectionType = GetIntersectionType(intersectionPoint.Coords, s1, s2);
+                intersectionPoint.Coords = ClampParameters(intersectionPoint.Coords, s1, s2);
+                intersectionPoint.Location = s1->GetPointAt(intersectionPoint.Coords.x, intersectionPoint.Coords.y);
+                intersectionPoints.push_back(intersectionPoint);
+                intersectionPoint = intersectionPoints[0];
+                reversed = true;
+                std::reverse(intersectionPoints.begin(), intersectionPoints.end());
+            }
+            else
+            {
+                intersectionType = GetIntersectionType(intersectionType, intersectionPoint.Coords, s1, s2);
+                intersectionPoint.Coords = ClampParameters(intersectionPoint.Coords, s1, s2);
+                intersectionPoint.Location = s1->GetPointAt(intersectionPoint.Coords.x, intersectionPoint.Coords.y);
+                intersectionPoints.push_back(intersectionPoint);
+                LOG_INFO("Length: {}", glm::length(intersectionPoints.back().Location - intersectionPoints[0].Location));
+                break;
+            }
+        }
+
+        return intersectionPoints;
+    }
+
+    glm::vec4 IntersectionHelper::GetFirstPointFromOneSurfaceCursor(Ref<SurfaceUV> s1, Ref<Cursor3D> cursor, float divide)
+    {
+        std::vector<std::pair<float, int>> bestPos;
+        std::vector<glm::vec4> startPos;
+        int index = 0;
+
+        for (int i = 0; i <= divide; i++)
+            for (int j = 0; j <= divide; j++)
+                for (int k = 0; k <= divide; k++)
+                    for (int l = 0; l <= divide; l++)
+                        if (i != k || j != l) {
+                            glm::vec4 newPos(i / divide, j / divide, k / divide, l / divide);
+                            float dist = GetDistance(newPos, s1, cursor);
+                            startPos.emplace_back(newPos);
+                            bestPos.emplace_back(std::make_pair(dist, index++));
+                        }
+        std::sort(bestPos.begin(), bestPos.end());
+        for (int i = 0; i < bestPos.size(); i++) {
+            glm::vec4 pos = GradientMinimalization(startPos[bestPos[i].second], s1, s1);
+            glm::vec4 pos2 = pos;
+            if (s1->GetRollU()) {
+                pos2.s = pos2.s - std::floorf(pos2.s);
+                pos2.p = pos2.p - std::floorf(pos2.p);
+            }
+            else {
+                pos2.s = glm::clamp(pos2.s, 0.f, 1.f);
+                pos2.p = glm::clamp(pos2.p, 0.f, 1.f);
+            }
+            if (s1->GetRollV()) {
+                pos2.t = pos2.t - std::floorf(pos2.t);
+                pos2.q = pos2.q - std::floorf(pos2.q);
+            }
+            else {
+                pos2.t = glm::clamp(pos2.t, 0.f, 1.f);
+                pos2.q = glm::clamp(pos2.q, 0.f, 1.f);
+            }
+
+            float dist = glm::length(s1->GetPointAt(pos.s, pos.t) -
+                s1->GetPointAt(pos.p, pos.q));
+            //if (dist < 0.00001f)
+            //	continue;		
+            float coordDist = glm::length(glm::vec2(pos2.s - pos2.p, pos2.t - pos2.q));
+            if (std::max(std::abs(pos2.s - pos2.p), std::abs(pos2.t - pos2.q)) > 0.999f)
+                continue;
+            if (dist < 0.01f && coordDist > 0.01f)
+                return pos;
+            LOG_INFO("checked {} of {}  possible begginnings", i, bestPos.size());
+        }
+        return glm::vec4(-1);
+    }
+
+    glm::vec4 IntersectionHelper::GetFirstPointFromOneSurface(Ref<SurfaceUV> s1, float divide)
+    {
+        std::vector<std::pair<float, int>> bestPos;
+        std::vector<glm::vec4> startPos;
+        int index = 0;
+
+        for (int i = 0; i <= divide; i++)
+            for (int j = 0; j <= divide; j++)
+                for (int k = 0; k <= divide; k++)
+                    for (int l = 0; l <= divide; l++)
+                        if (i != k || j != l) {
+                            glm::vec4 newPos(i / divide, j / divide, k / divide, l / divide);
+                            float dist = GetDistance(newPos, s1, s1);
+                            startPos.emplace_back(newPos);
+                            bestPos.emplace_back(std::make_pair(dist, index++));
+                        }
+        std::sort(bestPos.begin(), bestPos.end());
+        for (int i = 0; i < bestPos.size(); i++) {
+            glm::vec4 pos = GradientMinimalization(startPos[bestPos[i].second], s1, s1);
+            glm::vec4 pos2 = pos;
+            if (s1->GetRollU()) {
+                pos2.s = pos2.s - std::floorf(pos2.s);
+                pos2.p = pos2.p - std::floorf(pos2.p);
+            }
+            else {
+                pos2.s = glm::clamp(pos2.s, 0.f, 1.f);
+                pos2.p = glm::clamp(pos2.p, 0.f, 1.f);
+            }
+            if (s1->GetRollV()) {
+                pos2.t = pos2.t - std::floorf(pos2.t);
+                pos2.q = pos2.q - std::floorf(pos2.q);
+            }
+            else {
+                pos2.t = glm::clamp(pos2.t, 0.f, 1.f);
+                pos2.q = glm::clamp(pos2.q, 0.f, 1.f);
+            }
+
+            float dist = glm::length(s1->GetPointAt(pos.s, pos.t) -
+                s1->GetPointAt(pos.p, pos.q));
+            //if (dist < 0.00001f)
+            //	continue;		
+            float coordDist = glm::length(glm::vec2(pos2.s - pos2.p, pos2.t - pos2.q));
+            if (std::max(std::abs(pos2.s - pos2.p), std::abs(pos2.t - pos2.q)) > 0.999f)
+                continue;
+            if (dist < 0.01f && coordDist > 0.01f)
+                return pos;
+
+            LOG_INFO("checked {} of {}  possible begginnings", i, bestPos.size());
+        }
+        return glm::vec4(-1);
+    }
+
+    glm::vec4 IntersectionHelper::GetFirstPointFromTwoSurfacesCursor(Ref<Cursor3D> cursor, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2, float divide)
+    {
+        float minDist[] = { 10000000, 10000000 };
+        glm::vec4 pos(0.5f), newPos;
+        glm::vec4 startPos[2];
+        for (int i = 0; i <= divide; i++)
+            for (int j = 0; j <= divide; j++) {
+                newPos = glm::vec4(i / divide, j / divide, i / divide, j / divide);
+                float dist[2] = { GetDistance(newPos,s1,cursor),
+                    GetDistance(newPos,cursor,s2) };
+                if (dist[0] < minDist[0]) {
+                    minDist[0] = dist[0];
+                    startPos[0] = newPos;
+                }
+                if (dist[1] < minDist[1]) {
+                    minDist[1] = dist[1];
+                    startPos[1] = newPos;
+                }
+            }
+        glm::vec4 s1Pos = GradientMinimalization(startPos[0], s1, cursor);
+        glm::vec4 s2Pos = GradientMinimalization(startPos[1], cursor, s2);
+        pos = glm::vec4(s1Pos.x, s1Pos.y, s2Pos.z, s2Pos.w);
+        pos = GradientMinimalization(pos, s1, s2);
+        float dist = glm::length(s1->GetPointAt(pos.x, pos.y) -
+            s2->GetPointAt(pos.z, pos.w));
+        if (dist < 0.01f)
+            return pos;
+        return glm::vec4(-1);
+    }
+
     glm::vec4 IntersectionHelper::GetFirstPointFromTwoSurfaces(
         Ref<SurfaceUV> s1,
         Ref<SurfaceUV> s2,
@@ -86,8 +289,9 @@ namespace CADMageddon
                     for (int l = 0; l <= divide; l++)
                     {
                         float u2 = l * u2Delta;
-                        float dist = GetDistance(u1, v1, s1, u2, v2, s2);
-                        startingPos.push_back({ u1,v1,u2,v2 });
+                        glm::vec4 parameters(u1, v1, u2, v2);
+                        float dist = GetDistance(parameters, s1, s2);
+                        startingPos.push_back(parameters);
                         bestPos.push_back(std::make_pair(dist, index++));
                     }
                 }
@@ -98,10 +302,12 @@ namespace CADMageddon
         for (int i = 0; i < bestPos.size(); i++)
         {
             auto parameters = startingPos[bestPos[i].second];
-            glm::vec4 pos = GradientMinimalization(parameters.x, parameters.y, s1, parameters.z, parameters.w, s2);
+            glm::vec4 pos = GradientMinimalization(parameters, s1, s2);
             float dist = glm::length(s1->GetPointAt(pos.s, pos.t) - s2->GetPointAt(pos.p, pos.q));
             if (dist < 0.01f)
                 return pos;
+
+            LOG_INFO("checked {} of {}  possible begginnings", i, bestPos.size());
         }
 
         return glm::vec4(-1.0f);
@@ -163,11 +369,8 @@ namespace CADMageddon
     }
 
     glm::vec4 IntersectionHelper::GradientMinimalization(
-        float uStart1,
-        float vStart1,
+        glm::vec4 parameters,
         Ref<SurfaceUV> s1,
-        float uStart2,
-        float vStart2,
         Ref<SurfaceUV> s2)
     {
         //Nonlinear_conjugate_gradient_method
@@ -177,7 +380,6 @@ namespace CADMageddon
         glm::vec4 maxValues(s1->GetMaxU(), s1->GetMaxV(), s2->GetMaxU(), s2->GetMaxV());
 
         const int MAX_ITERATIONS = 100;
-        glm::vec4 parameters(uStart1, vStart1, uStart2, vStart2);
         const float alfaMin = 0.0f;
         const float alfaMax = 0.2f;
 
@@ -216,15 +418,12 @@ namespace CADMageddon
     }
 
     float IntersectionHelper::GetDistance(
-        float uStart1,
-        float vStart1,
+        glm::vec4 parameters,
         Ref<SurfaceUV> s1,
-        float uStart2,
-        float vStart2,
         Ref<SurfaceUV> s2)
     {
-        auto pos1 = s1->GetPointAt(uStart1, vStart1);
-        auto pos2 = s2->GetPointAt(uStart2, vStart2);
+        auto pos1 = s1->GetPointAt(parameters.x, parameters.y);
+        auto pos2 = s2->GetPointAt(parameters.z, parameters.w);
 
         return glm::dot(pos1 - pos2, pos1 - pos2);
     }
@@ -274,8 +473,8 @@ namespace CADMageddon
 
         auto xLeft = x + c * direction;
         auto xRight = x + d * direction;
-        auto valueLeft = GetDistance(xLeft.x, xLeft.y, s1, xLeft.z, xLeft.w, s2);
-        auto valueRight = GetDistance(xRight.x, xRight.y, s1, xRight.z, xRight.w, s2);
+        auto valueLeft = GetDistance(xLeft, s1, s2);
+        auto valueRight = GetDistance(xRight, s1, s2);
 
         for (int k = 0; k < n; k++)
         {
@@ -288,7 +487,7 @@ namespace CADMageddon
                 h = invPhi * h;
                 c = alfaMin + invPhi2 * h;
                 xLeft = x + c * direction;
-                valueLeft = GetDistance(xLeft.x, xLeft.y, s1, xLeft.z, xLeft.w, s2);
+                valueLeft = GetDistance(xLeft, s1, s2);
             }
             else
             {
@@ -299,7 +498,7 @@ namespace CADMageddon
                 h = invPhi * h;
                 d = alfaMin * invPhi * h;
                 xRight = alfaMin + d * direction;
-                valueRight = GetDistance(xRight.x, xRight.y, s1, xRight.z, xRight.w, s2);
+                valueRight = GetDistance(xRight, s1, s2);
             }
         }
 
