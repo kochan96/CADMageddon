@@ -75,6 +75,7 @@ namespace CADMageddon
         InitBSplinePatchRenderData();
         InitGregoryPatchRenderData();
         InitSelectionBoxRenderData();
+        InitTextureQuadRenderData();
     }
 
     void Renderer::InitTorusRenderData()
@@ -215,6 +216,40 @@ namespace CADMageddon
         s_RenderGregoryPatch.GregoryVertexArray->AddVertexBuffer(s_RenderGregoryPatch.GregoryVertexBuffer);
 
         s_RenderGregoryPatch.GregoryShader = s_ShaderLibrary->Get("GregoryPatchShader");
+    }
+
+    void Renderer::InitTextureQuadRenderData()
+    {
+        s_RenderTextureQuadData.TextureQuadVertexArray = CreateRef<OpenGLVertexArray>();
+
+
+        s_RenderTextureQuadData.TextureQuadVertexBuffer = CreateRef<OpenGLVertexBuffer>(s_RenderTextureQuadData.PointCount * sizeof(VertexT));
+        float verticesData[] =
+        {
+            -1.0f,-1.0f,0.0f, 0.0f,0.0f,
+            1.0f,-1.0f,0.0f, 1.0f,0.0f,
+            1.0f,1.0f,0.0f, 1.0f, 1.0f,
+            1.0f,1.0f,0.0f, 1.0f, 1.0f,
+           -1.0f, 1.0f, 0.0f,0.0f,1.0f,
+           -1.0f,-1.0f,0.0f, 0.0f,0.0f,
+        };
+
+        s_RenderTextureQuadData.TextureQuadVertexBuffer->SetLayout({
+            { ShaderDataType::Float3, "a_Position" },
+            { ShaderDataType::Float2, "a_TextureCoordinates" }
+            });
+
+        uint32_t indices[] =
+        {
+            0,1,2,
+            3,4,5
+        };
+
+        s_RenderTextureQuadData.TextureQuadIndexBuffer = CreateRef<OpenGLIndexBuffer>(indices, 6);
+        s_RenderTextureQuadData.TextureQuadVertexBuffer->SetData(verticesData, sizeof(verticesData));
+        s_RenderTextureQuadData.TextureQuadVertexArray->AddVertexBuffer(s_RenderTextureQuadData.TextureQuadVertexBuffer);
+        s_RenderTextureQuadData.TextureQuadVertexArray->SetIndexBuffer(s_RenderTextureQuadData.TextureQuadIndexBuffer);
+        s_RenderTextureQuadData.TextureQuadShader = s_ShaderLibrary->Get("TextureQuadShader");
     }
 
     void Renderer::ShutDown()
@@ -668,7 +703,7 @@ namespace CADMageddon
             glDrawElements(GL_PATCHES, 16, GL_UNSIGNED_INT, (void*)((i + 32) * sizeof(GLuint)));
 
             s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_uTexMin", (columnRendered + 1) * deltaColumn);
-            s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_uTexMax", (columnRendered) * deltaColumn);
+            s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_uTexMax", (columnRendered)*deltaColumn);
             s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_SubdivisionCount", 1);
             glDrawElements(GL_PATCHES, 16, GL_UNSIGNED_INT, (void*)((i + 48) * sizeof(GLuint)));
 
@@ -811,6 +846,18 @@ namespace CADMageddon
             RenderBSpline(p1, p2, p3, p3, color, false);
             RenderBSpline(p2, p3, p3, p3, color, false);
         }
+    }
+
+    void Renderer::RenderTextureQuad(int textureId)
+    {
+        s_RenderTextureQuadData.TextureQuadVertexArray->Bind();
+        s_RenderTextureQuadData.TextureQuadShader->Bind();
+        s_RenderTextureQuadData.TextureQuadShader->SetInt("sampler", 0);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, textureId);
+
+        glDrawElements(GL_TRIANGLES, s_RenderTextureQuadData.TextureQuadIndexBuffer->GetCount(), GL_UNSIGNED_INT, 0);
     }
 
     float CADMageddon::Renderer::Spline(float t, float ti, float interval)

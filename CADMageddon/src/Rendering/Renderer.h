@@ -145,6 +145,8 @@ namespace CADMageddon
             const glm::vec4& color = DEFAULT_COLOR,
             bool snapToEnd = false);
 
+        static void RenderTextureQuad(int textureId);
+
     private:
         static void InitTorusRenderData();
         static void InitPointRenderData();
@@ -154,6 +156,7 @@ namespace CADMageddon
         static void InitBSplinePatchRenderData();
         static void InitSelectionBoxRenderData();
         static void InitGregoryPatchRenderData();
+        static void InitTextureQuadRenderData();
 
         static void FlushAndResetPoints();
         static void FlushAndResetLines();

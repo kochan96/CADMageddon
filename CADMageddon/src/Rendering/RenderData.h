@@ -111,7 +111,7 @@ namespace CADMageddon
 
     struct RenderTextureQuadData
     {
-        static const int PointCount = 4;
+        static const int PointCount = 6;
         Ref<OpenGLVertexArray> TextureQuadVertexArray;
         Ref<OpenGLVertexBuffer> TextureQuadVertexBuffer;
         Ref<OpenGLIndexBuffer> TextureQuadIndexBuffer;

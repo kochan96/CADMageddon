@@ -4,6 +4,7 @@
 #include "Rendering\VertexArray.h"
 #include "Rendering\Shader.h"
 #include "Rendering\FrameBuffer.h"
+#include "Rendering\Texture.h"
 
 #include "Rendering\FPSCameraController.h"
 
@@ -119,5 +120,6 @@ namespace CADMageddon
         Ref<HierarchyPanel> m_HierarchyPanel;
         Ref<InspectorPanel> m_InspectorPanel;
 
+        Ref<OpenGLTexture2D> m_FishTexture;
     };
 }
