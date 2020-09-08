@@ -68,7 +68,7 @@ namespace CADMageddon
         Ref<BSplinePatch> CreateBSplinePatchRect(std::string name, const PatchRectCreationParameters& parameters);
         Ref<BSplinePatch> CreateBSplinePatchCylinder(std::string name, const PatchCylinderCreationParameters& parameters);
 
-        Ref<IntersectionCurve> CreateIntersectionCurve(std::string name, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2, std::vector<IntersectionPoint> points, bool isClosed);
+        Ref<IntersectionCurve> CreateIntersectionCurve(std::string name, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2, std::vector<IntersectionPoint> points, IntersectionType intersectionType);
 
         std::vector<Ref<Point>> GetFreePoints() const { return m_FreePoints; }
         std::vector<Ref<Point>> GetPoints() const { return m_Points; }

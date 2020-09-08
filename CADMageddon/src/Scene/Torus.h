@@ -44,6 +44,8 @@ namespace CADMageddon
         virtual float GetMaxV() const override;
         virtual bool GetRollU() const override { return true; }
         virtual bool GetRollV() const override { return true; }
+        virtual int GetUDivision() const override { return m_TorusParameters.MajorRadiusCount; }
+        virtual int GetVDivision() const override { return m_TorusParameters.MinorRadiusCount; }
 
     private:
         Ref<Transform> m_Transform;

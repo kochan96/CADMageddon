@@ -16,8 +16,11 @@ namespace CADMageddon
         virtual float GetMinV() const = 0;
         virtual float GetMaxV() const = 0;
 
+        virtual int GetUDivision() const = 0;
+        virtual int GetVDivision() const = 0;
+
         Ref<IntersectionCurve> GetIntersectionCurve() const { return m_IntersectionCurve; }
-        void SetIntersectionCurve(Ref<IntersectionCurve> intersectionCurve) { m_IntersectionCurve = intersectionCurve; }
+        void SetIntersectionCurve(Ref<IntersectionCurve> intersectionCurve) { m_IntersectionCurve = intersectionCurve; RecalculateTrimCurveGrid(); }
 
         bool GetIsTrimmed() const { return m_IntersectionCurve != nullptr; }
         bool GetReverseTrimming() const { return m_ReverseTrimming; }
@@ -38,6 +41,16 @@ namespace CADMageddon
 
         virtual bool GetRollU() const { return false; }
         virtual bool GetRollV() const { return false; }
+
+    protected:
+        void RecalculateTrimCurveGrid()
+        {
+            /*if (m_IntersectionCurve)
+            {
+                bool isFirst = m_IntersectionCurve->GetFirstSurface() == shared_from_this();
+                m_IntersectionCurve->CalculateTrimming(GetVDivision(), isFirst);
+            }*/
+        }
 
     private:
         bool m_ReverseTrimming = false;

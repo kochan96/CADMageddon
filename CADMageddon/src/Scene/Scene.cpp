@@ -190,14 +190,23 @@ namespace CADMageddon
         return bSpline;
     }
 
-    Ref<IntersectionCurve> Scene::CreateIntersectionCurve(std::string name, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2, std::vector<IntersectionPoint> points, bool isClosed)
+    Ref<IntersectionCurve> Scene::CreateIntersectionCurve(std::string name, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2, std::vector<IntersectionPoint> points, IntersectionType intersectionType)
     {
         static int intersectionCount = 0;
-        auto intersectionCurve = IntersectionCurve::Create("Intersection_" + std::to_string(intersectionCount++), points, s1, s2, isClosed);
+        auto intersectionCurve = IntersectionCurve::Create("Intersection_" + std::to_string(intersectionCount++), points, s1, s2, intersectionType);
         m_IntersectionCurve.push_back(intersectionCurve);
-        s1->SetIntersectionCurve(intersectionCurve);
-        s1->SetReverseTrimming(true);
-        s2->SetIntersectionCurve(intersectionCurve);
+
+
+        if (intersectionType == IntersectionType::ClosedClosed || intersectionType == IntersectionType::ClosedOpen)
+        {
+            s1->SetIntersectionCurve(intersectionCurve);
+            s1->SetReverseTrimming(true);
+        }
+
+        if (intersectionType == IntersectionType::ClosedClosed || intersectionType == IntersectionType::OpenClosed)
+        {
+            s2->SetIntersectionCurve(intersectionCurve);
+        }
 
         return intersectionCurve;
     }

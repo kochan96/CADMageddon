@@ -15,45 +15,84 @@ namespace CADMageddon
         return interpolated;
     }
 
-    void IntersectionCurve::GenerateTextures()
+    void IntersectionCurve::CalculateTrimming(int lineCount, bool isFirst)
     {
-        glGenTextures(2, m_TextureIds);
+        int index = isFirst ? 0 : 1;
+
+        std::vector<glm::vec2> surfaceCoordinates;
+        if (isFirst)
+            std::transform(m_IntersectionPoints.begin(), m_IntersectionPoints.end(), std::back_inserter(surfaceCoordinates), [](IntersectionPoint point) {return glm::vec2(point.Coords.x, point.Coords.y); });
+        else
+            std::transform(m_IntersectionPoints.begin(), m_IntersectionPoints.end(), std::back_inserter(surfaceCoordinates), [](IntersectionPoint point) {return glm::vec2(point.Coords.z, point.Coords.w); });
+
+        m_TexturePixels[index].clear();
+
+        for (int i = 0; i < lineCount; i++)
+        {
+            float lineV = i / (float)(lineCount - 1);
+            std::vector<float> intersections;
+            GetIntersectionsAlongU(lineV, surfaceCoordinates, intersections);
+
+            for (int offset = -1; offset <= 1; offset++)
+            {
+                for (int j = 1; j < intersections.size(); j += 2)
+                {
+                    auto intersectionLeft = intersections[j - 1] + offset;
+                    auto intersectionRight = intersections[j] + offset;
+
+                    float start = std::max(intersectionLeft, 0.0f);
+                    float end = std::min(intersectionRight, 1.0f);
+
+                    int startIndex = start * (lineCount - 1);
+                    int endIndex = end * (lineCount - 1);
+
+                    if (startIndex >= lineCount || endIndex < 0)
+                    {
+                        continue;
+                    }
+
+                    m_TexturePixels[index].push_back({ start,lineV });
+                    m_TexturePixels[index].push_back({ end,lineV });
+                }
+            }
+        }
+    }
+
+    void IntersectionCurve::GenerateTexture(int texNumber)
+    {
+        //needs optimization
+
+        glGenTextures(1, &m_TextureIds[texNumber]);
 
         static const int TEX_SIZE = 8192;
         static unsigned char textureData[TEX_SIZE][TEX_SIZE];
-        for (int k = 0; k < 2; k++)
+
+        bool isFirst = texNumber == 0;
+        CalculateTrimming(TEX_SIZE, isFirst);
+
+        for (int i = 1; i < m_TexturePixels[texNumber].size(); i += 2)
         {
-            bool isIn = false;
-            std::vector<glm::vec2> surfaceCoordinates;
-            if (k == 0)
-                std::transform(m_IntersectionPoints.begin(), m_IntersectionPoints.end(), std::back_inserter(surfaceCoordinates), [](IntersectionPoint point) {return glm::vec2(point.Coords.x, point.Coords.y); });
-            else
-                std::transform(m_IntersectionPoints.begin(), m_IntersectionPoints.end(), std::back_inserter(surfaceCoordinates), [](IntersectionPoint point) {return glm::vec2(point.Coords.z, point.Coords.w); });
+            auto row = m_TexturePixels[texNumber][i].y;
+            auto start = m_TexturePixels[texNumber][i - 1].x;
+            auto end = m_TexturePixels[texNumber][i].x;
+            int rowIndex = row * (TEX_SIZE - 1);
+            int startIndex = start * (TEX_SIZE - 1);
+            int endIndex = end * (TEX_SIZE - 1) + 0.5f;
 
-            float delta = 1.0f / (TEX_SIZE - 1);
-            for (int i = 0; i < TEX_SIZE; i++)
+            for (int index = startIndex; index <= endIndex; index++)
             {
-                int intersectionIndex = 0;
-                float lineV = i * delta;
-                auto intersections = GetIntersectionsAlongU(lineV, surfaceCoordinates);
-
-                for (int j = 0; j < TEX_SIZE; j++)
-                {
-                    float lineU = (j + 1) / (float)(TEX_SIZE + 2) + 0.5f / TEX_SIZE;
-                    CheckIfPixelInsideIntersections(lineU, intersections, intersectionIndex, isIn);
-
-                    textureData[i][j] = isIn ? 255 : 0;
-                }
+                textureData[rowIndex][index] = 255;
             }
-
-            glBindTexture(GL_TEXTURE_2D, m_TextureIds[k]);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, TEX_SIZE, TEX_SIZE, 0, GL_RED, GL_UNSIGNED_BYTE, textureData);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            glBindTexture(GL_TEXTURE_2D, 0);
         }
+
+
+        glBindTexture(GL_TEXTURE_2D, m_TextureIds[texNumber]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, TEX_SIZE, TEX_SIZE, 0, GL_RED, GL_UNSIGNED_BYTE, textureData);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glBindTexture(GL_TEXTURE_2D, 0);
     }
 
 
@@ -62,66 +101,97 @@ namespace CADMageddon
         std::vector<IntersectionPoint> points,
         Ref<SurfaceUV> s1,
         Ref<SurfaceUV> s2,
-        bool isClosed) :
+        IntersectionType intersectionType) :
         BaseObject(name),
         m_FirstSurface(s1),
         m_SecondSurface(s2),
         m_IntersectionPoints(points),
-        m_IsClosed(isClosed),
         m_ShowPlot(false)
     {
-        if (isClosed)
-            GenerateTextures();
+
+        if (intersectionType == IntersectionType::ClosedClosed || intersectionType == IntersectionType::ClosedOpen)
+        {
+            GenerateTexture(0);
+        }
+
+        if (intersectionType == IntersectionType::ClosedClosed || intersectionType == IntersectionType::OpenClosed)
+        {
+            GenerateTexture(1);
+        }
+
+        m_IntersectionType = intersectionType;
     }
 
-    std::vector<float> IntersectionCurve::GetIntersectionsAlongU(float lineV, std::vector<glm::vec2> coords)
+    void IntersectionCurve::GetIntersectionsAlongU(float lineV, std::vector<glm::vec2> coords, std::vector<float>& intersections)
     {
-        float offsets[] = { -1,0,1 };
-        std::vector<float> intersections;
-        float intersection;
-
         for (int i = 1; i < coords.size(); i++)
         {
             auto p1 = coords[i - 1];
             auto p2 = coords[i];
 
             GetIzolineIntersection(lineV, p1, p2, intersections);
-            GetIzolineIntersection(lineV + 1, p1, p2, intersections);
-            GetIzolineIntersection(lineV - 1, p1, p2, intersections);
+            if (p1.x != 1.001f && p1.x != -0.001f && p1.y != 1.001f && p1.y != -0.001f &&
+                p2.x != 1.001f && p2.x != -0.001f && p2.y != 1.001f && p2.y != -0.001f) {
+                GetIzolineIntersection(lineV + 1, p1, p2, intersections);
+                GetIzolineIntersection(lineV - 1, p1, p2, intersections);
+            }
         }
 
-        std::sort(intersections.begin(), intersections.end());
+        /*if (intersections.size() % 2 == 1)
+            intersections.push_back(2);*/
 
-        return intersections;
+        std::sort(intersections.begin(), intersections.end());
     }
 
-    void IntersectionCurve::CheckIfPixelInsideIntersections(float pixel, std::vector<float> intersections, int& intersectionIndex, bool& isIn)
+    void IntersectionCurve::GetIntersectionsAlongV(float lineU, std::vector<glm::vec2> coords, std::vector<float>& intersections)
+    {
+        for (int i = 1; i < coords.size(); i++)
+        {
+            auto p1 = coords[i - 1];
+            auto p2 = coords[i];
+
+            p1 = glm::vec2(p1.y, p1.x);
+            p2 = glm::vec2(p2.y, p2.x);
+
+            GetIzolineIntersection(lineU, p1, p2, intersections);
+            if (p1.x != 1.001f && p1.x != -0.001f && p1.y != 1.001f && p1.y != -0.001f &&
+                p2.x != 1.001f && p2.x != -0.001f && p2.y != 1.001f && p2.y != -0.001f) {
+                GetIzolineIntersection(lineU + 1, p1, p2, intersections);
+                GetIzolineIntersection(lineU - 1, p1, p2, intersections);
+            }
+
+        }
+
+        /*if (intersections.size() % 2 == 1)
+            intersections.push_back(2);*/
+
+        std::sort(intersections.begin(), intersections.end());
+    }
+
+    bool IntersectionCurve::CheckIfPixelInsideIntersections(float pixel, std::vector<float> intersections)
     {
         for (int i = 1; i < intersections.size(); i += 2)
         {
             auto intersectionLeft = intersections[i - 1];
             auto intersectionRight = intersections[i];
-            
-            if (intersectionLeft <= pixel && pixel <= intersectionRight)
+
+            if (intersectionLeft < pixel && pixel < intersectionRight)
             {
-                isIn = true;
-                return;
+                return true;
             }
 
-            if ((intersectionLeft - 1) <= pixel && pixel <= (intersectionRight - 1))
-            {
-                isIn = true;
-                return;
-            }
+            /* if ((intersectionLeft - 1) <= pixel && pixel <= (intersectionRight - 1))
+             {
+                 return true;
+             }*/
 
-            if ((intersectionLeft + 1) <= pixel && pixel <= (intersectionRight + 1))
-            {
-                isIn = true;
-                return;
-            }
+             /*if ((intersectionLeft + 1) <= pixel && pixel <= (intersectionRight + 1))
+              {
+                  return true;
+              }*/
         }
 
-        isIn = false;
+        return false;
     }
 
     bool IntersectionCurve::GetIzolineIntersection(float line, glm::vec2 p1, glm::vec2 p2, std::vector<float>& intersections)
@@ -140,7 +210,7 @@ namespace CADMageddon
             return line;
         }
 
-        if ((p1.y - line) * (p2.y - line) <= 0) //maybe <=
+        if ((p1.y - line) * (p2.y - line) < 0) //maybe <=
         {
             auto distance = p2 - p1;
             float x = p1.x + distance.x * (line - p1.y) / distance.y;
@@ -151,25 +221,15 @@ namespace CADMageddon
         return false;
     }
 
-    std::vector<glm::vec2> IntersectionCurve::TriangulateCurve()
-    {
-        return std::vector<glm::vec2>();
-    }
-
 
     Ref<IntersectionCurve> IntersectionCurve::Create(
         std::string name,
         std::vector<IntersectionPoint> points,
         Ref<SurfaceUV> s1,
         Ref<SurfaceUV> s2,
-        bool isClosed)
+        IntersectionType intersectionType)
     {
-        if (isClosed)
-        {
-            points.push_back(points[0]);
-        }
-
-        auto intersectionCurve = Ref<IntersectionCurve>(new IntersectionCurve(name, points, s1, s2, isClosed));
+        auto intersectionCurve = Ref<IntersectionCurve>(new IntersectionCurve(name, points, s1, s2, intersectionType));
 
         return intersectionCurve;
     }

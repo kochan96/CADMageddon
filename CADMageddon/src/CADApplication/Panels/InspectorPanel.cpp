@@ -177,26 +177,70 @@ namespace CADMageddon
         ImPlot::SetColormap(&colors[0], 2);
         if (ImPlot::BeginPlot("plot 1", "U", "V", ImVec2(-1, 0), ImPlotFlags_Default ^ ImPlotFlags_Legend))
         {
-            for (int i = 0; i < intersectionPoints.size(); i++) {
-                x[i] = intersectionPoints[i].Coords.s /*+ offset[j]*/;
-                y[i] = intersectionPoints[i].Coords.t /*+ offset[k]*/;
+            for (int j = 0; j < 3; j++)
+            {
+                for (int k = 0; k < 3; ++k)
+                {
+                    for (int i = 0; i < intersectionPoints.size(); i++)
+                    {
+                        x[i] = intersectionPoints[i].Coords.s + offset[j];
+                        y[i] = intersectionPoints[i].Coords.t + offset[k];
+                    }
+
+                    ImPlot::PlotLine("#polygon1",
+                        x.data(), y.data(), x.size(), 0);
+                }
             }
-            ImPlot::PlotLine("#polygon1",
-                x.data(), y.data(), x.size(), 0);
-            /*if (curve->s1->isTrimmed)
-                RenderPlotGrid(curve, 0);*/
+
+
+            auto pixels = intersectionCurve->GetFirstSurfaceIntersectionLines();
+            for (int i = 1; i < pixels.size(); i += 2)
+            {
+                ImVec2 points[2] = {
+                    ImVec2(pixels[i - 1].x,pixels[i - 1].y),
+                    ImVec2(pixels[i].x,pixels[i].y),
+                };
+
+                ImGui::PushID(i);
+                ImPlot::PlotLine("#scatter1", points, 2, 0);
+                ImGui::PopID();
+            }
+
+
             ImPlot::EndPlot();
         }
 
         if (ImPlot::BeginPlot("plot 2", "U", "V", ImVec2(-1, 0), ImPlotFlags_Default ^ ImPlotFlags_Legend))
         {
-            for (int i = 0; i < intersectionPoints.size(); i++) {
-                x[i] = intersectionPoints[i].Coords.p /*+ offset[j]*/;
-                y[i] = intersectionPoints[i].Coords.q /*+ offset[k]*/;
+            for (int j = 0; j < 3; j++)
+            {
+                for (int k = 0; k < 3; ++k)
+                {
+                    for (int i = 0; i < intersectionPoints.size(); i++)
+                    {
+                        x[i] = intersectionPoints[i].Coords.p + offset[j];
+                        y[i] = intersectionPoints[i].Coords.q + offset[k];
+                    }
+
+                    ImPlot::PlotLine("#polygon2",
+                        x.data(), y.data(), x.size(), 0);
+                }
             }
 
-            ImPlot::PlotLine("#polygon2",
-                x.data(), y.data(), x.size(), 0);
+
+            auto pixels = intersectionCurve->GetSecondSurfaceIntersectionLines();
+            for (int i = 1; i < pixels.size(); i += 2)
+            {
+                ImVec2 points[2] = {
+                    ImVec2(pixels[i - 1].x,pixels[i - 1].y),
+                    ImVec2(pixels[i].x,pixels[i].y),
+                };
+
+                ImGui::PushID(i);
+                ImPlot::PlotLine("#scatter1", points, 2, 0);
+                ImGui::PopID();
+            }
+
             /*if (curve->s1->isTrimmed)
                 RenderPlotGrid(curve, 0);*/
             ImPlot::EndPlot();
@@ -293,8 +337,8 @@ namespace CADMageddon
         ImGui::DragFloat("Step length", &m_StepLength, 0.001f, 0.001f, 1.0f);
         if (ImGui::Button("Calculate Intersection"))
         {
-            bool isClosed = false;
-            auto points = IntersectionHelper::GetIntersectionPoints(s1, s2, m_StepLength, isClosed);
+            IntersectionType intersectionType = IntersectionType::OpenOpen;
+            auto points = IntersectionHelper::GetIntersectionPoints(s1, s2, m_StepLength, intersectionType);
             if (points.empty())
             {
                 m_IntersectionNotFound = true;
@@ -302,7 +346,7 @@ namespace CADMageddon
             else
             {
                 m_IntersectionNotFound = false;
-                m_Scene->CreateIntersectionCurve("Intersected", s1, s2, points, isClosed);
+                m_Scene->CreateIntersectionCurve("Intersected", s1, s2, points, intersectionType);
             }
         }
 
@@ -470,7 +514,25 @@ namespace CADMageddon
                 m_IntersectionCurves[0]->SetShowPlot(true);
             }
 
-            ImGui::Text("IsClosed: %s", m_IntersectionCurves[0]->GetIsClosed() ? "Yes" : "No");
+            auto intersectionType = m_IntersectionCurves[0]->GetIntersectionType();
+            std::string intersectionTypeText = "ClosedClosed";
+            switch (intersectionType)
+            {
+                case IntersectionType::ClosedClosed:
+                    intersectionTypeText = "ClosedClosed";
+                    break;
+                case IntersectionType::ClosedOpen:
+                    intersectionTypeText = "ClosedOpen";
+                    break;
+                case IntersectionType::OpenClosed:
+                    intersectionTypeText = "OpenClosed";
+                    break;
+                case IntersectionType::OpenOpen:
+                    intersectionTypeText = "OpenOpen";
+            }
+
+
+            ImGui::Text("IsClosed: %s", intersectionTypeText);
 
             RenderIntersectionPlot(m_IntersectionCurves[0]);
 

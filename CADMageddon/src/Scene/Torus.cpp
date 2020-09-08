@@ -40,6 +40,8 @@ namespace CADMageddon
                 m_TextureCoordinates.push_back(glm::vec2(u, v));
             }
         }
+
+        RecalculateTrimCurveGrid();
     }
 
     glm::vec3 Torus::GetPointAt(float u, float v)

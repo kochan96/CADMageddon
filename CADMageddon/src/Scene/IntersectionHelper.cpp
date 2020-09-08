@@ -7,14 +7,13 @@ namespace CADMageddon
         Ref<SurfaceUV> s1,
         Ref<SurfaceUV> s2,
         float stepSize,
-        bool& isClosed)
+        IntersectionType& intersectionType)
     {
-        isClosed = false;
+        intersectionType = IntersectionType::ClosedClosed;
 
         glm::vec4 firstPoint = GetFirstPointFromTwoSurfaces(s1, s2, 5);
         if (firstPoint.x == -1 || glm::any(glm::isnan(firstPoint)))
             return std::vector<IntersectionPoint>();
-
 
         std::vector<IntersectionPoint> intersectionPoints;
         IntersectionPoint intersectionPoint = {
@@ -27,9 +26,10 @@ namespace CADMageddon
         while (true)
         {
             intersectionPoint = GetNextIntersectionPoint(intersectionPoint.Coords, s1, s2, stepSize, reversed);
-            if (glm::length(intersectionPoints.back().Location - intersectionPoints.front().Location) < stepSize && intersectionPoints.size() > 2)
-            {
-                isClosed = true;
+            if (glm::length(intersectionPoint.Location - intersectionPoints.front().Location) < stepSize && intersectionPoints.size() > 2)
+            {   
+                intersectionType = GetIntersectionType(intersectionType, intersectionPoint.Coords, s1, s2);
+                intersectionPoints.push_back(GetNextIntersectionPoint(intersectionPoint.Coords, s1, s2, stepSize, reversed));
                 break;
             }
             else if (CheckParameters(intersectionPoint.Coords, s1, s2))
@@ -38,12 +38,20 @@ namespace CADMageddon
             }
             else if (!reversed)
             {
+                intersectionType = GetIntersectionType(intersectionPoint.Coords, s1, s2);
+                intersectionPoint.Coords = ClampParameters(intersectionPoint.Coords, s1, s2);
+                intersectionPoint.Location = s1->GetPointAt(intersectionPoint.Coords.x, intersectionPoint.Coords.y);
+                intersectionPoints.push_back(intersectionPoint);
                 intersectionPoint = intersectionPoints[0];
                 reversed = true;
                 std::reverse(intersectionPoints.begin(), intersectionPoints.end());
             }
             else
             {
+                intersectionType = GetIntersectionType(intersectionType, intersectionPoint.Coords, s1, s2);
+                intersectionPoint.Coords = ClampParameters(intersectionPoint.Coords, s1, s2);
+                intersectionPoint.Location = s1->GetPointAt(intersectionPoint.Coords.x, intersectionPoint.Coords.y);
+                intersectionPoints.push_back(intersectionPoint);
                 LOG_INFO("Length: {}", glm::length(intersectionPoints.back().Location - intersectionPoints[0].Location));
                 break;
             }
@@ -116,7 +124,6 @@ namespace CADMageddon
         glm::vec4 previousPos = parameters;
         glm::vec4 nextPos = parameters;
         const int MaxIterations = 20;
-        glm::vec4 fNext;
 
         auto s1Pos = s1->GetPointAt(nextPos.x, nextPos.y);
         auto s2Pos = s2->GetPointAt(nextPos.z, nextPos.w);
@@ -192,7 +199,7 @@ namespace CADMageddon
             sDirection = direction + beta * lastSDirection;
             alfa = GoldenRatioSearch(alfaMin, alfaMax, parameters, sDirection, s1, s2);
             parameters = parameters + alfa * sDirection;
-            parameters = ClampParameters(parameters, minValues, maxValues);
+            parameters = ClampParameters(parameters, s1, s2);
             if (alfa < 0.0000001f)
                 return parameters;
 
@@ -306,11 +313,26 @@ namespace CADMageddon
         }
     }
 
-    glm::vec4 IntersectionHelper::ClampParameters(glm::vec4 parameters, glm::vec4 minValues, glm::vec4 maxValues)
+    glm::vec4 IntersectionHelper::ClampParameters(glm::vec4 parameters, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2)
     {
-        for (int i = 0; i < 4; i++)
+        if (!s1->GetRollU())
         {
-            parameters[i] = std::clamp(parameters[i], minValues[i], maxValues[i]);
+            parameters.x = glm::clamp(parameters.x, s1->GetMinU(), s1->GetMaxU());
+        }
+
+        if (!s1->GetRollV())
+        {
+            parameters.y = glm::clamp(parameters.y, s1->GetMinV(), s1->GetMaxV());
+        }
+
+        if (!s2->GetRollU())
+        {
+            parameters.z = glm::clamp(parameters.z, s2->GetMinU(), s2->GetMaxU());
+        }
+
+        if (!s2->GetRollV())
+        {
+            parameters.w = glm::clamp(parameters.w, s2->GetMinV(), s2->GetMaxV());
         }
 
         return parameters;
@@ -318,36 +340,73 @@ namespace CADMageddon
 
     bool IntersectionHelper::CheckParameters(glm::vec4& parameters, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2)
     {
-        bool isU1OutOfRange = parameters.x < s1->GetMinU() || parameters.x > s1->GetMaxU();
-        bool isV1OutOfRange = parameters.y < s1->GetMinV() || parameters.y > s1->GetMaxV();
+        bool isU1OutOfRange = !s1->GetRollU() && (parameters.x < s1->GetMinU() || parameters.x > s1->GetMaxU());
+        bool isV1OutOfRange = !s1->GetRollV() && (parameters.y < s1->GetMinV() || parameters.y > s1->GetMaxV());
 
-        bool isU2OutOfRange = parameters.z < s2->GetMinU() || parameters.z > s2->GetMaxU();
-        bool isV2OutOfRange = parameters.w < s2->GetMinV() || parameters.w > s2->GetMaxV();
-
-        if (isU1OutOfRange && s1->GetRollU())
-        {
-            //parameters.x = parameters.x - std::floorf(parameters.x);
-            isU1OutOfRange = false;
-        }
-
-        if (isV1OutOfRange && s1->GetRollV())
-        {
-            //parameters.y = parameters.y - std::floorf(parameters.y);
-            isV1OutOfRange = false;
-        }
-
-        if (isU2OutOfRange && s2->GetRollU())
-        {
-            //parameters.z = parameters.z - std::floorf(parameters.z);
-            isU2OutOfRange = false;
-        }
-
-        if (isV2OutOfRange && s2->GetRollV())
-        {
-            //parameters.w = parameters.w - std::floorf(parameters.w);
-            isV2OutOfRange = false;
-        }
+        bool isU2OutOfRange = !s2->GetRollU() && (parameters.z < s2->GetMinU() || parameters.z > s2->GetMaxU());
+        bool isV2OutOfRange = !s2->GetRollV() && (parameters.w < s2->GetMinV() || parameters.w > s2->GetMaxV());
 
         return !isU1OutOfRange && !isV1OutOfRange && !isU2OutOfRange && !isV2OutOfRange;
+    }
+
+    IntersectionType IntersectionHelper::GetIntersectionType(glm::vec4& parameters, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2)
+    {
+        bool isU1OutOfRange = !s1->GetRollU() && (parameters.x < s1->GetMinU() || parameters.x > s1->GetMaxU());
+        bool isV1OutOfRange = !s1->GetRollV() && (parameters.y < s1->GetMinV() || parameters.y > s1->GetMaxV());
+
+        bool isU2OutOfRange = !s2->GetRollU() && (parameters.z < s2->GetMinU() || parameters.z > s2->GetMaxU());
+        bool isV2OutOfRange = !s2->GetRollV() && (parameters.w < s2->GetMinV() || parameters.w > s2->GetMaxV());
+
+        if (isU1OutOfRange || isV1OutOfRange)
+            return IntersectionType::ClosedOpen;
+        else if (isU2OutOfRange || isV2OutOfRange)
+            return IntersectionType::OpenClosed;
+
+        return IntersectionType::OpenOpen; // should never happend;
+    }
+    IntersectionType IntersectionHelper::GetIntersectionType(
+        IntersectionType intersectionType,
+        glm::vec4& parameters,
+        Ref<SurfaceUV> s1,
+        Ref<SurfaceUV> s2)
+    {
+        bool isU1OutOfRange = !s1->GetRollU() && (parameters.x < s1->GetMinU() || parameters.x > s1->GetMaxU());
+        bool isV1OutOfRange = !s1->GetRollV() && (parameters.y < s1->GetMinV() || parameters.y > s1->GetMaxV());
+
+        bool isU2OutOfRange = !s2->GetRollU() && (parameters.z < s2->GetMinU() || parameters.z > s2->GetMaxU());
+        bool isV2OutOfRange = !s2->GetRollV() && (parameters.w < s2->GetMinV() || parameters.w > s2->GetMaxV());
+
+        if ((isU1OutOfRange || isV1OutOfRange))
+        {
+            if (intersectionType == IntersectionType::ClosedOpen)
+            {
+                return IntersectionType::ClosedOpen;
+            }
+            else
+            {
+                return IntersectionType::OpenOpen;
+            }
+        }
+
+        if (isU2OutOfRange || isV2OutOfRange)
+        {
+            if (intersectionType == IntersectionType::OpenClosed)
+            {
+                return IntersectionType::OpenClosed;
+            }
+            else
+            {
+                return IntersectionType::OpenOpen;
+            }
+        }
+
+        return IntersectionType::ClosedClosed;
+    }
+
+    IntersectionPoint IntersectionHelper::GetLastIntersectionPoint(IntersectionType intersectionType, IntersectionPoint parameters, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2)
+    {
+        IntersectionPoint p;
+
+        return p;
     }
 }

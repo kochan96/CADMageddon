@@ -24,7 +24,7 @@ namespace CADMageddon
         void SetUDivisionCount(int uDivisionCount) { m_UDivisionCount = uDivisionCount; }
 
         int GetVDivisionCount() const { return m_VDivisionCount; }
-        void SetVDivisionCount(int vDivisionCount) { m_VDivisionCount = vDivisionCount; }
+        void SetVDivisionCount(int vDivisionCount) { m_VDivisionCount = vDivisionCount; RecalculateTrimCurveGrid(); }
 
         int GetPatchCountX() const { return m_PatchCountX; }
         int GetPatchCountY() const { return m_PatchCountY; }
@@ -73,6 +73,8 @@ namespace CADMageddon
         virtual float GetMinV() const override;
         virtual float GetMaxV() const override;
         virtual bool GetRollU() const { return m_IsCylinder; }
+        virtual int GetUDivision() const override { return m_UDivisionCount; }
+        virtual int GetVDivision() const override { return m_VDivisionCount; }
 
 
     private:

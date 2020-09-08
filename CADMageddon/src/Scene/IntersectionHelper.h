@@ -6,7 +6,7 @@ namespace CADMageddon
     class IntersectionHelper
     {
     public:
-        static std::vector<IntersectionPoint> GetIntersectionPoints(Ref<SurfaceUV> s1, Ref<SurfaceUV> s2, float stepSize, bool& isClosed);
+        static std::vector<IntersectionPoint> GetIntersectionPoints(Ref<SurfaceUV> s1, Ref<SurfaceUV> s2, float stepSize, IntersectionType& intersectionType);
 
     private:
         static glm::vec4 GetFirstPointFromTwoSurfaces(
@@ -56,9 +56,15 @@ namespace CADMageddon
 
         static glm::vec4 ClampParameters(
             glm::vec4 parameters,
-            glm::vec4 minValues,
-            glm::vec4 maxValues);
+            Ref<SurfaceUV> s1,
+            Ref<SurfaceUV> s2);
 
         static bool CheckParameters(glm::vec4& parameters, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2);
+
+        static IntersectionType GetIntersectionType(glm::vec4& parameters, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2);
+
+        static IntersectionType GetIntersectionType(IntersectionType intersectionType, glm::vec4& parameters, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2);
+        
+        static IntersectionPoint GetLastIntersectionPoint(IntersectionType intersectionType, IntersectionPoint parameters, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2);
     };
 }
