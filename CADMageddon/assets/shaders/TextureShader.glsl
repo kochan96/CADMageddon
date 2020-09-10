@@ -24,8 +24,8 @@ uniform sampler2D sampler;
 
 void main()
 {
-    vec3 textureColor = texture(sampler,v_TextureCoordinates).rgb;
+    float textureColor = texture(sampler,v_TextureCoordinates).r;
     //color = vec4(textureColor,.5f);
 
-    color = vec4(textureColor,1.0f);
+    color = vec4(textureColor,textureColor,textureColor,1.0f);
 }

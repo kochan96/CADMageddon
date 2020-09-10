@@ -51,6 +51,7 @@ namespace CADMageddon
         glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, NULL, GL_FALSE);
 
         glEnable(GL_DEPTH_TEST);
+        glEnable(GL_STENCIL_TEST);
         glDepthFunc(GL_LEQUAL);
 
         glEnable(GL_BLEND);
@@ -229,6 +230,7 @@ namespace CADMageddon
             -1.0f,-1.0f,0.0f, 0.0f,0.0f,
             1.0f,-1.0f,0.0f, 1.0f,0.0f,
             1.0f,1.0f,0.0f, 1.0f, 1.0f,
+
             1.0f,1.0f,0.0f, 1.0f, 1.0f,
            -1.0f, 1.0f, 0.0f,0.0f,1.0f,
            -1.0f,-1.0f,0.0f, 0.0f,0.0f,
@@ -360,8 +362,6 @@ namespace CADMageddon
         glDrawElements(GL_LINES, s_RenderTorusData.TorusVertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-        //RenderTextureQuad(textureId);
     }
 
     void Renderer::RenderGrid(const Ref<OpenGLVertexArray>& vertexArray, const glm::mat4& transform, const glm::vec4& color)
@@ -609,8 +609,8 @@ namespace CADMageddon
 
             glDrawElements(GL_PATCHES, 16, GL_UNSIGNED_INT, (void*)(i * sizeof(GLuint)));
 
-            s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_vTexMin", rowsRendered + 1);
-            s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_vTexMax", rowsRendered);
+            s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_vTexMin", (rowsRendered + 1) * deltaRow);
+            s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_vTexMax", rowsRendered * deltaRow);
             s_RenderBezierPatchData.BezierPatchShader->SetFloat("u_SubdivisionCount", 1);
             glDrawElements(GL_PATCHES, 16, GL_UNSIGNED_INT, (void*)((i + 16) * sizeof(GLuint)));
 
@@ -688,12 +688,12 @@ namespace CADMageddon
 
             glDrawElements(GL_PATCHES, 16, GL_UNSIGNED_INT, (void*)(i * sizeof(GLuint)));
 
-            s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_vTexMin", rowsRendered + 1);
-            s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_vTexMax", rowsRendered);
+            s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_vTexMin", (rowsRendered + 1) * deltaRow);
+            s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_vTexMax", rowsRendered * deltaRow);
             s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_SubdivisionCount", 1);
             glDrawElements(GL_PATCHES, 16, GL_UNSIGNED_INT, (void*)((i + 16) * sizeof(GLuint)));
 
-
+            
             s_RenderBSplinePatchData.BSplinePatchShader->SetBool("u_ReverseTexture", true);
             s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_uTexMin", columnRendered * deltaColumn);
             s_RenderBSplinePatchData.BSplinePatchShader->SetFloat("u_uTexMax", (columnRendered + 1) * deltaColumn);

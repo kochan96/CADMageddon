@@ -4,6 +4,12 @@
 
 namespace CADMageddon
 {
+    enum class TrimmingType
+    {
+        Inside,
+        InsideWithBoundary,
+    };
+
     class SurfaceUV : public std::enable_shared_from_this<SurfaceUV>
     {
     public:
@@ -26,14 +32,28 @@ namespace CADMageddon
         bool GetReverseTrimming() const { return m_ReverseTrimming; }
         void SetReverseTrimming(bool reverse) { m_ReverseTrimming = reverse; }
 
+        TrimmingType GetTrimmingType() const { return m_TrimmingType; }
+        void SetTrimmingType(TrimmingType trimmingType) { m_TrimmingType = trimmingType; }
+
+
         unsigned int GetTextureId() const
         {
             if (m_IntersectionCurve)
             {
                 if (m_IntersectionCurve->GetFirstSurface() == shared_from_this()) //hacky
-                    return m_IntersectionCurve->GetFirstTextureId();
+                {
+                    if (m_TrimmingType == TrimmingType::InsideWithBoundary)
+                        return m_IntersectionCurve->GetFirstSurfaceTrimmedWithBounds();
+
+                    return m_IntersectionCurve->GetFirstSurfaceTrimmedInside();
+                }
                 else
-                    return m_IntersectionCurve->GetSecondTextureId();
+                {
+                    if (m_TrimmingType == TrimmingType::InsideWithBoundary)
+                        return m_IntersectionCurve->GetSecondSurfaceTrimmedWithBounds();
+
+                    return m_IntersectionCurve->GetSecondSurfaceTrimmedInside();
+                }
             }
 
             return -1;
@@ -53,6 +73,7 @@ namespace CADMageddon
         }
 
     private:
+        TrimmingType m_TrimmingType = TrimmingType::InsideWithBoundary;
         bool m_ReverseTrimming = false;
         Ref<IntersectionCurve> m_IntersectionCurve = nullptr;
 

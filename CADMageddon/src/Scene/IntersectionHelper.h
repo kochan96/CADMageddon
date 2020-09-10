@@ -9,9 +9,24 @@ namespace CADMageddon
     public:
         static std::vector<IntersectionPoint> GetIntersectionPoints(Ref<Cursor3D> cursor, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2, float stepSize, IntersectionType& intersectionType);
 
-        static std::vector<IntersectionPoint> GetIntersectionPoints(Ref<SurfaceUV> s1, Ref<SurfaceUV> s2, float stepSize, IntersectionType& intersectionType);
+        static  std::vector<std::vector<glm::vec2>>* GetIntersectionPoints(
+            Ref<SurfaceUV> s1,
+            Ref<SurfaceUV> s2, 
+            float stepSize, 
+            IntersectionType& intersectionType,
+            std::vector<IntersectionPoint>& intersectionPoints);
 
     private:
+        static void MergeLastAndFirstLoop(std::vector<std::vector<glm::vec2>>& loop);
+
+        static void GetLastTwoPoints(
+            Ref<SurfaceUV> s1,
+            Ref<SurfaceUV> s2,
+            IntersectionPoint& last,
+            std::vector<IntersectionPoint>& intersectionPoints,
+            std::vector<std::vector<glm::vec2>>& firstLoops,
+            std::vector<std::vector<glm::vec2>>& secondLoops);
+
         static glm::vec4 GetFirstPointFromOneSurfaceCursor(Ref<SurfaceUV> s1, Ref<Cursor3D> cursor, float divide = 5.0f);
 
         static glm::vec4 GetFirstPointFromOneSurface(Ref<SurfaceUV> s1, float divide = 5.0f);
@@ -59,16 +74,14 @@ namespace CADMageddon
             float tolerance = 1e-5);
 
         static glm::vec4 ClampParameters(
-            glm::vec4 parameters,
+            glm::vec4& parameters,
             Ref<SurfaceUV> s1,
             Ref<SurfaceUV> s2);
 
-        static bool CheckParameters(glm::vec4& parameters, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2);
+        static bool CheckParameters(glm::vec2& parameters, Ref<SurfaceUV> surface, std::vector<std::vector<glm::vec2>>& loops);
 
         static IntersectionType GetIntersectionType(glm::vec4& parameters, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2);
 
         static IntersectionType GetIntersectionType(IntersectionType intersectionType, glm::vec4& parameters, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2);
-
-        static IntersectionPoint GetLastIntersectionPoint(IntersectionType intersectionType, IntersectionPoint parameters, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2);
     };
 }

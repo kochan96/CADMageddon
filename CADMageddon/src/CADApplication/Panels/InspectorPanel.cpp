@@ -166,86 +166,117 @@ namespace CADMageddon
             return;
         }
 
-        auto intersectionPoints = intersectionCurve->GetIntersectionPoints();
-
         ImGui::Begin("Intersection Plot");
-        ImPlot::SetNextPlotLimits(0, 1, 0, 1);
-        std::vector<float> x(intersectionPoints.size());
-        std::vector<float> y(intersectionPoints.size());
+        const int size = 8191;
+        ImPlot::SetNextPlotLimits(0, size, 0, size);
+
         float offset[] = { 1,0,-1 };
         ImVec4 colors[] = { ImVec4(1,1,1,1),ImVec4(1,1,1,1) };
         ImPlot::SetColormap(&colors[0], 2);
+
         if (ImPlot::BeginPlot("plot 1", "U", "V", ImVec2(-1, 0), ImPlotFlags_Default ^ ImPlotFlags_Legend))
         {
-            for (int j = 0; j < 3; j++)
+            auto boundary = intersectionCurve->GetFirstBoundary();
+            for (int i = 0; i < boundary.size(); i++)
             {
-                for (int k = 0; k < 3; ++k)
+                if (boundary[i].empty())
                 {
-                    for (int i = 0; i < intersectionPoints.size(); i++)
-                    {
-                        x[i] = intersectionPoints[i].Coords.s + offset[j];
-                        y[i] = intersectionPoints[i].Coords.t + offset[k];
-                    }
-
-                    ImPlot::PlotLine("#polygon1",
-                        x.data(), y.data(), x.size(), 0);
+                    continue;
                 }
+
+                std::vector<float> x(boundary[i].size());
+                std::vector<float> y(boundary[i].size());
+                for (int j = 0; j < boundary[i].size(); j++)
+                {
+                    x[j] = boundary[i][j].x * size;
+                    y[j] = boundary[i][j].y * size;
+                }
+
+                ImPlot::PlotLine("#polygon1",
+                    x.data(), y.data(), x.size(), 0);
+
             }
-
-
-            auto pixels = intersectionCurve->GetFirstSurfaceIntersectionLines();
-            for (int i = 1; i < pixels.size(); i += 2)
-            {
-                ImVec2 points[2] = {
-                    ImVec2(pixels[i - 1].x,pixels[i - 1].y),
-                    ImVec2(pixels[i].x,pixels[i].y),
-                };
-
-                ImGui::PushID(i);
-                ImPlot::PlotLine("#scatter1", points, 2, 0);
-                ImGui::PopID();
-            }
-
 
             ImPlot::EndPlot();
         }
 
         if (ImPlot::BeginPlot("plot 2", "U", "V", ImVec2(-1, 0), ImPlotFlags_Default ^ ImPlotFlags_Legend))
         {
-            for (int j = 0; j < 3; j++)
+            auto domainLoops = intersectionCurve->GetFirstSurfaceDomainLoops();
+            for (int i = 0; i < domainLoops.size(); i++)
             {
-                for (int k = 0; k < 3; ++k)
+                if (domainLoops[i].empty())
                 {
-                    for (int i = 0; i < intersectionPoints.size(); i++)
-                    {
-                        x[i] = intersectionPoints[i].Coords.p + offset[j];
-                        y[i] = intersectionPoints[i].Coords.q + offset[k];
-                    }
-
-                    ImPlot::PlotLine("#polygon2",
-                        x.data(), y.data(), x.size(), 0);
+                    continue;
                 }
+
+                std::vector<float> x(domainLoops[i].size());
+                std::vector<float> y(domainLoops[i].size());
+                for (int j = 0; j < domainLoops[i].size(); j++)
+                {
+                    x[j] = domainLoops[i][j].x;
+                    y[j] = domainLoops[i][j].y;
+                }
+                ImPlot::PlotLine("#polygon1",
+                    x.data(), y.data(), x.size(), 0);
+
             }
 
-
-            auto pixels = intersectionCurve->GetSecondSurfaceIntersectionLines();
-            for (int i = 1; i < pixels.size(); i += 2)
-            {
-                ImVec2 points[2] = {
-                    ImVec2(pixels[i - 1].x,pixels[i - 1].y),
-                    ImVec2(pixels[i].x,pixels[i].y),
-                };
-
-                ImGui::PushID(i);
-                ImPlot::PlotLine("#scatter1", points, 2, 0);
-                ImGui::PopID();
-            }
-
-            /*if (curve->s1->isTrimmed)
-                RenderPlotGrid(curve, 0);*/
             ImPlot::EndPlot();
         }
 
+        ImPlot::SetNextPlotLimits(0, size, 0, size);
+        if (ImPlot::BeginPlot("plot 3", "U", "V", ImVec2(-1, 0), ImPlotFlags_Default ^ ImPlotFlags_Legend))
+        {
+            auto boundary = intersectionCurve->GetSecondBoundary();
+            for (int i = 0; i < boundary.size(); i++)
+            {
+                if (boundary[i].empty())
+                {
+                    continue;
+                }
+
+                std::vector<float> x(boundary[i].size());
+                std::vector<float> y(boundary[i].size());
+                for (int j = 0; j < boundary[i].size(); j++)
+                {
+                    x[j] = boundary[i][j].x * size;
+                    y[j] = boundary[i][j].y * size;
+                }
+
+                ImPlot::PlotLine("#polygon1",
+                    x.data(), y.data(), x.size(), 0);
+
+            }
+
+            ImPlot::EndPlot();
+        }
+
+        if (ImPlot::BeginPlot("plot 4", "U", "V", ImVec2(-1, 0), ImPlotFlags_Default ^ ImPlotFlags_Legend))
+        {
+            auto domainLoops = intersectionCurve->GetSecondSurfaceDomainLoops();
+            for (int i = 0; i < domainLoops.size(); i++)
+            {
+                if (domainLoops[i].empty())
+                {
+                    continue;
+                }
+
+                std::vector<float> x(domainLoops[i].size());
+                std::vector<float> y(domainLoops[i].size());
+                for (int j = 0; j < domainLoops[i].size(); j++)
+                {
+                    x[j] = domainLoops[i][j].x;
+                    y[j] = domainLoops[i][j].y;
+                }
+                ImPlot::PlotLine("#polygon1",
+                    x.data(), y.data(), x.size(), 0);
+
+            }
+
+            ImPlot::EndPlot();
+        }
+           
 
         if (ImGui::Button("Close window"))
         {
@@ -337,16 +368,17 @@ namespace CADMageddon
         ImGui::DragFloat("Step length", &m_StepLength, 0.001f, 0.001f, 1.0f);
         if (ImGui::Button("Calculate Intersection"))
         {
+            std::vector<IntersectionPoint> intersectionPoints;
             IntersectionType intersectionType = IntersectionType::OpenOpen;
-            auto points = IntersectionHelper::GetIntersectionPoints(s1, s2, m_StepLength, intersectionType);
-            if (points.empty())
+            auto points = IntersectionHelper::GetIntersectionPoints(s1, s2, m_StepLength, intersectionType, intersectionPoints);
+            if (!points)
             {
                 m_IntersectionNotFound = true;
             }
             else
             {
                 m_IntersectionNotFound = false;
-                m_Scene->CreateIntersectionCurve("Intersected", s1, s2, points, intersectionType);
+                m_Scene->CreateIntersectionCurve("Intersected", s1, s2, points, intersectionPoints, intersectionType);
             }
         }
 

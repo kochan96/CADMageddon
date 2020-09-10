@@ -133,9 +133,10 @@ uniform sampler2D trimmingSampler;
 void main()
 {
     
+    float alfa =1.0f;
     if(isTrimmed)
     {
-        float alfa = texture(trimmingSampler,tess_TextureCoordinates).r;
+        alfa = texture(trimmingSampler,tess_TextureCoordinates).r;
         if(reverseTrimming)
         {
            alfa = 1.0f - alfa; 
@@ -145,5 +146,5 @@ void main()
             discard;
     }
 
-    color = u_Color;
+    color = vec4(u_Color.xyz,1.0f);
 }

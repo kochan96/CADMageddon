@@ -190,10 +190,16 @@ namespace CADMageddon
         return bSpline;
     }
 
-    Ref<IntersectionCurve> Scene::CreateIntersectionCurve(std::string name, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2, std::vector<IntersectionPoint> points, IntersectionType intersectionType)
+    Ref<IntersectionCurve> Scene::CreateIntersectionCurve(
+        std::string name,
+        Ref<SurfaceUV> s1,
+        Ref<SurfaceUV> s2,
+        std::vector<std::vector<glm::vec2>>* points,
+        std::vector<IntersectionPoint> intersectionPoints,
+        IntersectionType intersectionType)
     {
         static int intersectionCount = 0;
-        auto intersectionCurve = IntersectionCurve::Create("Intersection_" + std::to_string(intersectionCount++), points, s1, s2, intersectionType);
+        auto intersectionCurve = IntersectionCurve::Create("Intersection_" + std::to_string(intersectionCount++), points, s1, s2, intersectionType, intersectionPoints);
         m_IntersectionCurve.push_back(intersectionCurve);
 
 
@@ -518,22 +524,11 @@ namespace CADMageddon
         }
         else
         {
-            bool isFirst = torus->GetIntersectionCurve()->GetFirstSurface() == torus;
-            unsigned int textureId = 0;
-            if (isFirst)
-            {
-                textureId = torus->GetIntersectionCurve()->GetFirstTextureId();
-            }
-            else
-            {
-                textureId = torus->GetIntersectionCurve()->GetSecondTextureId();
-            }
-
             Renderer::RenderTrimmedTorus(
                 vertices,
                 torus->GetTextureCoordinates(),
                 torus->GetReverseTrimming(),
-                textureId,
+                torus->GetTextureId(),
                 torus->GetIndices(),
                 torus->GetTransform()->GetMatrix(),
                 color);
@@ -613,6 +608,7 @@ namespace CADMageddon
         auto vertices = bezierPatch->GetRenderingVertices();
         auto textureCooridnates = bezierPatch->GetTextureCoordinates();
         auto color = bezierPatch->GetIsSelected() ? m_SelectionColor : m_DefaultColor;
+
 
         Renderer::RenderBezierPatch(
             vertices,

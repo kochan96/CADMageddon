@@ -1,13 +1,15 @@
 #include "IntersectionHelper.h"
 #include "SurfaceUV.h"
+#include "LineClipper.h"
 
 namespace CADMageddon
 {
-    std::vector<IntersectionPoint> IntersectionHelper::GetIntersectionPoints(
+    std::vector<std::vector<glm::vec2>>* IntersectionHelper::GetIntersectionPoints(
         Ref<SurfaceUV> s1,
         Ref<SurfaceUV> s2,
         float stepSize,
-        IntersectionType& intersectionType)
+        IntersectionType& intersectionType,
+        std::vector<IntersectionPoint>& intersectionPoints)
     {
         intersectionType = IntersectionType::ClosedClosed;
         glm::vec4 firstPoint;
@@ -21,38 +23,56 @@ namespace CADMageddon
         }
 
         if (firstPoint.x == -1 || glm::any(glm::isnan(firstPoint)))
-            return std::vector<IntersectionPoint>();
+            return nullptr;
 
-        std::vector<IntersectionPoint> intersectionPoints;
+        std::vector<std::vector<glm::vec2>> intersections[2];
+
         IntersectionPoint intersectionPoint = {
             firstPoint,
             s1->GetPointAt(firstPoint.x,firstPoint.y) };
 
         intersectionPoints.push_back(intersectionPoint);
 
+        std::vector<std::vector<glm::vec2>>* loops = new std::vector<std::vector<glm::vec2>>[2];
+        loops[0].push_back(std::vector<glm::vec2>());
+        loops[1].push_back(std::vector<glm::vec2>());
+        loops[0][0].push_back({ firstPoint.x,firstPoint.y });
+        loops[1][0].push_back({ firstPoint.z,firstPoint.w });
+
         bool reversed = false;
         while (true)
         {
             intersectionPoint = GetNextIntersectionPoint(intersectionPoint.Coords, s1, s2, stepSize, reversed);
+            glm::vec2 firstParameters = glm::vec2(intersectionPoint.Coords.x, intersectionPoint.Coords.y);
+            glm::vec2 secondParameters = glm::vec2(intersectionPoint.Coords.z, intersectionPoint.Coords.w);
             if (glm::length(intersectionPoint.Location - intersectionPoints.front().Location) < stepSize && intersectionPoints.size() > 2)
             {
                 intersectionType = GetIntersectionType(intersectionType, intersectionPoint.Coords, s1, s2);
-                intersectionPoints.push_back(GetNextIntersectionPoint(intersectionPoint.Coords, s1, s2, stepSize, reversed));
+                GetLastTwoPoints(s1, s2, intersectionPoint, intersectionPoints, loops[0], loops[1]);
+                MergeLastAndFirstLoop(loops[0]);
+                MergeLastAndFirstLoop(loops[1]);
                 break;
             }
-            else if (CheckParameters(intersectionPoint.Coords, s1, s2))
+            else if (CheckParameters(firstParameters, s1, loops[0]) && CheckParameters(secondParameters, s2, loops[1]))
             {
+                glm::vec4 paramters(firstParameters.x, firstParameters.y, secondParameters.x, secondParameters.y);
+                intersectionPoint.Coords = paramters;
                 intersectionPoints.push_back(intersectionPoint);
             }
             else if (!reversed)
             {
-                intersectionType = GetIntersectionType(intersectionPoint.Coords, s1, s2);
+                intersectionType = GetIntersectionType(intersectionType, intersectionPoint.Coords, s1, s2);
                 intersectionPoint.Coords = ClampParameters(intersectionPoint.Coords, s1, s2);
                 intersectionPoint.Location = s1->GetPointAt(intersectionPoint.Coords.x, intersectionPoint.Coords.y);
                 intersectionPoints.push_back(intersectionPoint);
+                loops[0].back().push_back({ intersectionPoint.Coords.x,intersectionPoint.Coords.y });
+                loops[1].back().push_back({ intersectionPoint.Coords.z,intersectionPoint.Coords.w });
+
                 intersectionPoint = intersectionPoints[0];
                 reversed = true;
                 std::reverse(intersectionPoints.begin(), intersectionPoints.end());
+                std::reverse(loops[0].back().begin(), loops[0].back().end());
+                std::reverse(loops[1].back().begin(), loops[1].back().end());
             }
             else
             {
@@ -60,12 +80,14 @@ namespace CADMageddon
                 intersectionPoint.Coords = ClampParameters(intersectionPoint.Coords, s1, s2);
                 intersectionPoint.Location = s1->GetPointAt(intersectionPoint.Coords.x, intersectionPoint.Coords.y);
                 intersectionPoints.push_back(intersectionPoint);
+                loops[0].back().push_back({ intersectionPoint.Coords.x,intersectionPoint.Coords.y });
+                loops[1].back().push_back({ intersectionPoint.Coords.z,intersectionPoint.Coords.w });
                 LOG_INFO("Length: {}", glm::length(intersectionPoints.back().Location - intersectionPoints[0].Location));
                 break;
             }
         }
 
-        return intersectionPoints;
+        return loops;
     }
 
     std::vector<IntersectionPoint> IntersectionHelper::GetIntersectionPoints(Ref<Cursor3D> cursor, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2, float stepSize, IntersectionType& intersectionType)
@@ -91,18 +113,24 @@ namespace CADMageddon
             s1->GetPointAt(firstPoint.x,firstPoint.y) };
 
         intersectionPoints.push_back(intersectionPoint);
+        std::vector<std::vector<glm::vec2>> loops[2];
+        loops[0].push_back(std::vector<glm::vec2>());
+        loops[1].push_back(std::vector<glm::vec2>());
+        loops[0][0].push_back({ firstPoint.x,firstPoint.y });
+        loops[1][0].push_back({ firstPoint.z,firstPoint.w });
 
         bool reversed = false;
         while (true)
         {
             intersectionPoint = GetNextIntersectionPoint(intersectionPoint.Coords, s1, s2, stepSize, reversed);
+            glm::vec2 firstParameters = glm::vec2(intersectionPoint.Coords.x, intersectionPoint.Coords.y);
+            glm::vec2 secondParameters = glm::vec2(intersectionPoint.Coords.z, intersectionPoint.Coords.w);
             if (glm::length(intersectionPoint.Location - intersectionPoints.front().Location) < stepSize && intersectionPoints.size() > 2)
             {
                 intersectionType = GetIntersectionType(intersectionType, intersectionPoint.Coords, s1, s2);
-                intersectionPoints.push_back(GetNextIntersectionPoint(intersectionPoint.Coords, s1, s2, stepSize, reversed));
                 break;
             }
-            else if (CheckParameters(intersectionPoint.Coords, s1, s2))
+            else if (CheckParameters(firstParameters, s1, loops[0]) && CheckParameters(secondParameters, s2, loops[1]))
             {
                 intersectionPoints.push_back(intersectionPoint);
             }
@@ -112,6 +140,9 @@ namespace CADMageddon
                 intersectionPoint.Coords = ClampParameters(intersectionPoint.Coords, s1, s2);
                 intersectionPoint.Location = s1->GetPointAt(intersectionPoint.Coords.x, intersectionPoint.Coords.y);
                 intersectionPoints.push_back(intersectionPoint);
+                loops[0].back().push_back({ intersectionPoint.Coords.x,intersectionPoint.Coords.y });
+                loops[1].back().push_back({ intersectionPoint.Coords.z,intersectionPoint.Coords.w });
+
                 intersectionPoint = intersectionPoints[0];
                 reversed = true;
                 std::reverse(intersectionPoints.begin(), intersectionPoints.end());
@@ -122,12 +153,47 @@ namespace CADMageddon
                 intersectionPoint.Coords = ClampParameters(intersectionPoint.Coords, s1, s2);
                 intersectionPoint.Location = s1->GetPointAt(intersectionPoint.Coords.x, intersectionPoint.Coords.y);
                 intersectionPoints.push_back(intersectionPoint);
+                loops[0].back().push_back({ intersectionPoint.Coords.x,intersectionPoint.Coords.y });
+                loops[1].back().push_back({ intersectionPoint.Coords.z,intersectionPoint.Coords.w });
                 LOG_INFO("Length: {}", glm::length(intersectionPoints.back().Location - intersectionPoints[0].Location));
                 break;
             }
         }
 
         return intersectionPoints;
+    }
+
+    void IntersectionHelper::MergeLastAndFirstLoop(std::vector<std::vector<glm::vec2>>& loop)
+    {
+        if (loop.size() == 1)
+        {
+            loop.back().push_back(loop.front().front());
+            return;
+        }
+
+        for (auto point : loop.front())
+        {
+            loop.back().push_back(point);
+        }
+
+        loop.front().clear();
+    }
+
+    void IntersectionHelper::GetLastTwoPoints(
+        Ref<SurfaceUV> s1,
+        Ref<SurfaceUV> s2,
+        IntersectionPoint& last,
+        std::vector<IntersectionPoint>& intersectionPoints,
+        std::vector<std::vector<glm::vec2>>& firstLoops,
+        std::vector<std::vector<glm::vec2>>& secondLoops)
+    {
+        glm::vec2 firstParameters(last.Coords.x, last.Coords.y);
+        glm::vec2 secondParameters(last.Coords.z, last.Coords.w);
+        CheckParameters(firstParameters, s1, firstLoops) && CheckParameters(secondParameters, s2, secondLoops);
+        glm::vec4 paramters(firstParameters.x, firstParameters.y, secondParameters.x, secondParameters.y);
+        last.Coords = paramters;
+        intersectionPoints.push_back(last);
+        intersectionPoints.push_back(intersectionPoints.front());
     }
 
     glm::vec4 IntersectionHelper::GetFirstPointFromOneSurfaceCursor(Ref<SurfaceUV> s1, Ref<Cursor3D> cursor, float divide)
@@ -512,40 +578,109 @@ namespace CADMageddon
         }
     }
 
-    glm::vec4 IntersectionHelper::ClampParameters(glm::vec4 parameters, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2)
+    glm::vec4 IntersectionHelper::ClampParameters(glm::vec4& parameters, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2)
     {
         if (!s1->GetRollU())
         {
             parameters.x = glm::clamp(parameters.x, s1->GetMinU(), s1->GetMaxU());
+        }
+        else
+        {
+            parameters.x = parameters.x - std::floor(parameters.x);
         }
 
         if (!s1->GetRollV())
         {
             parameters.y = glm::clamp(parameters.y, s1->GetMinV(), s1->GetMaxV());
         }
+        else
+        {
+            parameters.y = parameters.y - std::floor(parameters.y);
+        }
 
         if (!s2->GetRollU())
         {
             parameters.z = glm::clamp(parameters.z, s2->GetMinU(), s2->GetMaxU());
+        }
+        else
+        {
+            parameters.z = parameters.z - std::floor(parameters.z);
         }
 
         if (!s2->GetRollV())
         {
             parameters.w = glm::clamp(parameters.w, s2->GetMinV(), s2->GetMaxV());
         }
+        else
+        {
+            parameters.w = parameters.w - std::floor(parameters.w);
+        }
 
         return parameters;
     }
 
-    bool IntersectionHelper::CheckParameters(glm::vec4& parameters, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2)
+    bool IntersectionHelper::CheckParameters(glm::vec2& parameters, Ref<SurfaceUV> surface, std::vector<std::vector<glm::vec2>>& loops)
     {
-        bool isU1OutOfRange = !s1->GetRollU() && (parameters.x < s1->GetMinU() || parameters.x > s1->GetMaxU());
-        bool isV1OutOfRange = !s1->GetRollV() && (parameters.y < s1->GetMinV() || parameters.y > s1->GetMaxV());
+        bool isUOutOfRange = parameters.x <surface->GetMinU() || parameters.x >surface->GetMaxU();
+        bool isVOutOfRange = parameters.y <surface->GetMinV() || parameters.y > surface->GetMaxV();
 
-        bool isU2OutOfRange = !s2->GetRollU() && (parameters.z < s2->GetMinU() || parameters.z > s2->GetMaxU());
-        bool isV2OutOfRange = !s2->GetRollV() && (parameters.w < s2->GetMinV() || parameters.w > s2->GetMaxV());
+        if (isUOutOfRange && isVOutOfRange && surface->GetRollU() && surface->GetRollV())
+        {
+            auto last = loops.back().back();
+            glm::vec2 uBoundary = glm::vec2(surface->GetMinU(), surface->GetMaxU());
+            glm::vec2 vBoundary = glm::vec2(surface->GetMinV(), surface->GetMaxV());
+            glm::vec2 intersection;
+            glm::vec2 intersection2;
 
-        return !isU1OutOfRange && !isV1OutOfRange && !isU2OutOfRange && !isV2OutOfRange;
+            LineClipper::ClipLine(last, parameters, uBoundary, vBoundary, intersection, intersection2);
+            parameters.x -= std::floor(parameters.x);
+            parameters.y -= std::floor(parameters.y);
+            loops.back().push_back(intersection);
+            loops.push_back(std::vector<glm::vec2>());
+            loops.back().push_back(intersection2);
+            loops.back().push_back(parameters);
+            isUOutOfRange = false;
+            isVOutOfRange = false;
+        }
+        else if (isUOutOfRange && surface->GetRollU())
+        {
+            auto last = loops.back().back();
+            glm::vec2 uBoundary = glm::vec2(surface->GetMinU(), surface->GetMaxU());
+            glm::vec2 vBoundary = glm::vec2(surface->GetMinV(), surface->GetMaxV());
+            glm::vec2 intersection;
+            glm::vec2 intersection2;
+
+            LineClipper::ClipLine(last, parameters, uBoundary, vBoundary, intersection, intersection2);
+            parameters.x -= std::floor(parameters.x);
+            loops.back().push_back(intersection);
+            loops.push_back(std::vector<glm::vec2>());
+            loops.back().push_back(intersection2);
+            loops.back().push_back(parameters);
+            isUOutOfRange = false;
+        }
+        else if (isVOutOfRange && surface->GetRollV())
+        {
+            auto last = loops.back().back();
+            glm::vec2 uBoundary = glm::vec2(surface->GetMinU(), surface->GetMaxU());
+            glm::vec2 vBoundary = glm::vec2(surface->GetMinV(), surface->GetMaxV());
+            glm::vec2 intersection;
+            glm::vec2 intersection2;
+
+            LineClipper::ClipLine(last, parameters, uBoundary, vBoundary, intersection, intersection2);
+            parameters.y -= std::floor(parameters.y);
+            loops.back().push_back(intersection);
+            loops.push_back(std::vector<glm::vec2>());
+            loops.back().push_back(intersection2);
+            loops.back().push_back(parameters);
+
+            isVOutOfRange = false;
+        }
+        else if (!isVOutOfRange && !isUOutOfRange)
+        {
+            loops.back().push_back(parameters);
+        }
+
+        return !isUOutOfRange && !isVOutOfRange;
     }
 
     IntersectionType IntersectionHelper::GetIntersectionType(glm::vec4& parameters, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2)
@@ -575,9 +710,29 @@ namespace CADMageddon
         bool isU2OutOfRange = !s2->GetRollU() && (parameters.z < s2->GetMinU() || parameters.z > s2->GetMaxU());
         bool isV2OutOfRange = !s2->GetRollV() && (parameters.w < s2->GetMinV() || parameters.w > s2->GetMaxV());
 
-        if ((isU1OutOfRange || isV1OutOfRange))
+        bool isFirstOutOfRange = isU1OutOfRange || isV1OutOfRange;
+        bool isSecondOutOfRange = isU2OutOfRange || isV2OutOfRange;
+
+
+        if (isFirstOutOfRange && isSecondOutOfRange)
         {
-            if (intersectionType == IntersectionType::ClosedOpen)
+            if (intersectionType == IntersectionType::ClosedClosed)
+                return IntersectionType::ClosedClosed;
+            else if (intersectionType == IntersectionType::ClosedOpen)
+                return IntersectionType::ClosedOpen;
+            else if (intersectionType == IntersectionType::OpenClosed)
+                return IntersectionType::OpenClosed;
+            else
+                return IntersectionType::OpenOpen;
+        }
+
+        if (isFirstOutOfRange)
+        {
+            if (intersectionType == IntersectionType::ClosedClosed)
+            {
+                return IntersectionType::ClosedOpen;
+            }
+            else if (intersectionType == IntersectionType::ClosedOpen)
             {
                 return IntersectionType::ClosedOpen;
             }
@@ -586,10 +741,13 @@ namespace CADMageddon
                 return IntersectionType::OpenOpen;
             }
         }
-
-        if (isU2OutOfRange || isV2OutOfRange)
+        if (isSecondOutOfRange)
         {
-            if (intersectionType == IntersectionType::OpenClosed)
+            if (intersectionType == IntersectionType::ClosedClosed)
+            {
+                return IntersectionType::OpenClosed;
+            }
+            else if (intersectionType == IntersectionType::OpenClosed)
             {
                 return IntersectionType::OpenClosed;
             }
@@ -600,12 +758,5 @@ namespace CADMageddon
         }
 
         return IntersectionType::ClosedClosed;
-    }
-
-    IntersectionPoint IntersectionHelper::GetLastIntersectionPoint(IntersectionType intersectionType, IntersectionPoint parameters, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2)
-    {
-        IntersectionPoint p;
-
-        return p;
     }
 }

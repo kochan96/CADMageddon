@@ -18,6 +18,17 @@ namespace CADMageddon
             {
                 surface->SetReverseTrimming(reverseTrimming);
             }
+
+            auto trimmingType = surface->GetTrimmingType();
+            if (ImGui::RadioButton("TrimInside", trimmingType ==TrimmingType::Inside))
+            {
+                surface->SetTrimmingType(TrimmingType::Inside);
+            }
+
+            if (ImGui::RadioButton("TrimWithBoundary", trimmingType== TrimmingType::InsideWithBoundary))
+            {
+                surface->SetTrimmingType(TrimmingType::InsideWithBoundary);
+            }
         }
 
         ImGui::EndGroup();
