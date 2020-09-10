@@ -276,7 +276,7 @@ namespace CADMageddon
 
             ImPlot::EndPlot();
         }
-           
+
 
         if (ImGui::Button("Close window"))
         {
@@ -370,7 +370,15 @@ namespace CADMageddon
         {
             std::vector<IntersectionPoint> intersectionPoints;
             IntersectionType intersectionType = IntersectionType::OpenOpen;
-            auto points = IntersectionHelper::GetIntersectionPoints(s1, s2, m_StepLength, intersectionType, intersectionPoints);
+            std::vector<std::vector<glm::vec2>>* points;
+            if (m_BeginFromCursor)
+                points = IntersectionHelper::GetIntersectionPoints(m_Cursor, s1, s2, m_StepLength, intersectionType, intersectionPoints);
+            else
+                points = IntersectionHelper::GetIntersectionPoints(s1, s2, m_StepLength, intersectionType, intersectionPoints);
+
+            if (s1 == s2)
+                intersectionType = IntersectionType::OpenOpen;
+
             if (!points)
             {
                 m_IntersectionNotFound = true;

@@ -7,7 +7,13 @@ namespace CADMageddon
     class IntersectionHelper
     {
     public:
-        static std::vector<IntersectionPoint> GetIntersectionPoints(Ref<Cursor3D> cursor, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2, float stepSize, IntersectionType& intersectionType);
+        static std::vector<std::vector<glm::vec2>>* GetIntersectionPoints(
+            Ref<Cursor3D> cursor, 
+            Ref<SurfaceUV> s1,
+            Ref<SurfaceUV> s2, 
+            float stepSize, 
+            IntersectionType& intersectionType,
+            std::vector<IntersectionPoint>& intersectionPoints);
 
         static  std::vector<std::vector<glm::vec2>>* GetIntersectionPoints(
             Ref<SurfaceUV> s1,
@@ -17,6 +23,15 @@ namespace CADMageddon
             std::vector<IntersectionPoint>& intersectionPoints);
 
     private:
+
+        static  std::vector<std::vector<glm::vec2>>* GetIntersectionPoints(
+            glm::vec4 firstPoint,
+            Ref<SurfaceUV> s1,
+            Ref<SurfaceUV> s2,
+            float stepSize,
+            IntersectionType& intersectionType,
+            std::vector<IntersectionPoint>& intersectionPoints);
+
         static void MergeLastAndFirstLoop(std::vector<std::vector<glm::vec2>>& loop);
 
         static void GetLastTwoPoints(
@@ -79,8 +94,6 @@ namespace CADMageddon
             Ref<SurfaceUV> s2);
 
         static bool CheckParameters(glm::vec2& parameters, Ref<SurfaceUV> surface, std::vector<std::vector<glm::vec2>>& loops);
-
-        static IntersectionType GetIntersectionType(glm::vec4& parameters, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2);
 
         static IntersectionType GetIntersectionType(IntersectionType intersectionType, glm::vec4& parameters, Ref<SurfaceUV> s1, Ref<SurfaceUV> s2);
     };

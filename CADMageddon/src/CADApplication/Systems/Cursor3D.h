@@ -29,6 +29,8 @@ namespace CADMageddon
         virtual float GetMaxV() const override;
         virtual int GetUDivision() const override;
         virtual int GetVDivision() const override;
+        virtual bool GetRollU() const { return true; }
+        virtual bool GetRollV() const { return true; }
 
     private:
         glm::vec3 m_Position = { 0.0f,0.0f,0.0f };
