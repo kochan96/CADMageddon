@@ -74,6 +74,11 @@ project "CADMageddon"
         "tinyxml2",
 		"opengl32.lib"
     }
+
+    postbuildcommands 
+	{
+		'{COPY} "../CADMageddon/assets" "%{cfg.targetdir}/assets"'
+	}
     
     filter "system:windows"
         systemversion "latest"

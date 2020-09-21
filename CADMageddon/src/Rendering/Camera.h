@@ -66,7 +66,7 @@ namespace CADMageddon
         
         //stereo
         float m_EyeDistance = 0.1f;
-        float m_ProjectionPlaneDistance = 50.0f;
+        float m_ProjectionPlaneDistance = 10.0f;
     };
 
 }
