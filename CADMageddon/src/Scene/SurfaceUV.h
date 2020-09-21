@@ -28,13 +28,12 @@ namespace CADMageddon
         Ref<IntersectionCurve> GetIntersectionCurve() const { return m_IntersectionCurve; }
         void SetIntersectionCurve(Ref<IntersectionCurve> intersectionCurve) { m_IntersectionCurve = intersectionCurve; RecalculateTrimCurveGrid(); }
 
-        bool GetIsTrimmed() const { return m_IntersectionCurve != nullptr; }
+        bool GetIsTrimmed() const { return m_IntersectionCurve != nullptr && m_IsTrimmed; }
         bool GetReverseTrimming() const { return m_ReverseTrimming; }
         void SetReverseTrimming(bool reverse) { m_ReverseTrimming = reverse; }
 
         TrimmingType GetTrimmingType() const { return m_TrimmingType; }
         void SetTrimmingType(TrimmingType trimmingType) { m_TrimmingType = trimmingType; }
-
 
         unsigned int GetTextureId() const
         {
@@ -62,6 +61,8 @@ namespace CADMageddon
         virtual bool GetRollU() const { return false; }
         virtual bool GetRollV() const { return false; }
 
+        void SetIsTrimmed(bool trimmed) { m_IsTrimmed = trimmed; }
+
     protected:
         void RecalculateTrimCurveGrid()
         {
@@ -73,6 +74,7 @@ namespace CADMageddon
         }
 
     private:
+        bool m_IsTrimmed = true;
         TrimmingType m_TrimmingType = TrimmingType::InsideWithBoundary;
         bool m_ReverseTrimming = false;
         Ref<IntersectionCurve> m_IntersectionCurve = nullptr;

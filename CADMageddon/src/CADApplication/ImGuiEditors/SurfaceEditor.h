@@ -9,7 +9,10 @@ namespace CADMageddon
         ImGui::BeginGroup();
 
         bool isTrimmed = surface->GetIsTrimmed();
-        ImGui::Text("Is trimmed: %s", surface->GetIsTrimmed() ? "Yes" : "No");
+        if (ImGui::Checkbox("IsTrimmed ", &isTrimmed))
+        {
+            surface->SetIsTrimmed(isTrimmed);
+        }
 
         if (isTrimmed)
         {
@@ -19,7 +22,7 @@ namespace CADMageddon
                 surface->SetReverseTrimming(reverseTrimming);
             }
 
-            auto trimmingType = surface->GetTrimmingType();
+           /* auto trimmingType = surface->GetTrimmingType();
             if (ImGui::RadioButton("TrimInside", trimmingType ==TrimmingType::Inside))
             {
                 surface->SetTrimmingType(TrimmingType::Inside);
@@ -28,7 +31,7 @@ namespace CADMageddon
             if (ImGui::RadioButton("TrimWithBoundary", trimmingType== TrimmingType::InsideWithBoundary))
             {
                 surface->SetTrimmingType(TrimmingType::InsideWithBoundary);
-            }
+            }*/
         }
 
         ImGui::EndGroup();
