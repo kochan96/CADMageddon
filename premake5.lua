@@ -77,7 +77,8 @@ project "CADMageddon"
 
     postbuildcommands 
 	{
-		'{COPY} "../CADMageddon/assets" "%{cfg.targetdir}/assets"'
+        '{COPY} "../CADMageddon/assets" "%{cfg.targetdir}/assets"',
+        '{COPY} "../CADMageddon/imgui.ini" "%{cfg.targetdir}"'
 	}
     
     filter "system:windows"
