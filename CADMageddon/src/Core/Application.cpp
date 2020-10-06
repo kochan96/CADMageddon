@@ -25,7 +25,7 @@ namespace CADMageddon
     void Application::Init()
     {
         Logger::Init();
-        WindowProps windowData("Hello Window");
+        WindowProps windowData("CADMageddon");
 
         m_window->Init(windowData);
         m_window->SetEventCallback(BIND_EVENT_FN(Application::OnEvent));

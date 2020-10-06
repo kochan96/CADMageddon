@@ -4,8 +4,6 @@
 
 namespace CADMageddon
 {
-
-
     class Logger
     {
     public:
